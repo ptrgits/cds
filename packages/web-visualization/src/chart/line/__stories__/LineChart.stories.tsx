@@ -19,6 +19,7 @@ import { Text } from '@coinbase/cds-web/typography';
 import { AnimatePresence, m as motion } from 'framer-motion';
 
 import {
+  btcCandles,
   type ChartTextChildren,
   LiveTabLabel,
   PeriodSelector,
@@ -522,15 +523,14 @@ export const BTCPriceChart = () => {
   })} (${Math.abs(calculatedPercentChange).toFixed(2)}%)`;
 
   const AreaComponent = useMemo(
-    () => (props: AreaComponentProps) =>
-      (
-        <GradientArea
-          {...props}
-          endColor="var(--color-bg)"
-          startColor="var(--color-bg)"
-          startOpacity={0.15}
-        />
-      ),
+    () => (props: AreaComponentProps) => (
+      <GradientArea
+        {...props}
+        endColor="var(--color-bg)"
+        startColor="var(--color-bg)"
+        startOpacity={0.15}
+      />
+    ),
     [],
   );
 
@@ -1294,5 +1294,83 @@ export const DataFormat = () => {
         showGrid: true,
       }}
     />
+  );
+};
+
+export const BitcoinChartWithScrubberHead = () => {
+  const prices = [...btcCandles].reverse().map((candle) => parseFloat(candle.close));
+  const latestPrice = prices[prices.length - 1];
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+  };
+
+  const formatPercentChange = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price);
+  };
+
+  const percentChange = (latestPrice - prices[0]) / prices[0];
+
+  return (
+    <VStack
+      style={{
+        background:
+          'linear-gradient(0deg, rgba(0, 0, 0, 0.80) 0%, rgba(0, 0, 0, 0.80) 100%), #ED702F',
+      }}
+      borderRadius={300}
+      gap={2}
+      padding={2}
+      paddingBottom={0}
+      overflow="hidden"
+    >
+      <HStack gap={2} alignItems="center">
+        <RemoteImage source={assets.btc.imageUrl} size="xxl" shape="circle" />
+        <VStack gap={0.25} flexGrow={1}>
+          <Text font="title1" color="bg">
+            BTC
+          </Text>
+          <Text font="label1" color="fgMuted">
+            Bitcoin
+          </Text>
+        </VStack>
+        <VStack gap={0.25} alignItems="flex-end">
+          <Text font="title1" color="bg">
+            {formatPrice(latestPrice)}
+          </Text>
+          <Text font="label1" color="fgPositive">
+            +{formatPercentChange(percentChange)}
+          </Text>
+        </VStack>
+      </HStack>
+      <div
+        style={{
+          marginLeft: 'calc(-1 * var(--space-2))',
+          marginRight: 'calc(-1 * var(--space-2))',
+        }}
+      >
+        <LineChart
+          padding={{ left: 0, right: 24, bottom: 0, top: 0 }}
+          series={[
+            {
+              id: 'btcPrice',
+              data: prices,
+              color: assets.btc.color,
+            },
+          ]}
+          showArea
+          width="100%"
+          height={92}
+        >
+          <Scrubber pulse />
+        </LineChart>
+      </div>
+    </VStack>
   );
 };

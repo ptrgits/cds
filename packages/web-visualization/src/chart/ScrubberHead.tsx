@@ -151,36 +151,18 @@ export const ScrubberHead = memo(
       const pointColor = color || targetSeries?.color || 'var(--color-fgPrimary)';
 
       return (
-        <m.g
-          animate="animate"
-          data-testid={testID}
-          exit="exit"
-          initial="initial"
-          variants={axisTickLabelsInitialAnimationVariants}
-        >
-          <AnimatePresence>
-            <m.g
-              key={dataKey ? `scrubber-head-${seriesId}-${dataKey}` : `scrubber-head-${seriesId}`}
-              animate="animate"
-              exit="exit"
-              initial="initial"
-              variants={dataKeyUpdateAnimationVariants}
-            >
-              <Point
-                ref={pointRef}
-                color={pointColor}
-                dataX={x}
-                dataY={y}
-                opacity={opacity}
-                pulse={pulse}
-                radius={radius}
-                stroke="white"
-                strokeWidth={2}
-                {...props}
-              />
-            </m.g>
-          </AnimatePresence>
-        </m.g>
+        <Point
+          ref={pointRef}
+          color={pointColor}
+          dataX={x}
+          dataY={y}
+          opacity={opacity}
+          pulse={pulse}
+          radius={radius}
+          stroke="white"
+          strokeWidth={2}
+          {...props}
+        />
       );
     },
   ),

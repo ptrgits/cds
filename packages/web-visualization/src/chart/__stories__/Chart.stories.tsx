@@ -1,68 +1,27 @@
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
 import { prices } from '@coinbase/cds-common/internal/data/prices';
-import { sparklineInteractiveData } from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
 import type { TabValue } from '@coinbase/cds-common/tabs/useTabs';
-import type { ChartAxisScaleType } from '@coinbase/cds-common/visualizations/charts';
-import {
-  getChartRange,
-  isBandScale,
-  projectPoint,
-} from '@coinbase/cds-common/visualizations/charts';
-import { useTheme } from '@coinbase/cds-web';
-import { Button, IconButton } from '@coinbase/cds-web/buttons';
+import { isBandScale } from '@coinbase/cds-common/visualizations/charts';
 import { CellMedia, ListCell } from '@coinbase/cds-web/cells';
-import { Chip } from '@coinbase/cds-web/chips';
 import { Radio } from '@coinbase/cds-web/controls/Radio';
-import { TextInput } from '@coinbase/cds-web/controls/TextInput';
-import {
-  Box,
-  type BoxBaseProps,
-  type BoxProps,
-  Divider,
-  HStack,
-  VStack,
-} from '@coinbase/cds-web/layout';
-import { RemoteImage } from '@coinbase/cds-web/media/RemoteImage';
-import { Tray } from '@coinbase/cds-web/overlays';
+import { Box, type BoxBaseProps, Divider, HStack, VStack } from '@coinbase/cds-web/layout';
 import { Pressable } from '@coinbase/cds-web/system';
-import { SegmentedTabs } from '@coinbase/cds-web/tabs';
-import { SegmentedTab, type SegmentedTabProps } from '@coinbase/cds-web/tabs/SegmentedTab';
-import {
-  type TabComponent,
-  TabsActiveIndicator,
-  type TabsActiveIndicatorProps,
-} from '@coinbase/cds-web/tabs/Tabs';
-import { Text, TextHeadline, TextLabel1, TextLabel2 } from '@coinbase/cds-web/typography';
-import { AnimatePresence, m as motion } from 'framer-motion';
+import { Text } from '@coinbase/cds-web/typography';
 
-import { AreaChart, DottedArea, GradientArea, SolidArea } from '../area';
-import { Area, type AreaComponentProps } from '../area/Area';
+import { GradientArea } from '../area';
+import { Area } from '../area/Area';
 import { XAxis, YAxis } from '../axis';
-import { BarChart } from '../bar/BarChart';
-import { DottedLine, GradientLine, SolidLine } from '../line';
+import { SolidLine } from '../line';
 import { Line } from '../line/Line';
 import { LineChart } from '../line/LineChart';
 import { ReferenceLine } from '../line/ReferenceLine';
-import {
-  Chart,
-  ChartHeader,
-  type ChartTextChildren,
-  LiveTabLabel,
-  PeriodSelector,
-  Point,
-  Scrubber,
-  ScrubberHead,
-  ScrubberLine,
-  useChartContext,
-} from '../';
+import { Chart, type ChartTextChildren, PeriodSelector, Scrubber, useChartContext } from '../';
 
 export default {
   component: Chart,
   title: 'Components/Chart',
 };
-
-// Utility functions for price charts
 
 export const MultipleChart = () => {
   // todo: make a line chart with a bar chart underneath

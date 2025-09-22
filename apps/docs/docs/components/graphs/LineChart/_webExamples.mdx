@@ -2,6 +2,7 @@
 
 ```jsx live
 <LineChart
+  enableScrubbing
   height={250}
   series={[
     {
@@ -15,7 +16,9 @@
   yAxis={{
     showGrid: true,
   }}
-/>
+>
+  <Scrubber />
+</LineChart>
 ```
 
 ## Simple
@@ -110,6 +113,7 @@ function GainLossChart() {
 
   return (
     <Chart
+      enableScrubbing
       height={250}
       series={[
         {
@@ -125,11 +129,7 @@ function GainLossChart() {
       <YAxis requestedTickCount={2} showGrid tickLabelFormatter={tickLabelFormatter} />
       <Area seriesId="prices" curve="monotone" fill={`url(#${gradientId}-gradient)`} />
       <Line strokeWidth={3} curve="monotone" seriesId="prices" stroke={solidColor} />
-      <ScrubberLine hideOverlay />
-      <ScrubberHead
-        seriesId="prices"
-        {...(highlightedItem === null ? { x: data.length - 1, y: data[data.length - 1] } : {})}
-      />
+      <Scrubber hideOverlay />
     </Chart>
   );
 }
@@ -141,6 +141,7 @@ You can add multiple series to a line chart.
 
 ```jsx live
 <LineChart
+  enableScrubbing
   height={400}
   series={[
     {
@@ -172,7 +173,10 @@ You can add multiple series to a line chart.
     showGrid: true,
     tickLabelFormatter: (value) => value.toLocaleString(),
   }}
-/>
+>
+  {' '}
+  <Scrubber />
+</LineChart>
 ```
 
 ## Points
@@ -418,6 +422,7 @@ todo: we need to handle showing points for any spot in the axis.
 
 ```jsx live
 <LineChart
+  enableScrubbing
   series={[
     {
       id: 'line',
@@ -438,7 +443,10 @@ todo: we need to handle showing points for any spot in the axis.
     showTickMarks: true,
     showGrid: true,
   }}
-/>
+>
+  {' '}
+  <Scrubber />
+</LineChart>
 ```
 
 ## Customization
@@ -810,25 +818,25 @@ You can coordinate LineChart with custom styles to create a custom card that sho
 
 ```jsx live
 function BitcoinChartWithScrubberHead() {
-  const prices = [...btcCandles].reverse().map((candle) => parseFloat(candle.close))
-  const latestPrice = prices[prices.length - 1]
+  const prices = [...btcCandles].reverse().map((candle) => parseFloat(candle.close));
+  const latestPrice = prices[prices.length - 1];
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(price)
-  }
+    }).format(price);
+  };
 
   const formatPercentChange = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(price)
-  }
+    }).format(price);
+  };
 
-  const percentChange = (latestPrice - prices[0]) / prices[0]
+  const percentChange = (latestPrice - prices[0]) / prices[0];
 
   return (
     <VStack
@@ -845,20 +853,29 @@ function BitcoinChartWithScrubberHead() {
       <HStack gap={2} alignItems="center">
         <RemoteImage source={assets.btc.imageUrl} size="xxl" shape="circle" />
         <VStack gap={0.25} flexGrow={1}>
-          <Text font="title1" color="bg">BTC</Text>
-          <Text font="label1" color="fgMuted">Bitcoin</Text>
+          <Text font="title1" color="bg">
+            BTC
+          </Text>
+          <Text font="label1" color="fgMuted">
+            Bitcoin
+          </Text>
         </VStack>
         <VStack gap={0.25} alignItems="flex-end">
-          <Text font="title1" color="bg">{formatPrice(latestPrice)}</TextLabel2>
-          <Text font="label1" color="fgPositive">+{formatPercentChange(percentChange)}</TextLabel2>
+          <Text font="title1" color="bg">
+            {formatPrice(latestPrice)}
+          </Text>
+          <Text font="label1" color="fgPositive">
+            +{formatPercentChange(percentChange)}
+          </Text>
         </VStack>
       </HStack>
       <div
-       style={{  marginLeft: 'calc(-1 * var(--space-2))',
-          marginRight: 'calc(-1 * var(--space-2))', }}
+        style={{
+          marginLeft: 'calc(-1 * var(--space-2))',
+          marginRight: 'calc(-1 * var(--space-2))',
+        }}
       >
         <LineChart
-          disableHighlighting
           padding={{ left: 0, right: 24, bottom: 0, top: 0 }}
           series={[
             {
@@ -871,17 +888,12 @@ function BitcoinChartWithScrubberHead() {
           width="100%"
           height={92}
         >
-          <ScrubberHead
-            pulse
-            seriesId="btcPrice"
-            x={prices.length - 1}
-            y={prices[prices.length - 1]}
-          />
+          <Scrubber pulse />
         </LineChart>
       </div>
     </VStack>
   );
-}
+};
 ```
 
 ## A11y

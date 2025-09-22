@@ -3,74 +3,79 @@ import type { SharedProps } from '@coinbase/cds-common/types';
 import { type ChartScaleFunction, projectPoint } from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-web';
 
+import { m } from 'framer-motion';
+
 import { useScrubberContext } from './Chart';
 import { useChartContext } from './ChartContext';
 import { ScrubberHead, type ScrubberHeadProps } from './ScrubberHead';
 import { ScrubberHeadLabel, type ScrubberHeadLabelProps } from './ScrubberHeadLabel';
 import { ScrubberLine, type ScrubberLineProps } from './ScrubberLine';
+import { axisTickLabelsInitialAnimationVariants } from './axis';
+import type { PointProps } from './point';
 
 /**
  * Configuration for scrubber functionality across chart components.
  * Provides consistent API with smart defaults and component customization.
  */
-export type ScrubberProps = SharedProps & {
-  /**
-   * An array of series IDs that will receive visual emphasis as the user scrubs through the chart.
-   * Use this prop to restrict the scrubbing visual behavior to specific series.
-   * By default, all series will be highlighted by the Scrubber.
-   */
-  seriesIds?: string[];
+export type ScrubberProps = SharedProps &
+  Pick<PointProps, 'pulse'> & {
+    /**
+     * An array of series IDs that will receive visual emphasis as the user scrubs through the chart.
+     * Use this prop to restrict the scrubbing visual behavior to specific series.
+     * By default, all series will be highlighted by the Scrubber.
+     */
+    seriesIds?: string[];
 
-  /**
-   * Hide scrubber line (vertical line at current position).
-   * @default false
-   */
-  hideScrubberLine?: boolean;
+    /**
+     * Hide scrubber line (vertical line at current position).
+     * @default false
+     */
+    hideScrubberLine?: boolean;
 
-  /**
-   * Whether to hide the overlay rect which hides future data.
-   */
-  hideOverlay?: boolean;
+    /**
+     * Whether to hide the overlay rect which hides future data.
+     */
+    hideOverlay?: boolean;
 
-  /**
-   * Label content for scrubber (shows above the scrubber line).
-   */
-  scrubberLabel?: ScrubberLineProps['label'];
+    /**
+     * Label content for scrubber (shows above the scrubber line).
+     */
+    scrubberLabel?: ScrubberLineProps['label'];
 
-  /**
-   * Label configuration for the scrubber line label
-   */
-  scrubberLabelConfig?: ScrubberLineProps['labelConfig'];
+    /**
+     * Label configuration for the scrubber line label
+     */
+    scrubberLabelConfig?: ScrubberLineProps['labelConfig'];
 
-  /**
-   * Custom styles for scrubber elements.
-   */
-  scrubberStyles?: {
-    scrubberHead?: React.CSSProperties;
-    scrubberLine?: React.CSSProperties;
-    scrubberLabel?: React.CSSProperties;
-    scrubberHeadLabel?: React.CSSProperties;
+    /**
+     * Custom styles for scrubber elements.
+     */
+    scrubberStyles?: {
+      scrubberHead?: React.CSSProperties;
+      scrubberLine?: React.CSSProperties;
+      scrubberLabel?: React.CSSProperties;
+      scrubberHeadLabel?: React.CSSProperties;
+    };
+
+    /**
+     * Custom class names for scrubber elements.
+     */
+    scrubberClassNames?: {
+      scrubberHead?: string;
+      scrubberLine?: string;
+      scrubberLabel?: string;
+      scrubberHeadLabel?: string;
+    };
+
+    /**
+     * Custom component replacements.
+     */
+    scrubberComponents?: {
+      ScrubberHeadComponent?: React.ComponentType<ScrubberHeadProps>;
+      ScrubberHeadLabelComponent?: React.ComponentType<ScrubberHeadLabelProps>;
+      ScrubberLineComponent?: React.ComponentType<ScrubberLineProps>;
+    };
   };
-
-  /**
-   * Custom class names for scrubber elements.
-   */
-  scrubberClassNames?: {
-    scrubberHead?: string;
-    scrubberLine?: string;
-    scrubberLabel?: string;
-    scrubberHeadLabel?: string;
-  };
-
-  /**
-   * Custom component replacements.
-   */
-  scrubberComponents?: {
-    ScrubberHeadComponent?: React.ComponentType<ScrubberHeadProps>;
-    ScrubberHeadLabelComponent?: React.ComponentType<ScrubberHeadLabelProps>;
-    ScrubberLineComponent?: React.ComponentType<ScrubberLineProps>;
-  };
-};
 
 type LabelDimensions = {
   id: string;
@@ -93,6 +98,7 @@ export const Scrubber = memo<ScrubberProps>(
     scrubberComponents,
     hideOverlay,
     testID,
+    pulse,
   }) => {
     const theme = useTheme();
 
@@ -426,65 +432,73 @@ export const Scrubber = memo<ScrubberProps>(
     // todo: figure out why scrubber heads across dataKey values isn't working anymore
     // for animations
     return (
-      <g data-component="scrubber-group" data-testid={testID}>
+      <m.g
+        data-component="scrubber-group"
+        data-testid={testID}
+        animate="animate"
+        exit="exit"
+        initial="initial"
+        variants={axisTickLabelsInitialAnimationVariants}
+      >
         <ScrubberLineComponent
           hideOverlay={hideOverlay}
           hideScrubberLine={hideScrubberLine}
           label={scrubberLabel}
           labelConfig={scrubberLabelConfig}
         />
-        {isHighlighting &&
-          headPositions.map((scrubberHead) => {
-            if (!scrubberHead) return null;
-            const adjustment = labelPositioning.adjustments.get(scrubberHead.targetSeries.id);
-            const dotStroke = scrubberHead.targetSeries?.color || 'var(--color-fgPrimary)';
+        {headPositions.map((scrubberHead) => {
+          console.log('scrubberHead', scrubberHead);
+          if (!scrubberHead) return null;
+          const adjustment = labelPositioning.adjustments.get(scrubberHead.targetSeries.id);
+          const dotStroke = scrubberHead.targetSeries?.color || 'var(--color-fgPrimary)';
 
-            return (
-              <g key={scrubberHead.targetSeries.id} data-component="scrubber-head">
-                <ScrubberHeadComponent
-                  color={scrubberHead.targetSeries?.color}
-                  dataX={scrubberHead.x}
-                  dataY={scrubberHead.y}
-                  seriesId={scrubberHead.targetSeries.id}
-                  testID={testID ? `${testID}-${scrubberHead.targetSeries.id}-dot` : undefined}
-                />
-                {scrubberHead.label &&
-                  (() => {
-                    const finalAnchorX = adjustment?.x ?? scrubberHead.pixelX;
-                    const finalAnchorY = adjustment?.y ?? scrubberHead.pixelY;
-                    const finalSide = adjustment?.side ?? labelPositioning.strategy;
+          return (
+            <g key={scrubberHead.targetSeries.id} data-component="scrubber-head">
+              <ScrubberHeadComponent
+                color={scrubberHead.targetSeries?.color}
+                dataX={scrubberHead.x}
+                dataY={scrubberHead.y}
+                seriesId={scrubberHead.targetSeries.id}
+                testID={testID ? `${testID}-${scrubberHead.targetSeries.id}-dot` : undefined}
+                pulse={pulse}
+              />
+              {scrubberHead.label &&
+                (() => {
+                  const finalAnchorX = adjustment?.x ?? scrubberHead.pixelX;
+                  const finalAnchorY = adjustment?.y ?? scrubberHead.pixelY;
+                  const finalSide = adjustment?.side ?? labelPositioning.strategy;
 
-                    return (
-                      <ScrubberHeadLabelComponent
-                        background="var(--color-bg)"
-                        bounds={rect}
-                        color={dotStroke}
-                        dx={16}
-                        onDimensionsChange={({ width, height }) =>
-                          registerLabelDimensions(
-                            scrubberHead.targetSeries.id,
-                            width,
-                            height,
-                            scrubberHead.pixelX,
-                            scrubberHead.pixelY,
-                          )
-                        }
-                        padding={labelPadding}
-                        preferredSide={finalSide}
-                        testID={
-                          testID ? `${testID}-${scrubberHead.targetSeries.id}-label` : undefined
-                        }
-                        x={finalAnchorX}
-                        y={finalAnchorY}
-                      >
-                        {scrubberHead.label}
-                      </ScrubberHeadLabelComponent>
-                    );
-                  })()}
-              </g>
-            );
-          })}
-      </g>
+                  return (
+                    <ScrubberHeadLabelComponent
+                      background="var(--color-bg)"
+                      bounds={rect}
+                      color={dotStroke}
+                      dx={16}
+                      onDimensionsChange={({ width, height }) =>
+                        registerLabelDimensions(
+                          scrubberHead.targetSeries.id,
+                          width,
+                          height,
+                          scrubberHead.pixelX,
+                          scrubberHead.pixelY,
+                        )
+                      }
+                      padding={labelPadding}
+                      preferredSide={finalSide}
+                      testID={
+                        testID ? `${testID}-${scrubberHead.targetSeries.id}-label` : undefined
+                      }
+                      x={finalAnchorX}
+                      y={finalAnchorY}
+                    >
+                      {scrubberHead.label}
+                    </ScrubberHeadLabelComponent>
+                  );
+                })()}
+            </g>
+          );
+        })}
+      </m.g>
     );
   },
 );
