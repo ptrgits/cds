@@ -1214,20 +1214,6 @@ export const ForecastChart = () => {
     [historicalData, forecastData],
   );
 
-  const formatPrice = useCallback((price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  }, []);
-
-  // Format x-axis labels to show years
-  const formatXAxisLabel = useCallback((timestamp: number) => {
-    return new Date(timestamp).getFullYear().toString();
-  }, []);
-
   return (
     <LineChart
       enableScrubbing

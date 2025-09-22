@@ -455,243 +455,101 @@ todo: we need to handle showing points for any spot in the axis.
 
 ```jsx live
 function ForecastChart() {
-  // Generate monthly Bitcoin data from Jan 2022 to present
-  const generateMonthlyBitcoinData = () => {
-    const startDate = new Date('2022-01-01');
-    const endDate = new Date('2025-01-01'); // Present day
-    const data = [];
+  const getDataFromSparkline = (startDate: Date) => {
+    const allData = sparklineInteractiveData.all;
+    if (!allData || allData.length === 0) return [];
 
-    // Starting price around $47,000 (Bitcoin price in Jan 2022)
-    let currentPrice = 47000;
+    const timelineData = allData.filter((point) => point.date >= startDate);
 
-    const currentDate = new Date(startDate);
-    while (currentDate < endDate) {
-      // Simulate realistic Bitcoin volatility with monthly changes
-      const monthlyChange = (Math.random() - 0.5) * 0.4; // ±20% monthly volatility
-      const trendFactor =
-        Math.sin((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365)) * 0.1; // Long-term cycles
-
-      currentPrice = Math.max(15000, currentPrice * (1 + monthlyChange + trendFactor));
-
-      data.push({
-        date: new Date(currentDate),
-        value: Math.round(currentPrice),
-      });
-
-      // Move to next month
-      currentDate.setMonth(currentDate.getMonth() + 1);
-    }
-
-    return data;
+    return timelineData.map((point) => ({
+      date: point.date,
+      value: point.value,
+    }));
   };
 
-  const historicalData = useMemo(() => generateMonthlyBitcoinData(), []);
-  const [annualGrowthRate, setAnnualGrowthRate] = useState(10);
+  const historicalData = useMemo(() => getDataFromSparkline(new Date('2019-01-01')), []);
 
-  // Generate 5 years of monthly forecast data (60 months)
-  const forecastPeriods = 60;
+  const annualGrowthRate = 10;
 
   const generateForecastData = useCallback(
-    (lastPrice: number, periods: number, growthRate: number) => {
-      const monthlyGrowthRate = Math.pow(1 + growthRate / 100, 1 / 12) - 1; // Convert annual to monthly
+    (lastDate: Date, lastPrice: number, growthRate: number) => {
+      const dailyGrowthRate = Math.pow(1 + growthRate / 100, 1 / 365) - 1;
       const forecastData = [];
+      const fiveYearsFromNow = new Date(lastDate);
+      fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
 
-      for (let i = 1; i <= periods; i++) {
-        const forecastPrice = lastPrice * Math.pow(1 + monthlyGrowthRate, i);
-        forecastData.push(Math.round(forecastPrice));
+      // Generate daily forecast points for 5 years
+      const currentDate = new Date(lastDate);
+      currentDate.setDate(currentDate.getDate() + 1); // Start from day after last historical point
+      let currentPrice = lastPrice;
+
+      while (currentDate <= fiveYearsFromNow) {
+        currentPrice = currentPrice * (1 + dailyGrowthRate * 10);
+        forecastData.push({
+          date: new Date(currentDate),
+          value: Math.round(currentPrice),
+        });
+        currentDate.setDate(currentDate.getDate() + 10);
       }
+
       return forecastData;
     },
     [],
   );
 
-  const forecastPriceData = useMemo(
-    () =>
-      generateForecastData(
-        historicalData[historicalData.length - 1].value,
-        forecastPeriods,
-        annualGrowthRate,
-      ),
-    [generateForecastData, historicalData, forecastPeriods, annualGrowthRate],
-  );
+  const forecastData = useMemo(() => {
+    if (historicalData.length === 0) return [];
+    const lastPoint = historicalData[historicalData.length - 1];
+    return generateForecastData(lastPoint.date, lastPoint.value, annualGrowthRate);
+  }, [generateForecastData, historicalData, annualGrowthRate]);
 
-  // Create forecast dates
-  const forecastDates = useMemo(() => {
-    const dates = [];
-    const lastDate = new Date(historicalData[historicalData.length - 1].date);
-
-    for (let i = 1; i <= forecastPeriods; i++) {
-      const forecastDate = new Date(lastDate);
-      forecastDate.setMonth(lastDate.getMonth() + i);
-      dates.push(forecastDate);
-    }
-    return dates;
-  }, [historicalData, forecastPeriods]);
-
-  // Create series data
-  const historicalSeriesData = useMemo(() => historicalData.map((d) => d.value), [historicalData]);
-
-  const forecastSeriesData = useMemo(
-    () => [
-      ...Array(historicalData.length - 1).fill(null),
-      historicalData[historicalData.length - 1].value,
-      ...forecastPriceData,
-    ],
-    [historicalData, forecastPriceData],
-  );
-
-  // State management
-  const [currentPrice, setCurrentPrice] = useState(historicalData[historicalData.length - 1].value);
-  const [isHovering, setIsHovering] = useState(false);
-  const [isInForecast, setIsInForecast] = useState(false);
-
-  const formatPrice = useCallback((price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  }, []);
-
-  const allDates = useMemo(
-    () => [...historicalData.map((d) => d.date), ...forecastDates],
-    [historicalData, forecastDates],
-  );
-
-  const defaultScrubberPosition = useMemo(
-    () => ({
-      x: historicalData.length + forecastPeriods - 1,
-      y: forecastPriceData[forecastPeriods - 1],
-    }),
-    [historicalData.length, forecastPeriods, forecastPriceData],
-  );
-
-  // Simple formatter that just returns the year
-  const formatXAxisLabel = useCallback(
-    (dataIndex: number) => {
-      if (dataIndex >= 0 && dataIndex < allDates.length) {
-        return allDates[dataIndex].getFullYear().toString();
-      }
-      return '';
-    },
-    [allDates],
+  // Combine all data points with dates converted to timestamps for x-axis
+  const allDataPoints = useMemo(
+    () => [...historicalData, ...forecastData],
+    [historicalData, forecastData],
   );
 
   return (
-    <VStack gap={3}>
-      <HStack alignItems="center" justifyContent="space-between">
-        <VStack alignItems="flex-start" gap={1}>
-          <TextLabel2 as="h3">Bitcoin Price Forecast</TextLabel2>
-          <TextLabel2 as="p" color="fgMuted">
-            Historical data (2022-2025) with {annualGrowthRate}% annual growth forecast
-          </TextLabel2>
-        </VStack>
-        <VStack alignItems="flex-end" gap={1}>
-          <TextLabel2 as="p" color="fgMuted">
-            {isHovering
-              ? isInForecast
-                ? 'Forecast'
-                : 'Historical'
-              : `5-Year Target (${forecastDates[forecastDates.length - 1]?.getFullYear()})`}
-          </TextLabel2>
-          <TextLabel2 as="p">{formatPrice(currentPrice)}</TextLabel2>
-        </VStack>
-      </HStack>
-      <HStack alignItems="center" gap={2} justifyContent="flex-end">
-        <TextLabel1>Predicted Growth Rate</TextLabel1>
-        <TextInput
-          compact
-          readOnly
-          end={
-            <IconButton
-              compact
-              transparent
-              disabled={annualGrowthRate >= 20}
-              name="add"
-              onClick={() => setAnnualGrowthRate(Math.min(100, annualGrowthRate + 1))}
-            />
-          }
-          start={
-            <IconButton
-              compact
-              transparent
-              disabled={annualGrowthRate <= 0}
-              name="minus"
-              onClick={() => setAnnualGrowthRate(Math.max(0, annualGrowthRate - 1))}
-            />
-          }
-          style={{ textAlign: 'center', paddingLeft: 0, paddingRight: 0 }}
-          value={`${annualGrowthRate}%`}
-          width="160px"
-        />
-      </HStack>
-      <LineChart
-        disableAnimations
-        showArea
-        AreaComponent={DottedArea}
-        curve="natural"
-        height={350}
-        onHighlightChange={useCallback(
-          (highlightedIndex: number | null) => {
-            if (highlightedIndex !== null) {
-              const dataIndex = highlightedIndex;
-
-              if (dataIndex < historicalData.length) {
-                if (dataIndex >= 0 && dataIndex < historicalData.length) {
-                  setCurrentPrice(historicalData[dataIndex].value);
-                  setIsInForecast(false);
-                }
-              } else {
-                const forecastIndex = dataIndex - historicalData.length;
-                if (forecastIndex >= 0 && forecastIndex < forecastPriceData.length) {
-                  setCurrentPrice(forecastPriceData[forecastIndex]);
-                  setIsInForecast(true);
-                }
-              }
-              setIsHovering(true);
-            } else {
-              // Default to end of forecast when not hovering
-              setCurrentPrice(forecastPriceData[forecastPeriods - 1]);
-              setIsHovering(false);
-              setIsInForecast(false);
-            }
-          },
-          [historicalData, forecastPriceData, forecastPeriods],
-        )}
-        padding={{
-          top: 24,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        }}
-        series={[
-          {
-            id: 'historical',
-            data: historicalSeriesData,
-            color: assets.btc.color,
-          },
-          {
-            id: 'forecast',
-            data: forecastSeriesData,
-            color: assets.btc.color,
-            LineComponent: DottedLine,
-          },
-        ]}
-      >
-        <XAxis position="end" requestedTickCount={6} tickLabelFormatter={formatXAxisLabel} />
-        {!isHovering && (
-          <ScrubberHead
-            pulse
-            stroke={assets.btc.color}
-            x={defaultScrubberPosition.x}
-            y={defaultScrubberPosition.y}
-          />
-        )}
-      </LineChart>
-    </VStack>
+    <LineChart
+      enableScrubbing
+      showArea
+      showXAxis
+      areaType="dotted"
+      height={350}
+      padding={{
+        top: 24,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      }}
+      series={[
+        {
+          id: 'historical',
+          data: historicalData.map((d) => d.value),
+          color: assets.btc.color,
+        },
+        {
+          id: 'forecast',
+          data: [...historicalData.map((d) => null), ...forecastData.map((d) => d.value)],
+          color: assets.btc.color,
+          type: 'dotted',
+        },
+      ]}
+      xAxis={{
+        data: allDataPoints.map((d) => d.date.getTime()),
+        tickLabelFormatter: (value: number) => {
+          return new Date(value).toLocaleDateString('en-US', {
+            month: 'numeric',
+            year: 'numeric',
+          });
+        },
+        tickInterval: 4,
+      }}
+    >
+      <Scrubber />
+    </LineChart>
   );
-}
+};
 ```
 
 ### Availability

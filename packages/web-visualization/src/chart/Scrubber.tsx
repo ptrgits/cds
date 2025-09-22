@@ -103,11 +103,8 @@ export const Scrubber = memo<ScrubberProps>(
     const theme = useTheme();
 
     const { highlightedIndex } = useScrubberContext();
-    const { series, rect, getXScale, getYScale, getStackedSeriesData, getSeriesData } =
+    const { series, rect, getXScale, getYScale, getStackedSeriesData, getSeriesData, getXAxis } =
       useChartContext();
-
-    // Smart defaults based on highlighting state
-    const isHighlighting = highlightedIndex !== undefined;
 
     // Track label dimensions for collision detection
     const [labelDimensions, setLabelDimensions] = useState<Map<string, LabelDimensions>>(new Map());
@@ -115,9 +112,26 @@ export const Scrubber = memo<ScrubberProps>(
     // TODO: forecast chart is broken
     const headPositions = useMemo(() => {
       const xScale = getXScale() as ChartScaleFunction;
-      const dataX = highlightedIndex ?? (xScale?.domain()[1] as number);
+      const xAxis = getXAxis();
 
       if (!xScale) return [];
+
+      const maxDataLength =
+        series?.reduce((max, s) => {
+          const seriesData = getStackedSeriesData(s.id) || getSeriesData(s.id);
+          return Math.max(max, seriesData?.length ?? 0);
+        }, 0) ?? 0;
+
+      const dataIndex = highlightedIndex ?? Math.max(0, maxDataLength - 1);
+
+      // Convert index to actual x value if axis has data
+      let dataX: number;
+      if (xAxis?.data && Array.isArray(xAxis.data) && xAxis.data[dataIndex] !== undefined) {
+        const dataValue = xAxis.data[dataIndex];
+        dataX = typeof dataValue === 'string' ? dataIndex : dataValue;
+      } else {
+        dataX = dataIndex;
+      }
 
       return (
         series
@@ -127,36 +141,41 @@ export const Scrubber = memo<ScrubberProps>(
           })
           ?.map((s) => {
             const sourceData = getStackedSeriesData(s.id) || getSeriesData(s.id);
-            const stuff = sourceData?.[dataX];
-            let dataY: number;
+            // Use dataIndex to get the y value from the series data array
+            const stuff = sourceData?.[dataIndex];
+            let dataY: number | undefined;
             if (Array.isArray(stuff)) {
               dataY = stuff[stuff.length - 1];
-            } else {
-              dataY = stuff ?? 0;
+            } else if (typeof stuff === 'number') {
+              dataY = stuff;
             }
 
-            const yScale = getYScale(s.yAxisId) as ChartScaleFunction;
-            const pixelPosition = projectPoint({
-              x: dataX,
-              y: dataY,
-              xScale,
-              yScale,
-            });
+            if (dataY !== undefined) {
+              const yScale = getYScale(s.yAxisId) as ChartScaleFunction;
+              const pixelPosition = projectPoint({
+                x: dataX,
+                y: dataY,
+                xScale,
+                yScale,
+              });
 
-            const resolvedLabel = typeof s.label === 'function' ? s.label(dataX) : s.label;
+              const resolvedLabel = typeof s.label === 'function' ? s.label(dataIndex) : s.label;
 
-            return {
-              x: dataX,
-              y: dataY,
-              label: resolvedLabel,
-              pixelX: pixelPosition.x,
-              pixelY: pixelPosition.y,
-              targetSeries: s,
-            };
-          }) ?? []
+              return {
+                x: dataX,
+                y: dataY,
+                label: resolvedLabel,
+                pixelX: pixelPosition.x,
+                pixelY: pixelPosition.y,
+                targetSeries: s,
+              };
+            }
+          })
+          .filter((head) => head !== undefined) ?? []
       );
     }, [
       getXScale,
+      getXAxis,
       highlightedIndex,
       series,
       getStackedSeriesData,
@@ -447,7 +466,6 @@ export const Scrubber = memo<ScrubberProps>(
           labelConfig={scrubberLabelConfig}
         />
         {headPositions.map((scrubberHead) => {
-          console.log('scrubberHead', scrubberHead);
           if (!scrubberHead) return null;
           const adjustment = labelPositioning.adjustments.get(scrubberHead.targetSeries.id);
           const dotStroke = scrubberHead.targetSeries?.color || 'var(--color-fgPrimary)';
