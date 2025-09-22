@@ -107,8 +107,6 @@ export const ScrubberLine = memo<ScrubberLineProps>(
 
     if (pixelX === undefined) return null;
 
-    console.log('got pixel x', xValue, pixelX, dataIndex);
-
     return (
       <g data-testid={testID}>
         {!(hideOverlay ?? !isHovering) && (
