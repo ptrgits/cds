@@ -1,9 +1,9 @@
 import { forwardRef, memo, useImperativeHandle, useRef } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
 
-import { useScrubberContext } from './Chart';
-import { useChartContext } from './ChartContext';
-import { Point, type PointProps, type PointRef } from './point';
+import { useScrubberContext } from '../Chart';
+import { useChartContext } from '../ChartContext';
+import { Point, type PointProps, type PointRef } from '../point';
 
 export const dataKeyUpdateAnimationVariants = {
   initial: {

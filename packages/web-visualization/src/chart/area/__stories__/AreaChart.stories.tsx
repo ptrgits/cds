@@ -2,7 +2,7 @@ import { VStack } from '@coinbase/cds-web/layout';
 import { Text } from '@coinbase/cds-web/typography';
 
 import { DottedLine } from '../../line';
-import { Scrubber } from '../../Scrubber';
+import { Scrubber } from '../../scrubber/Scrubber';
 import { AreaChart } from '..';
 
 export default {

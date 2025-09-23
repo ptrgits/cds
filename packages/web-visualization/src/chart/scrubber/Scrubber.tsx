@@ -15,13 +15,18 @@ import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 
 import { m } from 'framer-motion';
 
-import { useScrubberContext } from './Chart';
-import { useChartContext } from './ChartContext';
-import { ScrubberHead, type ScrubberHeadProps, type ScrubberHeadRef } from './ScrubberHead';
-import { ScrubberHeadLabel, type ScrubberHeadLabelProps } from './ScrubberHeadLabel';
-import { ScrubberLine, type ScrubberLineProps } from './ScrubberLine';
-import { axisTickLabelsInitialAnimationVariants } from './axis';
-import type { PointProps } from './point';
+import { useScrubberContext } from '../Chart';
+import { useChartContext } from '../ChartContext';
+import {
+  ScrubberHead,
+  type ScrubberHeadProps,
+  type ScrubberHeadRef,
+  ScrubberHeadLabel,
+  type ScrubberHeadLabelProps,
+} from './';
+import { axisTickLabelsInitialAnimationVariants } from '../axis';
+import type { PointProps } from '../point';
+import { ReferenceLine, type ReferenceLineProps } from '../line';
 
 /**
  * Configuration for scrubber functionality across chart components.
@@ -50,12 +55,12 @@ export type ScrubberProps = SharedProps &
     /**
      * Label content for scrubber (shows above the scrubber line).
      */
-    scrubberLabel?: ScrubberLineProps['label'];
+    scrubberLabel?: ReferenceLineProps['label'];
 
     /**
      * Label configuration for the scrubber line label
      */
-    scrubberLabelConfig?: ScrubberLineProps['labelConfig'];
+    scrubberLabelConfig?: ReferenceLineProps['labelConfig'];
 
     /**
      * Custom styles for scrubber elements.
@@ -83,7 +88,7 @@ export type ScrubberProps = SharedProps &
     scrubberComponents?: {
       ScrubberHeadComponent?: React.ComponentType<ScrubberHeadProps>;
       ScrubberHeadLabelComponent?: React.ComponentType<ScrubberHeadLabelProps>;
-      ScrubberLineComponent?: React.ComponentType<ScrubberLineProps>;
+      ScrubberLineComponent?: React.ComponentType<ReferenceLineProps>;
     };
   };
 
@@ -141,13 +146,12 @@ export const Scrubber = memo(
         },
       }));
 
-      // TODO: forecast chart is broken
-      const headPositions = useMemo(() => {
+      const { dataX, dataIndex } = useMemo(() => {
         const xScale = getXScale() as ChartScaleFunction;
         const xAxis = getXAxis();
+        if (!xScale) return { dataX: undefined, dataIndex: undefined };
 
-        if (!xScale) return [];
-
+        // todo: can we store this in axis config?
         const maxDataLength =
           series?.reduce((max, s) => {
             const seriesData = getStackedSeriesData(s.id) || getSeriesData(s.id);
@@ -164,6 +168,15 @@ export const Scrubber = memo(
         } else {
           dataX = dataIndex;
         }
+
+        return { dataX, dataIndex };
+      }, [getXScale, getXAxis, highlightedIndex]);
+
+      // TODO: forecast chart is broken
+      const headPositions = useMemo(() => {
+        const xScale = getXScale() as ChartScaleFunction;
+
+        if (!xScale || dataX === undefined || dataIndex === undefined) return [];
 
         return (
           series
@@ -534,13 +547,15 @@ export const Scrubber = memo(
       if (!defaultXScale || !defaultYScale) return null;
 
       // Use custom components if provided
-      const ScrubberLineComponent = scrubberComponents?.ScrubberLineComponent ?? ScrubberLine;
+      const ScrubberLineComponent = scrubberComponents?.ScrubberLineComponent ?? ReferenceLine;
       const ScrubberHeadComponent = scrubberComponents?.ScrubberHeadComponent ?? ScrubberHead;
       const ScrubberHeadLabelComponent =
         scrubberComponents?.ScrubberHeadLabelComponent ?? ScrubberHeadLabel;
 
       // todo: figure out why scrubber heads across dataKey values isn't working anymore
       // for animations
+
+      const pixelX = dataX !== undefined ? defaultXScale(dataX) : undefined;
 
       // todo: figure out if we should disable 'pulse' animation when scrubbing
       return (
@@ -553,14 +568,29 @@ export const Scrubber = memo(
           initial="initial"
           variants={axisTickLabelsInitialAnimationVariants}
         >
-          <ScrubberLineComponent
-            hideOverlay={hideOverlay}
-            hideScrubberLine={hideScrubberLine}
-            label={scrubberLabel}
-            labelConfig={scrubberLabelConfig}
-            style={scrubberStyles?.scrubberLine}
-            className={scrubberClassNames?.scrubberLine}
-          />
+          {!hideOverlay &&
+            dataX !== undefined &&
+            highlightedIndex !== undefined &&
+            pixelX !== undefined && (
+              <rect
+                fill="var(--color-bg)"
+                height={rect.height}
+                opacity={0.8}
+                width={rect.x + rect.width - pixelX}
+                x={pixelX}
+                y={rect.y}
+              />
+            )}
+          {!hideScrubberLine && highlightedIndex !== undefined && dataX !== undefined && (
+            <ScrubberLineComponent
+              labelPosition="top"
+              dataX={dataX}
+              label={scrubberLabel}
+              labelConfig={scrubberLabelConfig}
+              style={scrubberStyles?.scrubberLine}
+              className={scrubberClassNames?.scrubberLine}
+            />
+          )}
           {headPositions.map((scrubberHead) => {
             if (!scrubberHead) return null;
             const adjustment = labelPositioning.adjustments.get(scrubberHead.targetSeries.id);

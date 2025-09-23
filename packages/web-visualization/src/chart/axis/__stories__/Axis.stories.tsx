@@ -5,7 +5,7 @@ import { Text } from '@coinbase/cds-web/typography';
 import { Chart } from '../../Chart';
 import { LineChart, SolidLine, type SolidLineProps } from '../../line';
 import { Line } from '../../line/Line';
-import { Scrubber } from '../../Scrubber';
+import { Scrubber } from '../../scrubber/Scrubber';
 import { XAxis, YAxis } from '..';
 
 export default {

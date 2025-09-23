@@ -26,7 +26,6 @@ import {
   PeriodSelector,
   PeriodSelectorActiveIndicator,
   Scrubber,
-  ScrubberLine,
   useChartContext,
 } from '../..';
 import { Area, type AreaComponentProps, DottedArea, GradientArea } from '../../area';
@@ -34,7 +33,7 @@ import { XAxis } from '../../axis';
 import { Chart } from '../../Chart';
 import { ChartHeader } from '../../ChartHeader';
 import { Point } from '../../point';
-import { ScrubberHead } from '../../ScrubberHead';
+import { ScrubberHead } from '../../scrubber/ScrubberHead';
 import { DottedLine, GradientLine, Line, LineChart, ReferenceLine, SolidLine } from '..';
 import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
 
@@ -577,13 +576,16 @@ export const BTCPriceChart = () => {
               />
             )}
           </AnimatePresence>
-          {/* TODO erich use scrubber component here? */}
-          <ScrubberLine label={displayDate} lineStroke="black" overlayColor={btcAccentColor} />
-          <ScrubberHead
+          <Scrubber
+            scrubberLabel={displayDate}
+            scrubberComponents={{
+              ScrubberLineComponent: ReferenceLine,
+            }}
+            scrubberStyles={{
+              scrubberLine: { stroke: 'black' },
+              scrubberHead: { stroke: 'white' },
+            }}
             pulse={!isHovering}
-            seriesId="price"
-            style={{ stroke: 'white' }}
-            {...(!isHovering ? latestPriceCoords : {})}
           />
         </Chart>
         <Box paddingX={{ phone: 2, tablet: 4, desktop: 4 }}>

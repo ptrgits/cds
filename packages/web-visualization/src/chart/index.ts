@@ -8,7 +8,5 @@ export * from './line';
 export * from './Path';
 export * from './PeriodSelector';
 export * from './point';
-export * from './Scrubber';
-export * from './ScrubberHead';
-export * from './ScrubberLine';
+export * from './scrubber';
 export * from './text';

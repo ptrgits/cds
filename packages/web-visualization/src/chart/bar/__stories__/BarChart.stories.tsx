@@ -6,12 +6,10 @@ import { Text } from '@coinbase/cds-web/typography';
 
 import { Chart, ScrubberContext } from '../..';
 import { XAxis, YAxis } from '../../axis';
-import { ChartHeader } from '../../ChartHeader';
 import { useChartContext } from '../../ChartContext';
 import { ReferenceLine, SolidLine, type SolidLineProps } from '../../line';
 import { PeriodSelector } from '../../PeriodSelector';
-import { Scrubber } from '../../Scrubber';
-import { ScrubberLine } from '../../ScrubberLine';
+import { Scrubber } from '../../scrubber';
 import { BarChart } from '../BarChart';
 import { BarPlot } from '../BarPlot';
 import { DefaultStackComponent, type StackComponentProps } from '../DefaultStackComponent';
@@ -417,7 +415,15 @@ const Candlesticks = () => {
         }}
       >
         {timePeriod.id === 'year' ? (
-          <ScrubberLine hideOverlay LineComponent={ThinSolidLine} />
+          <Scrubber
+            hideOverlay
+            scrubberComponents={{
+              ScrubberLineComponent: (props) => (
+                <ReferenceLine {...props} LineComponent={ThinSolidLine} />
+              ),
+            }}
+            seriesIds={[]}
+          />
         ) : (
           <ScrubberRect />
         )}

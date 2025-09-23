@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { projectPoint } from '@coinbase/cds-common/visualizations/charts';
 
@@ -11,6 +11,8 @@ import type { LineComponent } from './Line';
 
 /**
  * Configuration for ReferenceLine label rendering using ChartText.
+ * Note: The labelConfig styles and classNames will be merged with the top-level
+ * styles.text and classNames.text properties if both are provided.
  */
 export type ReferenceLineLabelConfig = Pick<
   ChartTextProps,
@@ -62,6 +64,40 @@ type BaseReferenceLineProps = SharedProps & {
    * Consolidates styling and positioning options for the ChartText component.
    */
   labelConfig?: ReferenceLineLabelConfig;
+  /**
+   * Custom class name for the root element.
+   */
+  className?: string;
+  /**
+   * Custom inline styles for the root element.
+   */
+  style?: React.CSSProperties;
+  /**
+   * Custom class names for the component parts.
+   */
+  classNames?: {
+    /**
+     * Custom class name for the root element.
+     */
+    root?: string;
+    /**
+     * Custom class name for the text label.
+     */
+    text?: string;
+  };
+  /**
+   * Custom styles for the component parts.
+   */
+  styles?: {
+    /**
+     * Custom styles for the root element.
+     */
+    root?: React.CSSProperties;
+    /**
+     * Custom styles for the text label.
+     */
+    text?: React.CSSProperties;
+  };
 };
 
 export type HorizontalReferenceLineProps = BaseReferenceLineProps & {
@@ -116,10 +152,14 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     LineComponent = DottedLine,
     lineStroke = 'var(--color-bgLine)',
     labelConfig,
+    className,
+    style,
+    classNames,
+    styles,
   }) => {
     const { width, height, rect, getXScale, getYScale } = useChartContext();
 
-    // Merge default config with user provided config
+    // Merge default config with user provided config, including text-specific styles and classNames
     const finalLabelConfig: ReferenceLineLabelConfig = useMemo(
       () => ({
         dominantBaseline: 'middle',
@@ -128,9 +168,25 @@ export const ReferenceLine = memo<ReferenceLineProps>(
         elevation: 0,
         padding: { top: 7.5, bottom: 7.5, left: 12, right: 12 },
         ...labelConfig,
+        // Merge classNames for text
+        classNames: {
+          ...labelConfig?.classNames,
+          ...(classNames?.text && { text: classNames.text }),
+        },
+        // Merge styles for text
+        styles: {
+          ...labelConfig?.styles,
+          ...(styles?.text && { text: styles.text }),
+        },
       }),
-      [labelConfig],
+      [labelConfig, classNames?.text, styles?.text],
     );
+
+    // Combine root classNames
+    const rootClassName = [className, classNames?.root].filter(Boolean).join(' ') || undefined;
+
+    // Combine root styles
+    const rootStyle = { ...style, ...styles?.root } as React.CSSProperties | undefined;
     // Horizontal reference line logic
     if (dataY !== undefined) {
       const yScale = getYScale?.(yAxisId);
@@ -157,7 +213,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
       if (yPixel === undefined) return null;
 
       return (
-        <g data-testid={testID}>
+        <g data-testid={testID} className={rootClassName} style={rootStyle}>
           <LineComponent
             disableAnimations
             d={`M${rect.x},${yPixel} L${rect.x + rect.width},${yPixel}`}
@@ -215,7 +271,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
       if (xPixel === undefined) return null;
 
       return (
-        <g data-testid={testID}>
+        <g data-testid={testID} className={rootClassName} style={rootStyle}>
           <LineComponent
             disableAnimations
             d={`M${xPixel},${rect.y} L${xPixel},${rect.y + rect.height}`}
