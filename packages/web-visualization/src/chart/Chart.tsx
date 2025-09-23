@@ -14,6 +14,7 @@ import {
   getStackedSeriesData as calculateStackedSeriesData,
   isBandScale,
   type Series,
+  defaultChartPadding,
 } from '@coinbase/cds-common/visualizations/charts';
 import { cx } from '@coinbase/cds-web';
 import { useDimensions } from '@coinbase/cds-web/hooks/useDimensions';
@@ -98,6 +99,7 @@ export type ChartBaseProps = BoxBaseProps & {
 
 export type ChartProps = Omit<BoxProps<'svg'>, 'padding'> & ChartBaseProps;
 
+// todo: get rid of overflow visible default to be consistent with mobile
 export const Chart = memo<ChartProps>(
   ({
     series,
@@ -116,7 +118,10 @@ export const Chart = memo<ChartProps>(
   }) => {
     const { observe, width: chartWidth, height: chartHeight } = useDimensions();
 
-    const userPadding = useMemo(() => getPadding(paddingInput), [paddingInput]);
+    const userPadding = useMemo(
+      () => getPadding(paddingInput, defaultChartPadding),
+      [paddingInput],
+    );
 
     const xAxisConfig = useMemo(() => getAxisConfig('x', xAxisConfigInput), [xAxisConfigInput]);
     const yAxisConfig = useMemo(() => getAxisConfig('y', yAxisConfigInput), [yAxisConfigInput]);
@@ -358,7 +363,7 @@ export const Chart = memo<ChartProps>(
 
         const isBand = isBandScale(defaultXScale as any);
         const categories = isBand
-          ? defaultXScale.domain?.() ?? (defaultXAxis.data as string[] | undefined)
+          ? (defaultXScale.domain?.() ?? (defaultXAxis.data as string[] | undefined))
           : (defaultXAxis.data as string[] | undefined);
         const domain = defaultXAxis.domain;
         const minIndex = isBand ? 0 : (domain.min ?? 0);

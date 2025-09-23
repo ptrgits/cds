@@ -916,7 +916,7 @@ export const PriceChart = () => {
         dataKey={dataKey}
         height={defaultChartHeight}
         onScrubberPosChange={onScrubberPosChange}
-        padding={{ left: 0, right: 24, bottom: 24, top: 24 }}
+        padding={{ left: 10, right: 24, bottom: 24, top: 24 }}
         series={[
           {
             id: 'price',
@@ -949,7 +949,7 @@ export const PriceChart = () => {
         ]}
         yAxis={{ domainLimit: 'strict' }}
       >
-        <Scrubber scrubberLabel={computedScrubberLabel} seriesIds={['price']} />
+        <Scrubber scrubberLabel={computedScrubberLabel} pulse />
       </LineChart>
       <PeriodSelector activeTab={activeTab} onChange={(tab) => setActiveTab(tab)} tabs={tabs} />
     </VStack>
@@ -1050,8 +1050,8 @@ export const ForecastChart = () => {
       onScrubberPosChange={onScrubberPosChange}
       padding={{
         top: 32,
-        left: 0,
-        right: 0,
+        left: 10,
+        right: 10,
         bottom: 0,
       }}
       series={[

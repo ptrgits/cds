@@ -18,6 +18,7 @@ import {
   getStackedSeriesData as calculateStackedSeriesData,
   isBandScale,
   type Series,
+  defaultChartPadding,
 } from '@coinbase/cds-common/visualizations/charts';
 import { useLayout } from '@coinbase/cds-mobile/hooks/useLayout';
 import { Box } from '@coinbase/cds-mobile/layout';
@@ -132,7 +133,10 @@ export const Chart = memo<ChartProps>(
     const chartWidth = typeof width === 'number' ? width : containerLayout.width;
     const chartHeight = typeof height === 'number' ? height : containerLayout.height;
 
-    const userPadding = useMemo(() => getPadding(paddingInput), [paddingInput]);
+    const userPadding = useMemo(
+      () => getPadding(paddingInput, defaultChartPadding),
+      [paddingInput],
+    );
 
     const xAxisConfig = useMemo(() => getAxisConfig('x', xAxisConfigInput), [xAxisConfigInput]);
     const yAxisConfig = useMemo(() => getAxisConfig('y', yAxisConfigInput), [yAxisConfigInput]);
