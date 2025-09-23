@@ -1,26 +1,39 @@
 ## Basic Example
 
-todo: talk about how charts work. Talk about how they are an SVG with helpful components / functions to be used.
+Scrubber can be used to provide horizontal interaction with a chart. As your mouse hovers over the chart, you will see a vertical reference line and scrubber head following your cursor.
 
 ```jsx live
 <LineChart
-  height={400}
+  enableScrubbing
+  height={250}
   series={[
     {
-      id: 'pageViews',
-      data: [24, 13, 98, 39, 48, 38, 43],
+      id: 'prices',
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
     },
   ]}
+  curve="monotone"
   showYAxis
+  showArea
   yAxis={{
     showGrid: true,
   }}
-/>
+>
+  <Scrubber />
+</LineChart>
 ```
 
 ## Multiple Series
 
-## Imperative Handle
+## Labels
+
+### Reference Line Label
+
+### Scrubber Head Labels
+
+## Pulsing
+
+### With Imperative Handle
 
 ```jsx live
 function ImperativeHandle() {
@@ -79,3 +92,40 @@ function ImperativeHandle() {
   );
 }
 ```
+
+### Customization
+
+### Disable Overlay When Scrubbing
+
+By default, the scrubber will show an overlay to de-emphasize future data. You can hide this by setting the `hideOverlay` prop to `true`.
+
+```jsx live
+<LineChart
+  enableScrubbing
+  height={250}
+  series={[
+    {
+      id: 'prices',
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
+    },
+  ]}
+  curve="monotone"
+  showYAxis
+  showArea
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Scrubber hideOverlay />
+</LineChart>
+```
+
+### Colors
+
+Talk about howe you can customize the colors of the scrubber heads.
+
+### Partial Series
+
+Showcase an example where we only scrub a subset of series.
+
+You can even use this to show no scrubber heads at all.
