@@ -585,6 +585,11 @@ const sidebars: SidebarsConfig = {
             },
             {
               type: 'doc',
+              id: 'components/graphs/Scrubber/scrubber',
+              label: 'Scrubber',
+            },
+            {
+              type: 'doc',
               id: 'components/graphs/Sparkline/sparkline',
               label: 'Sparkline',
             },
