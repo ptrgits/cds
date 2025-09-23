@@ -80,7 +80,7 @@ module.exports = {
     'chart/axis/YAxis',
     'chart/point/Point',
     'chart/text/ChartText',
-    'chart/Scrubber',
+    'chart/scrubber/Scrubber',
     'chips/Chip',
     'chips/InputChip',
     'chips/SelectChip',
