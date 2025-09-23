@@ -12,8 +12,14 @@ import { PeriodSelector } from '../../PeriodSelector';
 import { Scrubber } from '../../scrubber';
 import { BarChart } from '../BarChart';
 import { BarPlot } from '../BarPlot';
-import { DefaultStackComponent, type StackComponentProps } from '../DefaultStackComponent';
-import { Bar, type BarComponentProps, btcCandles, DefaultBar } from '..';
+import {
+  Bar,
+  type BarComponentProps,
+  btcCandles,
+  DefaultBar,
+  DefaultStack,
+  type DefaultStackProps,
+} from '..';
 
 export default {
   title: 'Components/Chart/BarChart',
@@ -141,7 +147,7 @@ const MonthlyRewards = () => {
     { id: 'green', data: green, color: '#33c481' },
   ];
 
-  const CustomStackComponent = ({ children, ...props }: StackComponentProps) => {
+  const CustomStackComponent = ({ children, ...props }: DefaultStackProps) => {
     if (props.height === 0) {
       const diameter = props.width;
       return (
@@ -158,7 +164,7 @@ const MonthlyRewards = () => {
       );
     }
 
-    return <DefaultStackComponent {...props}>{children}</DefaultStackComponent>;
+    return <DefaultStack {...props}>{children}</DefaultStack>;
   };
 
   return (

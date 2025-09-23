@@ -5,7 +5,7 @@ import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
 import type { BarComponentProps } from './Bar';
 
-export type SolidBarProps = SharedProps &
+export type DefaultBarProps = SharedProps &
   BarComponentProps & {
     /**
      * The fill color of the bar.
@@ -15,9 +15,9 @@ export type SolidBarProps = SharedProps &
   };
 
 /**
- * A customizable solid bar component which uses path element.
+ * Default bar component that renders a solid bar with animation.
  */
-export const SolidBar = memo<SolidBarProps>(
+export const DefaultBar = memo<DefaultBarProps>(
   ({
     d,
     fill,

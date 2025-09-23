@@ -9,7 +9,7 @@ import { useChartContext } from '../ChartContext';
 import type { BarComponent, BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
 import { BarStackGroup } from './BarStackGroup';
-import type { StackComponent } from './DefaultStackComponent';
+import type { StackComponent } from './DefaultStack';
 
 export type BarPlotProps = {
   /**

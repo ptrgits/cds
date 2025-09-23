@@ -347,14 +347,7 @@ export const Chart = memo<ChartProps>(
           onScrubberPosChange?.(dataIndex);
         }
       },
-      [
-        enableScrubbing,
-        series,
-        xScales,
-        getDataIndexFromX,
-        highlightedIndex,
-        onScrubberPosChange,
-      ],
+      [enableScrubbing, series, xScales, getDataIndexFromX, highlightedIndex, onScrubberPosChange],
     );
 
     const handleInteractionEnd = useCallback(() => {

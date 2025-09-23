@@ -6,7 +6,7 @@ import { useChartContext } from '../ChartContext';
 
 import { Bar, type BarComponent, type BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
-import { DefaultStackComponent, type StackComponent } from './DefaultStackComponent';
+import { DefaultStack, type StackComponent } from './DefaultStack';
 
 // todo: simplify props by reusing from other types
 export type BarStackProps = {
@@ -65,7 +65,7 @@ export type BarStackProps = {
   /**
    * Custom component to render the stack container.
    * Can be used to add clip paths, outlines, or other custom styling.
-   * @default DefaultStackComponent
+   * @default DefaultStack
    */
   StackComponent?: StackComponent;
   /**
@@ -105,7 +105,7 @@ export const BarStack = memo<BarStackProps>(
     stroke: defaultStroke,
     strokeWidth: defaultStrokeWidth,
     borderRadius,
-    StackComponent = DefaultStackComponent,
+    StackComponent = DefaultStack,
     stackGap,
     barMinSize,
     stackMinSize,

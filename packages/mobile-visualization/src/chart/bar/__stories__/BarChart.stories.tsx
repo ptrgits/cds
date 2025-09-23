@@ -9,7 +9,7 @@ import { ReferenceLine, SolidLine, type SolidLineProps } from '../../line';
 import { Bar } from '../Bar';
 import { BarChart } from '../BarChart';
 import { BarPlot } from '../BarPlot';
-import { DefaultStackComponent, type StackComponentProps } from '../DefaultStackComponent';
+import { DefaultStack, type DefaultStackProps } from '../DefaultStack';
 
 const ThinSolidLine = memo((props: SolidLineProps) => <SolidLine {...props} strokeWidth={1} />);
 
@@ -118,7 +118,7 @@ const MonthlyRewards = () => {
     { id: 'green', data: green, color: '#33c481' },
   ];
 
-  const CustomStackComponent = ({ children, ...props }: StackComponentProps) => {
+  const CustomStackComponent = ({ children, ...props }: DefaultStackProps) => {
     if (props.height === 0) {
       const diameter = props.width;
       return (
@@ -136,7 +136,7 @@ const MonthlyRewards = () => {
       );
     }
 
-    return <DefaultStackComponent {...props}>{children}</DefaultStackComponent>;
+    return <DefaultStack {...props}>{children}</DefaultStack>;
   };
 
   return (

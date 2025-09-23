@@ -53,7 +53,7 @@ export type StackComponentBaseProps = {
   yOrigin?: number;
 };
 
-export type StackComponentProps = StackComponentBaseProps & {
+export type DefaultStackProps = StackComponentBaseProps & {
   /**
    * Custom class name for the stack group.
    */
@@ -64,52 +64,62 @@ export type StackComponentProps = StackComponentBaseProps & {
   style?: React.CSSProperties;
 };
 
-export type StackComponent = React.FC<StackComponentProps>;
+export type StackComponent = React.FC<StackComponentBaseProps>;
 
 /**
  * Default stack component that renders children in a group with animated clip path.
  */
-export const DefaultStackComponent = memo<StackComponentProps>(function DefaultStackComponent({
-  children,
-  className,
-  style,
-  width,
-  height,
-  x,
-  y,
-  borderRadius = 100,
-  roundTop = true,
-  roundBottom = true,
-  disableAnimations,
-  yOrigin,
-}) {
-  const theme = useTheme();
-  const clipPathId = useRef(generateRandomId()).current;
+export const DefaultStack = memo<DefaultStackProps>(
+  ({
+    children,
+    className,
+    style,
+    width,
+    height,
+    x,
+    y,
+    borderRadius = 100,
+    roundTop = true,
+    roundBottom = true,
+    disableAnimations,
+    yOrigin,
+  }) => {
+    const theme = useTheme();
+    const clipPathId = useRef(generateRandomId()).current;
 
-  const clipPathData = useMemo(() => {
-    return getBarPath(x, y, width, height, theme.borderRadius[borderRadius], roundTop, roundBottom);
-  }, [x, y, width, height, theme.borderRadius, borderRadius, roundTop, roundBottom]);
+    const clipPathData = useMemo(() => {
+      return getBarPath(
+        x,
+        y,
+        width,
+        height,
+        theme.borderRadius[borderRadius],
+        roundTop,
+        roundBottom,
+      );
+    }, [x, y, width, height, theme.borderRadius, borderRadius, roundTop, roundBottom]);
 
-  const initialClipPathData = useMemo(() => {
-    return getBarPath(
-      x,
-      yOrigin ?? y + height,
-      width,
-      1,
-      theme.borderRadius[borderRadius],
-      roundTop,
-      roundBottom,
+    const initialClipPathData = useMemo(() => {
+      return getBarPath(
+        x,
+        yOrigin ?? y + height,
+        width,
+        1,
+        theme.borderRadius[borderRadius],
+        roundTop,
+        roundBottom,
+      );
+    }, [x, yOrigin, y, height, width, theme.borderRadius, borderRadius, roundTop, roundBottom]);
+
+    return (
+      <>
+        <Defs>
+          <ClipPath id={clipPathId}>
+            <Path d={clipPathData} />
+          </ClipPath>
+        </Defs>
+        <G clipPath={`url(#${clipPathId})`}>{children}</G>
+      </>
     );
-  }, [x, yOrigin, y, height, width, theme.borderRadius, borderRadius, roundTop, roundBottom]);
-
-  return (
-    <>
-      <Defs>
-        <ClipPath id={clipPathId}>
-          <Path d={clipPathData} />
-        </ClipPath>
-      </Defs>
-      <G clipPath={`url(#${clipPathId})`}>{children}</G>
-    </>
-  );
-});
+  },
+);

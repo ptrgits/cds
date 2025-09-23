@@ -7,7 +7,7 @@ import { useChartContext } from '../ChartContext';
 
 import { Bar, type BarComponent, type BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
-import { DefaultStackComponent, type StackComponent } from './DefaultStackComponent';
+import { DefaultStackComponent, type StackComponent } from './DefaultStack';
 
 // todo: simplify props by reusing from other types
 export type BarStackProps = {
