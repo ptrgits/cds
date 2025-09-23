@@ -327,98 +327,145 @@ export const Scrubber = memo(
         // After collision resolution, ensure all labels are within bounds
         const labelIds = Array.from(adjustments.keys());
 
-        // Check if any labels are outside bounds and need adjustment
-        const outOfBounds = labelIds.filter((id) => {
-          const adjustment = adjustments.get(id)!;
-          const dim = sortedDimensions.find((d) => d.id === id)!;
-          const labelTop = adjustment.y - dim.height / 2;
-          const labelBottom = adjustment.y + dim.height / 2;
+        // Group labels that are close together or overlapping
+        // This prevents distant labels from being unnecessarily shifted
+        const findConnectedGroups = () => {
+          const groups: string[][] = [];
+          const visited = new Set<string>();
 
-          return labelTop < rect.y || labelBottom > rect.y + rect.height;
-        });
+          for (const id of labelIds) {
+            if (visited.has(id)) continue;
 
-        if (outOfBounds.length > 0) {
-          // Get all labels sorted by their preferred Y position (not current)
-          const allLabels = labelIds
-            .map((id) => ({
-              id,
-              dim: sortedDimensions.find((d) => d.id === id)!,
-              preferredY: sortedDimensions.find((d) => d.id === id)!.preferredY,
-              currentY: adjustments.get(id)!.y,
-            }))
-            .sort((a, b) => a.preferredY - b.preferredY);
+            const group: string[] = [id];
+            visited.add(id);
+            const queue = [id];
 
-          // Calculate total height needed
-          const totalLabelHeight = allLabels.reduce((sum, label) => sum + label.dim.height, 0);
-          const totalGaps = (allLabels.length - 1) * minGap;
-          const totalNeeded = totalLabelHeight + totalGaps;
+            while (queue.length > 0) {
+              const currentId = queue.shift()!;
+              const currentAdjustment = adjustments.get(currentId)!;
+              const currentDim = sortedDimensions.find((d) => d.id === currentId)!;
 
-          if (totalNeeded > rect.height) {
-            // Not enough space - use compressed equal spacing as fallback
-            const compressedGap = Math.max(
-              2,
-              (rect.height - totalLabelHeight) / Math.max(1, allLabels.length - 1),
-            );
-            let currentY = rect.y + allLabels[0].dim.height / 2;
+              // Check if this label overlaps or is close to any other unvisited label
+              for (const otherId of labelIds) {
+                if (visited.has(otherId)) continue;
 
-            for (const label of allLabels) {
-              adjustments.set(label.id, {
-                ...adjustments.get(label.id)!,
-                y: currentY,
-              });
+                const otherAdjustment = adjustments.get(otherId)!;
+                const otherDim = sortedDimensions.find((d) => d.id === otherId)!;
 
-              currentY += label.dim.height + compressedGap;
-            }
-          } else {
-            // Enough space - use minimal displacement algorithm
-            // Start with preferred positions and adjust minimally
-            const finalPositions = [...allLabels];
+                // Calculate distance between labels
+                const distance = Math.abs(currentAdjustment.y - otherAdjustment.y);
+                const minDistance = (currentDim.height + otherDim.height) / 2 + minGap * 2;
 
-            // Ensure minimum spacing between adjacent labels
-            for (let i = 1; i < finalPositions.length; i++) {
-              const prev = finalPositions[i - 1];
-              const current = finalPositions[i];
-
-              // Calculate minimum Y position for current label
-              const minCurrentY =
-                prev.preferredY + prev.dim.height / 2 + minGap + current.dim.height / 2;
-
-              if (current.preferredY < minCurrentY) {
-                // Need to push this label down
-                current.preferredY = minCurrentY;
+                // Labels are considered connected if they're close enough to potentially overlap
+                if (distance <= minDistance) {
+                  visited.add(otherId);
+                  group.push(otherId);
+                  queue.push(otherId);
+                }
               }
             }
 
-            // Check if the group fits within bounds, if not shift the entire group
-            const groupTop = finalPositions[0].preferredY - finalPositions[0].dim.height / 2;
-            const groupBottom =
-              finalPositions[finalPositions.length - 1].preferredY +
-              finalPositions[finalPositions.length - 1].dim.height / 2;
+            groups.push(group);
+          }
 
-            let shiftAmount = 0;
+          return groups;
+        };
 
-            if (groupTop < rect.y) {
-              // Group is too high, shift down
-              shiftAmount = rect.y - groupTop;
-            } else if (groupBottom > rect.y + rect.height) {
-              // Group is too low, shift up
-              shiftAmount = rect.y + rect.height - groupBottom;
-            }
+        const connectedGroups = findConnectedGroups();
 
-            // Apply final positions with shift
-            for (const label of finalPositions) {
-              const finalY = label.preferredY + shiftAmount;
+        // Process each connected group independently
+        for (const groupIds of connectedGroups) {
+          // Check if any labels in this group are outside bounds
+          const groupOutOfBounds = groupIds.some((id) => {
+            const adjustment = adjustments.get(id)!;
+            const dim = sortedDimensions.find((d) => d.id === id)!;
+            const labelTop = adjustment.y - dim.height / 2;
+            const labelBottom = adjustment.y + dim.height / 2;
+            return labelTop < rect.y || labelBottom > rect.y + rect.height;
+          });
 
-              // Final bounds check for individual labels
-              const clampedY = Math.max(
-                rect.y + label.dim.height / 2,
-                Math.min(rect.y + rect.height - label.dim.height / 2, finalY),
+          if (groupOutOfBounds) {
+            // Get labels in this group sorted by their preferred Y position
+            const groupLabels = groupIds
+              .map((id) => ({
+                id,
+                dim: sortedDimensions.find((d) => d.id === id)!,
+                preferredY: sortedDimensions.find((d) => d.id === id)!.preferredY,
+                currentY: adjustments.get(id)!.y,
+              }))
+              .sort((a, b) => a.preferredY - b.preferredY);
+
+            // Calculate total height needed for this group
+            const totalLabelHeight = groupLabels.reduce((sum, label) => sum + label.dim.height, 0);
+            const totalGaps = (groupLabels.length - 1) * minGap;
+            const totalNeeded = totalLabelHeight + totalGaps;
+
+            if (totalNeeded > rect.height) {
+              // Not enough space - use compressed equal spacing as fallback
+              const compressedGap = Math.max(
+                2,
+                (rect.height - totalLabelHeight) / Math.max(1, groupLabels.length - 1),
               );
+              let currentY = rect.y + groupLabels[0].dim.height / 2;
 
-              adjustments.set(label.id, {
-                ...adjustments.get(label.id)!,
-                y: clampedY,
-              });
+              for (const label of groupLabels) {
+                adjustments.set(label.id, {
+                  ...adjustments.get(label.id)!,
+                  y: currentY,
+                });
+
+                currentY += label.dim.height + compressedGap;
+              }
+            } else {
+              // Enough space - use minimal displacement algorithm for this group
+              const finalPositions = [...groupLabels];
+
+              // Ensure minimum spacing between adjacent labels in this group
+              for (let i = 1; i < finalPositions.length; i++) {
+                const prev = finalPositions[i - 1];
+                const current = finalPositions[i];
+
+                // Calculate minimum Y position for current label
+                const minCurrentY =
+                  prev.preferredY + prev.dim.height / 2 + minGap + current.dim.height / 2;
+
+                if (current.preferredY < minCurrentY) {
+                  // Need to push this label down
+                  current.preferredY = minCurrentY;
+                }
+              }
+
+              // Check if this specific group fits within bounds, if not shift only this group
+              const groupTop = finalPositions[0].preferredY - finalPositions[0].dim.height / 2;
+              const groupBottom =
+                finalPositions[finalPositions.length - 1].preferredY +
+                finalPositions[finalPositions.length - 1].dim.height / 2;
+
+              let shiftAmount = 0;
+
+              if (groupTop < rect.y) {
+                // Group is too high, shift down
+                shiftAmount = rect.y - groupTop;
+              } else if (groupBottom > rect.y + rect.height) {
+                // Group is too low, shift up
+                shiftAmount = rect.y + rect.height - groupBottom;
+              }
+
+              // Apply final positions with shift only to this group
+              for (const label of finalPositions) {
+                const finalY = label.preferredY + shiftAmount;
+
+                // Final bounds check for individual labels
+                const clampedY = Math.max(
+                  rect.y + label.dim.height / 2,
+                  Math.min(rect.y + rect.height - label.dim.height / 2, finalY),
+                );
+
+                adjustments.set(label.id, {
+                  ...adjustments.get(label.id)!,
+                  y: clampedY,
+                });
+              }
             }
           }
         }
