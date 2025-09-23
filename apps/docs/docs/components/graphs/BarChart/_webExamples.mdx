@@ -491,7 +491,7 @@ function GradientBars() {
       return (
         <>
           {linearGradient}
-          <SolidBar {...props} fill={`url(#${gradientId})`} />
+          <DefaultBar {...props} fill={`url(#${gradientId})`} />
         </>
       );
     });

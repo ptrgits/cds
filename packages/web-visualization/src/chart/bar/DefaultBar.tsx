@@ -5,12 +5,12 @@ import { m as motion, type MotionProps } from 'framer-motion';
 
 import type { BarComponentProps } from './Bar';
 
-export type SolidBarProps = BarComponentProps;
+export type DefaultBarProps = BarComponentProps;
 
 /**
  * Default bar component that renders a solid bar with animation.
  */
-export const SolidBar = memo<SolidBarProps>(
+export const DefaultBar = memo<DefaultBarProps>(
   ({
     x,
     width,

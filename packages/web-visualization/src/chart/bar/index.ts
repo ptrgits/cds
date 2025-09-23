@@ -5,4 +5,4 @@ export * from './BarStack';
 export * from './BarStackGroup';
 export * from './data';
 export * from './DefaultStackComponent';
-export * from './SolidBar';
+export * from './DefaultBar';

@@ -4,7 +4,7 @@ import type { ThemeVars } from '@coinbase/cds-common';
 import { createRoundedRectPath } from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-web';
 
-import { SolidBar } from './SolidBar';
+import { DefaultBar } from './';
 
 export type BarComponentProps = {
   /**
@@ -167,7 +167,7 @@ export const Bar = memo<BarProps>(
     originY,
     dataX,
     dataY,
-    BarComponent: CustomBarComponent,
+    BarComponent = DefaultBar,
     fill = 'var(--color-fgPrimary)',
     fillOpacity = 1,
     disableAnimations,
@@ -187,8 +187,6 @@ export const Bar = memo<BarProps>(
     const barPath = useMemo(() => {
       return createRoundedRectPath(x, y, width, height, borderRadiusPixels, roundTop, roundBottom);
     }, [x, y, width, height, borderRadiusPixels, roundTop, roundBottom]);
-
-    const BarComponent = CustomBarComponent || SolidBar;
 
     const effectiveOriginY = originY ?? y + height;
 

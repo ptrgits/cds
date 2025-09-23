@@ -13,8 +13,7 @@ import { Scrubber } from '../../scrubber';
 import { BarChart } from '../BarChart';
 import { BarPlot } from '../BarPlot';
 import { DefaultStackComponent, type StackComponentProps } from '../DefaultStackComponent';
-import { SolidBar } from '../SolidBar';
-import { Bar, type BarComponentProps, btcCandles } from '..';
+import { Bar, type BarComponentProps, btcCandles, DefaultBar } from '..';
 
 export default {
   title: 'Components/Chart/BarChart',
@@ -220,7 +219,7 @@ const GradientBars = () => {
     return (
       <>
         {linearGradient}
-        <SolidBar {...props} fill={`url(#${gradientId})`} />
+        <DefaultBar {...props} fill={`url(#${gradientId})`} />
       </>
     );
   });
