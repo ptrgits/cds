@@ -3,9 +3,11 @@ import type { SharedProps } from '@coinbase/cds-common/types';
 
 import { useChartContext } from '../ChartContext';
 import { Path, type PathProps } from '../Path';
+import type { LineComponentProps } from './Line';
 
 export type DottedLineProps = SharedProps &
-  Omit<PathProps, 'fill'> & {
+  Omit<PathProps, 'fill' | 'strokeWidth'> &
+  Pick<LineComponentProps, 'strokeWidth'> & {
     fill?: SVGProps<SVGPathElement>['fill'];
   };
 
@@ -39,6 +41,7 @@ export const DottedLine = memo<DottedLineProps>(
         strokeLinejoin={strokeLinejoin}
         strokeOpacity={strokeOpacity}
         strokeWidth={strokeWidth}
+        clipOffset={strokeWidth}
         vectorEffect={vectorEffect}
         {...props}
       />

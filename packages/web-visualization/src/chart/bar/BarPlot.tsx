@@ -69,7 +69,7 @@ export type BarPlotProps = {
   /**
    * Custom component to render the stack container.
    * Can be used to add clip paths, outlines, or other custom styling.
-   * @default DefaultStackComponent
+   * @default DefaultStack
    */
   StackComponent?: StackComponent;
 };

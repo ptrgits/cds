@@ -34,13 +34,23 @@ import { Chart } from '../../Chart';
 import { ChartHeader } from '../../ChartHeader';
 import { Point } from '../../point';
 import { ScrubberHead } from '../../scrubber/ScrubberHead';
-import { DottedLine, GradientLine, Line, LineChart, ReferenceLine, SolidLine } from '..';
+import {
+  DottedLine,
+  GradientLine,
+  Line,
+  LineChart,
+  ReferenceLine,
+  SolidLine,
+  type SolidLineProps,
+} from '..';
 import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
 
 export default {
   component: LineChart,
   title: 'Components/Chart/LineChart',
 };
+
+const ThinSolidLine = memo((props: SolidLineProps) => <SolidLine {...props} strokeWidth={1} />);
 
 const defaultChartHeight = 400;
 
@@ -1267,6 +1277,7 @@ export const DataFormat = () => {
           showLine: true,
           showTickMarks: true,
           showGrid: true,
+          GridLineComponent: ThinSolidLine,
         }}
         showYAxis
         yAxis={{
@@ -1275,9 +1286,10 @@ export const DataFormat = () => {
           showLine: true,
           showTickMarks: true,
           showGrid: true,
+          GridLineComponent: ThinSolidLine,
         }}
       >
-        <Scrubber />
+        <Scrubber hideOverlay />
       </LineChart>
       <LineChart
         enableScrubbing
@@ -1298,6 +1310,7 @@ export const DataFormat = () => {
           showLine: true,
           showTickMarks: true,
           showGrid: true,
+          GridLineComponent: ThinSolidLine,
         }}
         showYAxis
         yAxis={{
@@ -1306,9 +1319,10 @@ export const DataFormat = () => {
           showLine: true,
           showTickMarks: true,
           showGrid: true,
+          GridLineComponent: ThinSolidLine,
         }}
       >
-        <Scrubber />
+        <Scrubber hideOverlay />
       </LineChart>
       <LineChart
         enableScrubbing
@@ -1329,6 +1343,7 @@ export const DataFormat = () => {
           showLine: true,
           showTickMarks: true,
           showGrid: true,
+          GridLineComponent: ThinSolidLine,
         }}
         showYAxis
         yAxis={{
@@ -1337,10 +1352,11 @@ export const DataFormat = () => {
           showLine: true,
           showTickMarks: true,
           showGrid: true,
+          GridLineComponent: ThinSolidLine,
         }}
       >
-        <Scrubber />
-      </LineChart>{' '}
+        <Scrubber hideOverlay />
+      </LineChart>
       <LineChart
         enableScrubbing
         series={[
@@ -1360,6 +1376,7 @@ export const DataFormat = () => {
           showLine: true,
           showTickMarks: true,
           showGrid: true,
+          GridLineComponent: ThinSolidLine,
         }}
         showYAxis
         yAxis={{
@@ -1368,9 +1385,10 @@ export const DataFormat = () => {
           showLine: true,
           showTickMarks: true,
           showGrid: true,
+          GridLineComponent: ThinSolidLine,
         }}
       >
-        <Scrubber />
+        <Scrubber hideOverlay />
       </LineChart>
     </VStack>
   );

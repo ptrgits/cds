@@ -4,9 +4,11 @@ import { generateRandomId } from '@coinbase/cds-utils';
 
 import { useChartContext } from '../ChartContext';
 import { Path, type PathProps } from '../Path';
+import type { LineComponentProps } from './Line';
 
 export type GradientLineProps = SharedProps &
-  Omit<PathProps, 'stroke' | 'strokeOpacity'> & {
+  Omit<PathProps, 'stroke' | 'strokeOpacity' | 'strokeWidth'> &
+  Pick<LineComponentProps, 'strokeWidth'> & {
     /**
      * The color of the line.
      * @default 'var(--color-bgLine)'
@@ -79,6 +81,7 @@ export const GradientLine = memo<GradientLineProps>(
           strokeLinejoin={strokeLinejoin}
           strokeOpacity={strokeOpacity}
           strokeWidth={strokeWidth}
+          clipOffset={strokeWidth}
           {...props}
         />
       </>
