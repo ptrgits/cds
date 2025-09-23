@@ -49,11 +49,6 @@ export const getAreaPath = ({
 
   const yDomain = yScale.domain();
   const yMin = Math.min(...yDomain);
-  const yMax = Math.max(...yDomain);
-
-  const clampY = (value: number): number => {
-    return Math.max(yMin, Math.min(yMax, value));
-  };
 
   const normalizedData: Array<[number, number] | null> = data.map((item, index) => {
     if (item === null) {
@@ -62,13 +57,13 @@ export const getAreaPath = ({
 
     if (Array.isArray(item)) {
       if (item.length >= 2 && typeof item[0] === 'number' && typeof item[1] === 'number') {
-        return [clampY(item[0]), clampY(item[1])];
+        return [item[0], item[1]];
       }
       return null;
     }
 
     if (typeof item === 'number') {
-      return [yMin, clampY(item)];
+      return [yMin, item];
     }
 
     return null;
@@ -86,10 +81,7 @@ export const getAreaPath = ({
 
     let xValue: number = index;
     if (!isBandScale(xScale) && xData && xData[index] !== undefined) {
-      const xDomain = xScale.domain();
-      const xMin = Math.min(...xDomain);
-      const xMax = Math.max(...xDomain);
-      xValue = Math.max(xMin, Math.min(xMax, xData[index]));
+      xValue = xData[index];
     }
 
     const xPoint = projectPoint({ x: xValue, y: 0, xScale, yScale });

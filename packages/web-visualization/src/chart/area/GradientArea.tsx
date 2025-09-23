@@ -43,7 +43,6 @@ export const GradientArea = memo<GradientAreaProps>(
     peakOpacity = 0.3,
     baselineOpacity = 0,
     disableAnimations,
-    clipRect,
     yAxisId,
     ...pathProps
   }) => {
@@ -134,7 +133,6 @@ export const GradientArea = memo<GradientAreaProps>(
           </linearGradient>
         </defs>
         <Path
-          clipRect={clipRect}
           d={d}
           disableAnimations={
             disableAnimations !== undefined ? disableAnimations : context.disableAnimations

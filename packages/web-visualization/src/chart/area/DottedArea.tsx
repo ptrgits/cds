@@ -6,8 +6,8 @@ import { Path, type PathProps } from '../Path';
 
 import type { AreaComponentProps } from './Area';
 
-export type DottedAreaProps = Omit<PathProps, 'd' | 'fill' | 'fillOpacity'> &
-  AreaComponentProps & {
+export type DottedAreaProps = Omit<PathProps, 'd' | 'fill' | 'fillOpacity' | 'clipRect'> &
+  Omit<AreaComponentProps, 'clipRect'> & {
     /**
      * Size of the pattern unit (width and height).
      * @default 4
@@ -85,7 +85,6 @@ export const DottedArea = memo<DottedAreaProps>(
     classNames,
     styles,
     disableAnimations,
-    clipRect,
     ...pathProps
   }) => {
     const context = useChartContext();
@@ -184,12 +183,17 @@ export const DottedArea = memo<DottedAreaProps>(
             )}
           </linearGradient>
           <mask id={maskIdRef.current}>
-            <Path d={d} fill={`url(#${gradientIdRef.current})`} disableAnimations={true} />
+            <Path 
+              d={d} 
+              fill={`url(#${gradientIdRef.current})`} 
+              disableAnimations={
+                disableAnimations !== undefined ? disableAnimations : context.disableAnimations
+              } 
+            />
           </mask>
         </defs>
         <Path
           className={classNames?.path}
-          clipRect={clipRect}
           d={d}
           disableAnimations={
             disableAnimations !== undefined ? disableAnimations : context.disableAnimations
