@@ -2,5 +2,5 @@
 ### Run `yarn codeowners` to update
 
 # FROM ./OWNERS
-#~ {"path":".","teams":{"@frontend/ui-systems-eng-team":{"required_reviews":1}}}
-. @frontend/ui-systems-eng-team
+#~ {"path":".","teams":{"@coinbase/ui-systems-eng-team":{"required_reviews":1}}}
+. @coinbase/ui-systems-eng-team
