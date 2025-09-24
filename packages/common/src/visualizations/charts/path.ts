@@ -1,5 +1,5 @@
-import { area as d3Area, line as d3Line } from 'd3-shape';
 import {
+  area as d3Area,
   curveBumpX,
   curveCatmullRom,
   curveLinear,
@@ -9,10 +9,11 @@ import {
   curveStep,
   curveStepAfter,
   curveStepBefore,
+  line as d3Line,
 } from 'd3-shape';
 
-import { projectPoint, projectPoints } from './getPoints';
-import { type ChartScaleFunction, isBandScale } from './scale';
+import { type ChartScaleFunction, isCategoricalScale } from './scale';
+import { projectPoint, projectPoints } from './';
 
 // todo: see if we can support basis, basisClosed, and basisOpen
 
@@ -171,7 +172,7 @@ export const getAreaPath = ({
     }
 
     let xValue: number = index;
-    if (!isBandScale(xScale) && xData && xData[index] !== undefined) {
+    if (!isCategoricalScale(xScale) && xData && xData[index] !== undefined) {
       xValue = xData[index];
     }
 

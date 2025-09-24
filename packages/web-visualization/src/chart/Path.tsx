@@ -4,12 +4,14 @@ import React, { memo, useCallback, useEffect, useRef } from 'react';
 import type { SVGProps } from 'react';
 import { useValueChanges } from '@coinbase/cds-common/hooks/useValueChanges';
 import type { Rect, SharedProps } from '@coinbase/cds-common/types';
+import {
+  useChartContext,
+  useChartDrawingAreaContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import { generateRandomId } from '@coinbase/cds-utils';
 import { interpolatePath } from 'd3-interpolate-path';
 import { select } from 'd3-selection';
 import { m } from 'framer-motion';
-
-import { useChartContext } from './ChartContext';
 
 export type PathProps = SharedProps &
   Omit<
@@ -28,9 +30,9 @@ export type PathProps = SharedProps &
     | 'onDragStartCapture'
   > & {
     /**
-     * Whether to disable animations for this path.
+     * Whether to animate this path. Overrides the animate prop on the Chart component.
      */
-    disableAnimations?: boolean;
+    animate?: boolean;
     /**
      * Custom clip path rect. If provided, this overrides the default chart rect for clipping.
      */
@@ -42,11 +44,13 @@ export type PathProps = SharedProps &
   };
 
 export const Path = memo<PathProps>(
-  ({ disableAnimations, clipRect, clipOffset = 0, d = '', ...pathProps }) => {
+  ({ animate: animateProp, clipRect, clipOffset = 0, d = '', ...pathProps }) => {
     const pathRef = useRef<SVGPathElement>(null);
     const clipPathIdRef = useRef<string>(generateRandomId());
-    const { rect: contextRect } = useChartContext();
+    const context = useChartContext();
+    const { drawingArea: contextRect } = useChartDrawingAreaContext();
     const rect = clipRect ?? contextRect;
+    const animate = animateProp ?? context.animate;
 
     // todo: do we need useValueChanges?
     const {
@@ -70,10 +74,10 @@ export const Path = memo<PathProps>(
     useEffect(() => {
       addPreviousValue(newPath);
 
-      if (!disableAnimations && hasChanged && previousPath) {
+      if (animate && hasChanged && previousPath) {
         morphPath();
       }
-    }, [addPreviousValue, newPath, disableAnimations, hasChanged, previousPath, morphPath]);
+    }, [addPreviousValue, newPath, animate, hasChanged, previousPath, morphPath]);
 
     // The clip offset provides extra padding to prevent path from being cut off
     // Area charts typically use offset=0 for exact clipping, while lines use offset=2 for breathing room
@@ -83,7 +87,7 @@ export const Path = memo<PathProps>(
       <>
         <defs>
           <clipPath id={clipPathIdRef.current}>
-            {disableAnimations ? (
+            {!animate ? (
               <rect
                 height={rect.height + totalOffset}
                 width={rect.width + totalOffset}

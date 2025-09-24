@@ -1,9 +1,11 @@
 import React, { memo, useMemo, useRef } from 'react';
 import type { ThemeVars } from '@coinbase/cds-common';
-import { defaultAxisId } from '@coinbase/cds-common/visualizations/charts';
+import {
+  defaultAxisId,
+  useChartContext,
+  useChartDrawingAreaContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import { generateRandomId } from '@coinbase/cds-utils';
-
-import { useChartContext } from '../ChartContext';
 
 import type { BarComponent, BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
@@ -34,10 +36,6 @@ export type BarPlotProps = {
    * Default opacity of the bar.
    */
   fillOpacity?: number;
-  /**
-   * Disable animations for the bars.
-   */
-  disableAnimations?: boolean;
   /**
    * Default stroke color for the bar outline.
    */
@@ -87,7 +85,6 @@ export const BarPlot = memo<BarPlotProps>(
     barPadding = 0.1,
     BarComponent: defaultBarComponent,
     fillOpacity: defaultFillOpacity,
-    disableAnimations,
     stroke: defaultStroke,
     strokeWidth: defaultStrokeWidth,
     borderRadius: defaultBorderRadius,
@@ -97,12 +94,13 @@ export const BarPlot = memo<BarPlotProps>(
     barMinSize,
     stackMinSize,
   }) => {
-    const { series: allSeries, rect } = useChartContext();
+    const { series: allSeries } = useChartContext();
+    const { drawingArea } = useChartDrawingAreaContext();
     const clipPathId = useRef(generateRandomId()).current;
 
     const targetSeries = useMemo(() => {
       const seriesToRender: BarSeries[] =
-        (series ?? allSeries)?.filter((s) => (s.xAxisId ?? defaultAxisId) === xAxisId) ?? [];
+        (series ?? allSeries)?.filter((s: any) => (s.xAxisId ?? defaultAxisId) === xAxisId) ?? [];
 
       return seriesToRender;
     }, [allSeries, series, xAxisId]);
@@ -140,7 +138,7 @@ export const BarPlot = memo<BarPlotProps>(
       return Array.from(groups.values());
     }, [targetSeries]);
 
-    if (!rect) {
+    if (!drawingArea) {
       return null;
     }
 
@@ -148,7 +146,12 @@ export const BarPlot = memo<BarPlotProps>(
       <>
         <defs>
           <clipPath id={clipPathId}>
-            <rect height={rect.height} width={rect.width} x={rect.x} y={rect.y} />
+            <rect
+              height={drawingArea.height}
+              width={drawingArea.width}
+              x={drawingArea.x}
+              y={drawingArea.y}
+            />
           </clipPath>
         </defs>
         <g clipPath={`url(#${clipPathId})`}>
@@ -160,7 +163,6 @@ export const BarPlot = memo<BarPlotProps>(
               barMinSize={barMinSize}
               barPadding={barPadding}
               borderRadius={defaultBorderRadius}
-              disableAnimations={disableAnimations}
               fillOpacity={defaultFillOpacity}
               roundBaseline={roundBaseline}
               series={group.series}

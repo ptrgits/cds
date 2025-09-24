@@ -1,13 +1,12 @@
 import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import type { SVGProps } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import { projectPoint } from '@coinbase/cds-common/visualizations/charts';
+import { projectPoint, useChartContext } from '@coinbase/cds-common/visualizations/charts';
 import { cx } from '@coinbase/cds-web';
 import { css } from '@linaria/core';
 import { m as motion, useAnimate } from 'framer-motion';
 
 import { useScrubberContext } from '../Chart';
-import { useChartContext } from '../ChartContext';
 import { ChartText, type ChartTextProps } from '../text';
 import type { ChartTextChildren } from '../text/ChartText';
 
@@ -305,7 +304,7 @@ export const Point = memo(
       ref,
     ) => {
       const [scope, animate] = useAnimate();
-      const { getXScale, getYScale } = useChartContext();
+      const { getXScale, getYScale, animate: animateContext } = useChartContext();
       const { highlightedIndex } = useScrubberContext();
       const [isHovered, setIsHovered] = useState(false);
 
@@ -353,7 +352,8 @@ export const Point = memo(
 
       const effectiveHover = isScrubbing ? isScrubberHighlighted : isHovered;
 
-      const shouldShowPulse = pulse || (hoverEffect === 'pulse' && effectiveHover);
+      const shouldShowPulse =
+        animateContext && (pulse || (hoverEffect === 'pulse' && effectiveHover));
 
       const containerStyle = {
         ...styles?.container,
@@ -396,7 +396,7 @@ export const Point = memo(
           ...styles?.innerPoint,
         };
 
-        return hoverEffect === 'scale' ? (
+        return hoverEffect === 'scale' && animateContext ? (
           <motion.circle
             animate={
               effectiveHover
@@ -455,6 +455,7 @@ export const Point = memo(
         pixelCoordinate.y,
         color,
         hoverEffect,
+        animateContext,
         effectiveHover,
         radius,
         className,
@@ -478,7 +479,7 @@ export const Point = memo(
             data-testid={testID}
             opacity={opacity}
             style={containerStyle}
-            whileTap={{ scale: 0.9 }}
+            whileTap={animateContext ? { scale: 0.9 } : undefined}
           >
             {/* pulse ring */}
             <motion.circle

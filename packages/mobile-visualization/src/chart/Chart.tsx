@@ -7,27 +7,26 @@ import type { Rect } from '@coinbase/cds-common/types';
 import {
   type AxisConfig,
   type AxisConfigProps,
+  ChartContext,
+  type ChartContextValue,
+  ChartDrawingAreaContext,
+  type ChartDrawingAreaContextValue,
   type ChartPadding,
   type ChartScaleFunction,
   defaultAxisId,
+  defaultChartPadding,
   getAxisConfig,
   getAxisDomain,
   getAxisRange,
   getAxisScale,
   getPadding,
   getStackedSeriesData as calculateStackedSeriesData,
-  isBandScale,
+  isCategoricalScale,
+  type RegisteredAxis,
   type Series,
 } from '@coinbase/cds-common/visualizations/charts';
 import { useLayout } from '@coinbase/cds-mobile/hooks/useLayout';
 import { Box } from '@coinbase/cds-mobile/layout';
-
-import { ChartContext, type ChartContextValue } from './ChartContext';
-import {
-  ChartDrawingAreaContext,
-  type ChartDrawingAreaContextValue,
-  type RegisteredAxis,
-} from './ChartDrawingAreaContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -64,9 +63,10 @@ export type ChartBaseProps = {
    */
   children?: React.ReactNode;
   /**
-   * Prevents default animations on the chart.
+   * Whether to animate the chart.
+   * @default true
    */
-  disableAnimations?: boolean;
+  animate?: boolean;
   /**
    * Disables all highlighting interactions (pan gestures).
    * When true, no highlighting will occur and scrubber components won't be interactive.
@@ -111,7 +111,7 @@ export type ChartProps = ChartBaseProps;
 export const Chart = memo<ChartProps>(
   ({
     series,
-    disableAnimations,
+    animate = true,
     disableHighlighting,
     xAxis: xAxisConfigInput,
     yAxis: yAxisConfigInput,
@@ -129,7 +129,10 @@ export const Chart = memo<ChartProps>(
     const chartWidth = typeof width === 'number' ? width : containerLayout.width;
     const chartHeight = typeof height === 'number' ? height : containerLayout.height;
 
-    const userPadding = useMemo(() => getPadding(paddingInput), [paddingInput]);
+    const userPadding = useMemo(
+      () => getPadding(paddingInput, defaultChartPadding),
+      [paddingInput],
+    );
 
     const xAxisConfig = useMemo(() => getAxisConfig('x', xAxisConfigInput), [xAxisConfigInput]);
     const yAxisConfig = useMemo(() => getAxisConfig('y', yAxisConfigInput), [yAxisConfigInput]);
@@ -285,7 +288,7 @@ export const Chart = memo<ChartProps>(
 
         if (!defaultXScale || !defaultXAxis) return 0;
 
-        if (isBandScale(defaultXScale)) {
+        if (isCategoricalScale(defaultXScale)) {
           const categories = defaultXAxis.data ?? [];
           const bandwidth = defaultXScale.bandwidth?.() ?? 0;
           let closestIndex = 0;
@@ -360,15 +363,6 @@ export const Chart = memo<ChartProps>(
       onHighlightChange?.(null);
     }, [disableHighlighting, onHighlightChange]);
 
-    // Legacy touch handlers (kept for compatibility, but pan gesture is preferred)
-    const handleTouchStart = useCallback(() => {
-      // Pan gesture handles all touch interactions now
-    }, []);
-
-    const handleTouchEnd = useCallback(() => {
-      // Pan gesture handles all touch interactions now
-    }, []);
-
     const highlightContextValue: HighlightContextValue = useMemo(
       () => ({
         highlightedIndex,
@@ -381,8 +375,6 @@ export const Chart = memo<ChartProps>(
     const getYAxis = useCallback((id?: string) => yAxes.get(id ?? defaultAxisId), [yAxes]);
     const getXScale = useCallback((id?: string) => xScales.get(id ?? defaultAxisId), [xScales]);
     const getYScale = useCallback((id?: string) => yScales.get(id ?? defaultAxisId), [yScales]);
-    const getDefaultXAxis = useCallback(() => xAxes.get(defaultAxisId), [xAxes]);
-    const getDefaultYAxis = useCallback(() => yAxes.get(defaultAxisId), [yAxes]);
     const getSeries = useCallback(
       (seriesId?: string) => series?.find((s) => s.id === seriesId),
       [series],
@@ -394,15 +386,6 @@ export const Chart = memo<ChartProps>(
       return calculateStackedSeriesData(series);
     }, [series]);
 
-    const getSeriesData = useCallback(
-      (seriesId?: string) => {
-        if (!seriesId) return undefined;
-        const s = series?.find((ser) => ser.id === seriesId);
-        return s?.data;
-      },
-      [series],
-    );
-
     const getStackedSeriesData = useCallback(
       (seriesId?: string) => {
         if (!seriesId) return undefined;
@@ -413,48 +396,28 @@ export const Chart = memo<ChartProps>(
 
     const contextValue: ChartContextValue = useMemo(
       () => ({
-        series,
-        stackedDataMap,
+        series: series ?? [],
         getSeries,
-        getSeriesData,
-        getStackedSeriesData,
-        disableAnimations,
-        xAxes,
-        yAxes,
-        xScales,
-        yScales,
-        padding: userPadding,
-        rect: chartRect,
+        getSeriesData: getStackedSeriesData,
+        animate,
         width: chartWidth,
         height: chartHeight,
         getXAxis,
         getYAxis,
         getXScale,
         getYScale,
-        getDefaultXAxis,
-        getDefaultYAxis,
       }),
       [
         series,
         getSeries,
-        getSeriesData,
         getStackedSeriesData,
-        stackedDataMap,
-        disableAnimations,
-        xAxes,
-        yAxes,
-        xScales,
-        yScales,
-        userPadding,
-        chartRect,
+        animate,
         chartWidth,
         chartHeight,
         getXAxis,
         getYAxis,
         getXScale,
         getYScale,
-        getDefaultXAxis,
-        getDefaultYAxis,
       ],
     );
 
@@ -548,11 +511,12 @@ export const Chart = memo<ChartProps>(
 
     const chartDrawingAreaContextValue: ChartDrawingAreaContextValue = useMemo(
       () => ({
+        drawingArea: chartRect,
         registerAxis,
         unregisterAxis,
         getAxisBounds,
       }),
-      [registerAxis, unregisterAxis, getAxisBounds], // These functions are stable
+      [chartRect, registerAxis, unregisterAxis, getAxisBounds], // These functions are stable
     );
 
     // Pan gesture for chart highlighting and scrubbing

@@ -1,8 +1,11 @@
 import React, { memo, useMemo } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import { projectPoint } from '@coinbase/cds-common/visualizations/charts';
+import {
+  getPointOnScale,
+  useChartContext,
+  useChartDrawingAreaContext,
+} from '@coinbase/cds-common/visualizations/charts';
 
-import { useChartContext } from '../ChartContext';
 import { ChartText } from '../text';
 import type { ChartTextChildren, ChartTextProps } from '../text/ChartText';
 
@@ -157,7 +160,8 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     classNames,
     styles,
   }) => {
-    const { width, height, rect, getXScale, getYScale } = useChartContext();
+    const { getXScale, getYScale } = useChartContext();
+    const { drawingArea } = useChartDrawingAreaContext();
 
     // Merge default config with user provided config, including text-specific styles and classNames
     const finalLabelConfig: ReferenceLineLabelConfig = useMemo(
@@ -198,15 +202,16 @@ export const ReferenceLine = memo<ReferenceLineProps>(
 
       const yPixel = yScale(dataY);
 
+      // todo: adjust these to potentially couple with label position and offset for smarter defaults
       const getLabelX = () => {
         switch (labelPosition as 'left' | 'center' | 'right') {
           case 'left':
-            return rect.x + 8;
+            return drawingArea.x + 8;
           case 'center':
-            return (rect.x + rect.x + rect.width) / 2;
+            return drawingArea.x + drawingArea.width / 2;
           case 'right':
           default:
-            return rect.x + rect.width - 5;
+            return drawingArea.x + drawingArea.width - 5;
         }
       };
 
@@ -215,8 +220,8 @@ export const ReferenceLine = memo<ReferenceLineProps>(
       return (
         <g className={rootClassName} data-testid={testID} style={rootStyle}>
           <LineComponent
-            disableAnimations
-            d={`M${rect.x},${yPixel} L${rect.x + rect.width},${yPixel}`}
+            animate={false}
+            d={`M${drawingArea.x},${yPixel} L${drawingArea.x + drawingArea.width},${yPixel}`}
             stroke={stroke}
           />
           {label && (
@@ -238,33 +243,23 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     // Vertical reference line logic
     if (dataX !== undefined) {
       const xScale = getXScale?.(xAxisId);
-      // We need a y scale for projectPoint, but we only care about the x coordinate
-      // so we can use any available y scale
-      const yScale = getYScale?.();
 
       // Don't render if we don't have scales
-      if (!xScale || !yScale) {
+      if (!xScale) {
         return null;
       }
 
-      // Use projectPoint to handle both numeric and band scales properly
-      const pixelCoord = projectPoint({
-        x: dataX,
-        y: 0, // We only care about x, so y can be any value
-        xScale,
-        yScale,
-      });
-      const xPixel = pixelCoord.x;
+      const xPixel = getPointOnScale(dataX, xScale);
 
       const getLabelY = () => {
         switch (labelPosition as 'top' | 'center' | 'bottom') {
           case 'top':
             return 0;
           case 'center':
-            return height / 2;
+            return drawingArea.y + drawingArea.height / 2;
           case 'bottom':
           default:
-            return height - 24;
+            return drawingArea.y + drawingArea.height - 24;
         }
       };
 
@@ -273,8 +268,8 @@ export const ReferenceLine = memo<ReferenceLineProps>(
       return (
         <g className={rootClassName} data-testid={testID} style={rootStyle}>
           <LineComponent
-            disableAnimations
-            d={`M${xPixel},${rect.y} L${xPixel},${rect.y + rect.height}`}
+            animate={false}
+            d={`M${xPixel},${drawingArea.y} L${xPixel},${drawingArea.y + drawingArea.height}`}
             stroke={stroke}
           />
           {label && (

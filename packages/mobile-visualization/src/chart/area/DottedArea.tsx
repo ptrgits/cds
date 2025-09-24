@@ -1,10 +1,10 @@
 import React, { memo, useRef } from 'react';
 import { Circle, Defs, G, Pattern } from 'react-native-svg';
+import { useChartContext } from '@coinbase/cds-common/visualizations/charts';
 import { useSparklineAreaOpacity } from '@coinbase/cds-common/visualizations/useSparklineAreaOpacity';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 import { generateRandomId } from '@coinbase/cds-utils';
 
-import { useChartContext } from '../ChartContext';
 import { Path, type PathProps } from '../Path';
 
 import type { AreaComponentProps } from './Area';
@@ -30,11 +30,9 @@ export const DottedArea = memo<DottedAreaProps>(
     // todo: fillOpacity, fix this opacity, default is normally 1 but we want useSparklineAreaOpacity
     patternSize = 4,
     dotSize = 1,
-    disableAnimations,
     clipRect,
     ...pathProps
   }) => {
-    const context = useChartContext();
     const { activeColorScheme } = useTheme();
     const patternIdRef = useRef<string>(generateRandomId());
 
@@ -63,15 +61,7 @@ export const DottedArea = memo<DottedAreaProps>(
             />
           </Pattern>
         </Defs>
-        <Path
-          clipRect={clipRect}
-          d={d}
-          disableAnimations={
-            disableAnimations !== undefined ? disableAnimations : context.disableAnimations
-          }
-          fill={`url(#${patternIdRef.current})`}
-          {...pathProps}
-        />
+        <Path clipRect={clipRect} d={d} fill={`url(#${patternIdRef.current})`} {...pathProps} />
       </G>
     );
   },

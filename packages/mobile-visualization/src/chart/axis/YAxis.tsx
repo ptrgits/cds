@@ -1,11 +1,14 @@
 import React, { memo, useCallback, useEffect, useId, useMemo } from 'react';
 import { G, Line } from 'react-native-svg';
 import type { ThemeVars } from '@coinbase/cds-common';
-import { getAxisTicksData, isBandScale } from '@coinbase/cds-common/visualizations/charts';
+import {
+  getAxisTicksData,
+  isCategoricalScale,
+  useChartContext,
+  useChartDrawingAreaContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
-import { useChartContext } from '../ChartContext';
-import { useChartDrawingAreaContext } from '../ChartDrawingAreaContext';
 import { DottedLine } from '../line';
 import { ReferenceLine } from '../line/ReferenceLine';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
@@ -37,7 +40,6 @@ export const YAxis = memo<YAxisProps>(
     classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 1,
-    disableAnimations,
     dataKey,
     size = 44,
     minTickLabelGap = 0,
@@ -50,14 +52,12 @@ export const YAxis = memo<YAxisProps>(
     const theme = useTheme();
     // todo: probably switch to our own id generator, use id seems to be for accessibility
     const registrationId = useId();
-    const context = useChartContext();
+    const { animate, getYScale, getYAxis } = useChartContext();
     const { registerAxis, unregisterAxis, getAxisBounds } = useChartDrawingAreaContext();
-    const { getYScale, getYAxis } = context;
 
     const yScale = getYScale?.(axisId);
     const yAxis = getYAxis?.(axisId);
 
-    const shouldDisableAnimations = disableAnimations ?? context.disableAnimations;
     const axisBounds = getAxisBounds(registrationId);
 
     // Define axis styling using theme
@@ -117,7 +117,7 @@ export const YAxis = memo<YAxisProps>(
       let categories: string[] | undefined;
       if (hasStringLabels) {
         categories = axisData as string[];
-      } else if (isBandScale(yScale)) {
+      } else if (isCategoricalScale(yScale)) {
         // For band scales without explicit string data, generate numeric categories
         // based on the domain of the scale
         const domain = yScale.domain();

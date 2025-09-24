@@ -1,13 +1,15 @@
-import React, { memo, useCallback, useEffect, useId, useMemo } from 'react';
-import type { ThemeVars } from '@coinbase/cds-common';
-import { getAxisTicksData, isBandScale } from '@coinbase/cds-common/visualizations/charts';
+import { memo, useCallback, useEffect, useId, useMemo } from 'react';
+import {
+  getAxisTicksData,
+  isCategoricalScale,
+  useChartContext,
+  useChartDrawingAreaContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import { cx } from '@coinbase/cds-web';
 import { useTheme } from '@coinbase/cds-web/hooks/useTheme';
 import { css } from '@linaria/core';
 import { AnimatePresence, m as motion } from 'framer-motion';
 
-import { useChartContext } from '../ChartContext';
-import { useChartDrawingAreaContext } from '../ChartDrawingAreaContext';
 import { DottedLine } from '../line';
 import { ReferenceLine } from '../line/ReferenceLine';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
@@ -52,7 +54,6 @@ export const YAxis = memo<YAxisProps>(
     classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 1,
-    disableAnimations,
     dataKey,
     size = 44,
     minTickLabelGap = 0,
@@ -65,14 +66,12 @@ export const YAxis = memo<YAxisProps>(
     const theme = useTheme();
     // todo: probably switch to our own id generator, use id seems to be for accessibility
     const registrationId = useId();
-    const context = useChartContext();
+    const { animate, getYScale, getYAxis } = useChartContext();
     const { registerAxis, unregisterAxis, getAxisBounds } = useChartDrawingAreaContext();
-    const { getYScale, getYAxis } = context;
 
     const yScale = getYScale?.(axisId);
     const yAxis = getYAxis?.(axisId);
 
-    const shouldDisableAnimations = disableAnimations ?? context.disableAnimations;
     const axisBounds = getAxisBounds(registrationId);
 
     useEffect(() => {
@@ -113,7 +112,7 @@ export const YAxis = memo<YAxisProps>(
       let categories: string[] | undefined;
       if (hasStringLabels) {
         categories = axisData as string[];
-      } else if (isBandScale(yScale)) {
+      } else if (isCategoricalScale(yScale)) {
         // For band scales without explicit string data, generate numeric categories
         // based on the domain of the scale
         const domain = yScale.domain();
@@ -189,9 +188,7 @@ export const YAxis = memo<YAxisProps>(
                 />
               );
 
-              return shouldDisableAnimations ? (
-                <g key={`grid-${tick.tick}-${index}-${dataKey}`}>{horizontalLine}</g>
-              ) : (
+              return animate ? (
                 <motion.g
                   key={`grid-${tick.tick}-${index}-${dataKey}`}
                   animate="animate"
@@ -201,6 +198,8 @@ export const YAxis = memo<YAxisProps>(
                 >
                   {horizontalLine}
                 </motion.g>
+              ) : (
+                <g key={`grid-${tick.tick}-${index}-${dataKey}`}>{horizontalLine}</g>
               );
             })}
           </AnimatePresence>
@@ -211,10 +210,7 @@ export const YAxis = memo<YAxisProps>(
               animate="animate"
               exit="exit"
               initial="initial"
-              variants={
-                // TODO may not need this animation anymore since ChartText fades themselves in
-                shouldDisableAnimations ? undefined : axisTickLabelsInitialAnimationVariants
-              }
+              variants={animate ? axisTickLabelsInitialAnimationVariants : undefined}
             >
               {/* TODO pass through styles */}
               <SmartChartTextGroup

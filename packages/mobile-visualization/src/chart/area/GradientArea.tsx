@@ -1,9 +1,9 @@
 import React, { memo, useRef } from 'react';
 import { Defs, LinearGradient, Stop } from 'react-native-svg';
+import { useChartContext } from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 import { generateRandomId } from '@coinbase/cds-utils';
 
-import { useChartContext } from '../ChartContext';
 import { Path, type PathProps } from '../Path';
 
 import type { AreaComponentProps } from './Area';
@@ -42,7 +42,6 @@ export const GradientArea = memo<GradientAreaProps>(
     endColor,
     startOpacity = 0.4 * fillOpacity,
     endOpacity = 0,
-    disableAnimations,
     clipRect,
     ...pathProps
   }) => {
@@ -60,15 +59,7 @@ export const GradientArea = memo<GradientAreaProps>(
             <Stop offset="100%" stopColor={endColor ?? effectiveFill} stopOpacity={endOpacity} />
           </LinearGradient>
         </Defs>
-        <Path
-          clipRect={clipRect}
-          d={d}
-          disableAnimations={
-            disableAnimations !== undefined ? disableAnimations : context.disableAnimations
-          }
-          fill={`url(#${patternIdRef.current})`}
-          {...pathProps}
-        />
+        <Path clipRect={clipRect} d={d} fill={`url(#${patternIdRef.current})`} {...pathProps} />
       </>
     );
   },

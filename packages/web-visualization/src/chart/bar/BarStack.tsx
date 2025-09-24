@@ -1,9 +1,8 @@
 import React, { memo, useMemo } from 'react';
 import type { ThemeVars } from '@coinbase/cds-common';
 import type { Rect } from '@coinbase/cds-common/types';
+import { useChartContext } from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-web';
-
-import { useChartContext } from '../ChartContext';
 
 import { Bar, type BarComponent, type BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
@@ -53,10 +52,6 @@ export type BarStackProps = {
    * Default opacity of the bar.
    */
   fillOpacity?: number;
-  /**
-   * Disable animations for the bars.
-   */
-  disableAnimations?: boolean;
   /**
    * Default stroke color for the bar outline.
    */
@@ -109,7 +104,6 @@ export const BarStack = memo<BarStackProps>(
     yAxisId,
     BarComponent: defaultBarComponent,
     fillOpacity: defaultFillOpacity,
-    disableAnimations,
     stroke: defaultStroke,
     strokeWidth: defaultStrokeWidth,
     borderRadius,
@@ -120,7 +114,7 @@ export const BarStack = memo<BarStackProps>(
     roundBaseline,
   }) => {
     const theme = useTheme();
-    const { getStackedSeriesData, getSeriesData, getXAxis } = useChartContext();
+    const { getSeriesData, getXAxis } = useChartContext();
 
     const stackGapPx = stackGap ? theme.space[stackGap] : 0;
     const barMinSizePx = barMinSize ? theme.space[barMinSize] : 0;
@@ -151,7 +145,6 @@ export const BarStack = memo<BarStackProps>(
         fillOpacity?: number;
         stroke?: string;
         strokeWidth?: number;
-        disableAnimations?: boolean;
         borderRadius?: BarProps['borderRadius'];
         roundTop?: boolean;
         roundBottom?: boolean;
@@ -168,13 +161,13 @@ export const BarStack = memo<BarStackProps>(
 
       // Process each series in the stack
       series.forEach((s) => {
-        const data = getStackedSeriesData(s.id);
+        const data = getSeriesData(s.id);
         if (!data) return;
 
         const value = data[categoryIndex];
         if (value === null || value === undefined) return;
 
-        const originalData = getSeriesData(s.id);
+        const originalData = s.data;
         const originalValue = originalData?.[categoryIndex];
         // Only apply gap logic if the original data wasn't tuple format
         const shouldApplyGap = !Array.isArray(originalValue);
@@ -237,7 +230,6 @@ export const BarStack = memo<BarStackProps>(
           fillOpacity: s.fillOpacity,
           stroke: s.stroke,
           strokeWidth: s.strokeWidth,
-          disableAnimations: s.disableAnimations,
           // Pass context data for custom components
           roundTop: roundBaseline || barTop !== baseline,
           roundBottom: roundBaseline || barBottom !== baseline,
@@ -545,7 +537,6 @@ export const BarStack = memo<BarStackProps>(
       series,
       x,
       width,
-      getStackedSeriesData,
       getSeriesData,
       categoryIndex,
       roundBaseline,
@@ -568,7 +559,6 @@ export const BarStack = memo<BarStackProps>(
         borderRadius={borderRadius}
         dataX={dataX}
         dataY={bar.dataY}
-        disableAnimations={bar.disableAnimations ?? disableAnimations}
         fill={bar.fill}
         fillOpacity={bar.fillOpacity ?? defaultFillOpacity}
         height={bar.height}
@@ -590,7 +580,6 @@ export const BarStack = memo<BarStackProps>(
       <StackComponent
         borderRadius={borderRadius}
         categoryIndex={categoryIndex}
-        disableAnimations={disableAnimations}
         height={stackRect.height}
         roundBottom={stackRoundBottom}
         roundTop={stackRoundTop}

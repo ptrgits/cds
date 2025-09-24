@@ -1,10 +1,10 @@
 import React, { memo, useMemo } from 'react';
 import type { SVGProps } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import { getLinePath, type ChartPathCurveType } from '@coinbase/cds-common/visualizations/charts';
+import { type ChartPathCurveType, getLinePath } from '@coinbase/cds-common/visualizations/charts';
+import { useChartContext } from '@coinbase/cds-common/visualizations/charts';
 
 import { Area, type AreaComponent } from '../area';
-import { useChartContext } from '../ChartContext';
 import { Point, type PointConfig, type RenderPointsParams } from '../point/Point';
 
 import { DottedLine } from './DottedLine';
@@ -15,9 +15,9 @@ export type LineComponentProps = {
   d: SVGProps<SVGPathElement>['d'];
   stroke: string;
   strokeOpacity?: number;
-  disableAnimations?: boolean;
   strokeWidth?: number;
   testID?: string;
+  animate?: boolean;
 };
 
 export type LineComponent = React.FC<LineComponentProps>;
@@ -71,11 +71,6 @@ export type LineProps = SharedProps & {
    */
   opacity?: number;
   /**
-   * Disable animations for the line.
-   * Overrides the disableAnimations prop on the Chart component.
-   */
-  disableAnimations?: boolean;
-  /**
    * Callback function to determine how to render points at each data point in the series.
    * Called for every entry in the data array.
    *
@@ -99,22 +94,20 @@ export const Line = memo<LineProps>(
     LineComponent: SelectedLineComponent,
     AreaComponent,
     opacity = 1,
-    disableAnimations,
     renderPoints,
     ...props
   }) => {
-    const { getSeries, getSeriesData, getXScale, getYScale, getXAxis, getStackedSeriesData } =
-      useChartContext();
+    const { getSeries, getSeriesData, getXScale, getYScale, getXAxis } = useChartContext();
 
     const matchedSeries = getSeries(seriesId);
 
     const sourceData = useMemo(() => {
-      const stackedData = getStackedSeriesData(seriesId);
+      const stackedData = getSeriesData(seriesId);
       if (stackedData) {
         return stackedData;
       }
       return getSeriesData(seriesId) || null;
-    }, [seriesId, getSeriesData, getStackedSeriesData]);
+    }, [seriesId, getSeriesData]);
 
     const xScale = getXScale?.(matchedSeries?.xAxisId);
     const yScale = getYScale?.(matchedSeries?.yAxisId);
@@ -126,10 +119,10 @@ export const Line = memo<LineProps>(
       if (!sourceData) return [];
 
       // Check if this is stacked data (array of tuples)
-      const firstNonNull = sourceData.find((d) => d !== null);
+      const firstNonNull = sourceData.find((d: any) => d !== null);
       if (Array.isArray(firstNonNull)) {
         // Extract actual values from [baseline, value] tuples
-        return sourceData.map((d) => {
+        return sourceData.map((d: any) => {
           if (d === null) return null;
           if (Array.isArray(d)) return d[1];
           return d as number;
@@ -200,20 +193,13 @@ export const Line = memo<LineProps>(
           <Area
             AreaComponent={AreaComponent}
             curve={curve}
-            disableAnimations={disableAnimations}
             fill={stroke}
             fillOpacity={opacity}
             seriesId={seriesId}
             type={areaType}
           />
         )}
-        <LineComponent
-          d={path}
-          disableAnimations={disableAnimations}
-          stroke={stroke}
-          strokeOpacity={opacity}
-          {...props}
-        />
+        <LineComponent d={path} stroke={stroke} strokeOpacity={opacity} {...props} />
         {renderPoints &&
           chartData.map((value, index) => {
             if (value === null) {

@@ -1,7 +1,7 @@
 import React, { memo, useRef } from 'react';
+import { useChartContext } from '@coinbase/cds-common/visualizations/charts';
 import { generateRandomId } from '@coinbase/cds-utils';
 
-import { useChartContext } from '../ChartContext';
 import { Path, type PathProps } from '../Path';
 
 import type { AreaComponentProps } from './Area';
@@ -84,7 +84,7 @@ export const DottedArea = memo<DottedAreaProps>(
     yAxisId,
     classNames,
     styles,
-    disableAnimations,
+    animate,
     ...pathProps
   }) => {
     const context = useChartContext();
@@ -153,8 +153,8 @@ export const DottedArea = memo<DottedAreaProps>(
             <circle cx={dotCenterPosition} cy={dotCenterPosition} fill={fill} r={dotSize} />
           </pattern>
           <linearGradient
-            id={gradientIdRef.current}
             gradientUnits={useUserSpaceUnits ? 'userSpaceOnUse' : 'objectBoundingBox'}
+            id={gradientIdRef.current}
             x1={useUserSpaceUnits ? 0 : '0%'}
             x2={useUserSpaceUnits ? 0 : '0%'}
             y1={gradientY1}
@@ -183,21 +183,13 @@ export const DottedArea = memo<DottedAreaProps>(
             )}
           </linearGradient>
           <mask id={maskIdRef.current}>
-            <Path
-              d={d}
-              fill={`url(#${gradientIdRef.current})`}
-              disableAnimations={
-                disableAnimations !== undefined ? disableAnimations : context.disableAnimations
-              }
-            />
+            <Path animate={animate} d={d} fill={`url(#${gradientIdRef.current})`} />
           </mask>
         </defs>
         <Path
+          animate={animate}
           className={classNames?.path}
           d={d}
-          disableAnimations={
-            disableAnimations !== undefined ? disableAnimations : context.disableAnimations
-          }
           fill={`url(#${patternIdRef.current})`}
           mask={`url(#${maskIdRef.current})`}
           style={styles?.path}

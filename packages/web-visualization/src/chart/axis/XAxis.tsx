@@ -1,13 +1,16 @@
 import React, { memo, useCallback, useEffect, useId, useMemo } from 'react';
 import type { ThemeVars } from '@coinbase/cds-common';
-import { getAxisTicksData, isBandScale } from '@coinbase/cds-common/visualizations/charts';
+import {
+  getAxisTicksData,
+  isCategoricalScale,
+  useChartContext,
+  useChartDrawingAreaContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import { cx } from '@coinbase/cds-web';
 import { useTheme } from '@coinbase/cds-web/hooks/useTheme';
 import { css } from '@linaria/core';
 import { AnimatePresence, m as motion } from 'framer-motion';
 
-import { useChartContext } from '../ChartContext';
-import { useChartDrawingAreaContext } from '../ChartDrawingAreaContext';
 import { DottedLine } from '../line';
 import { ReferenceLine } from '../line/ReferenceLine';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
@@ -53,7 +56,6 @@ export const XAxis = memo<XAxisProps>(
     classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 0.25,
-    disableAnimations,
     dataKey,
     size = 32,
     minTickLabelGap = 0.5,
@@ -65,14 +67,12 @@ export const XAxis = memo<XAxisProps>(
   }) => {
     const theme = useTheme();
     const registrationId = useId();
-    const context = useChartContext();
+    const { animate, getXScale, getXAxis } = useChartContext();
     const { registerAxis, unregisterAxis, getAxisBounds } = useChartDrawingAreaContext();
-    const { getXScale, getXAxis } = context;
 
     const xScale = getXScale?.(axisId);
     const xAxis = getXAxis?.(axisId);
 
-    const shouldDisableAnimations = disableAnimations ?? context.disableAnimations;
     const axisBounds = getAxisBounds(registrationId);
 
     useEffect(() => {
@@ -113,7 +113,7 @@ export const XAxis = memo<XAxisProps>(
       let categories: string[] | undefined;
       if (hasStringLabels) {
         categories = axisData as string[];
-      } else if (isBandScale(xScale)) {
+      } else if (isCategoricalScale(xScale)) {
         // For band scales without explicit string data, generate numeric categories
         // based on the domain of the scale
         const domain = xScale.domain();
@@ -127,7 +127,7 @@ export const XAxis = memo<XAxisProps>(
         axisData &&
         Array.isArray(axisData) &&
         (typeof axisData[0] === 'string' ||
-          (typeof axisData[0] === 'number' && isBandScale(xScale)))
+          (typeof axisData[0] === 'number' && isCategoricalScale(xScale)))
       )
         possibleTickValues = Array.from({ length: axisData.length }, (_, i) => i);
 
@@ -205,9 +205,7 @@ export const XAxis = memo<XAxisProps>(
                 />
               );
 
-              return shouldDisableAnimations ? (
-                <g key={`grid-${tick.tick}-${index}-${dataKey}`}>{verticalLine}</g>
-              ) : (
+              return animate ? (
                 <motion.g
                   key={`grid-${tick.tick}-${index}-${dataKey}`}
                   animate="animate"
@@ -217,6 +215,8 @@ export const XAxis = memo<XAxisProps>(
                 >
                   {verticalLine}
                 </motion.g>
+              ) : (
+                <g key={`grid-${tick.tick}-${index}-${dataKey}`}>{verticalLine}</g>
               );
             })}
           </AnimatePresence>
@@ -227,9 +227,7 @@ export const XAxis = memo<XAxisProps>(
               animate="animate"
               exit="exit"
               initial="initial"
-              variants={
-                shouldDisableAnimations ? undefined : axisTickLabelsInitialAnimationVariants
-              }
+              variants={animate ? axisTickLabelsInitialAnimationVariants : undefined}
             >
               {/* TODO pass through styles */}
               <SmartChartTextGroup

@@ -1,6 +1,5 @@
 import { memo } from 'react';
 
-import { useChartContext } from '../ChartContext';
 import { Path, type PathProps } from '../Path';
 
 import type { AreaComponentProps } from './Area';
@@ -10,19 +9,6 @@ export type SolidAreaProps = Omit<PathProps, 'd' | 'fill' | 'fillOpacity'> & Are
 /**
  * A customizable solid area component which uses Path.
  */
-export const SolidArea = memo<SolidAreaProps>(
-  ({ d, fill, fillOpacity = 1, disableAnimations, ...props }) => {
-    const context = useChartContext();
-    return (
-      <Path
-        d={d}
-        disableAnimations={
-          disableAnimations !== undefined ? disableAnimations : context.disableAnimations
-        }
-        fill={fill}
-        fillOpacity={fillOpacity}
-        {...props}
-      />
-    );
-  },
-);
+export const SolidArea = memo<SolidAreaProps>(({ d, fill, fillOpacity = 1, ...props }) => {
+  return <Path d={d} fill={fill} fillOpacity={fillOpacity} {...props} />;
+});

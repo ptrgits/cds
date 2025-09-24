@@ -1,8 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import type { SVGProps } from 'react';
-import { getAreaPath, type ChartPathCurveType } from '@coinbase/cds-common/visualizations/charts';
-
-import { useChartContext } from '../ChartContext';
+import { type ChartPathCurveType, getAreaPath } from '@coinbase/cds-common/visualizations/charts';
+import { useChartContext } from '@coinbase/cds-common/visualizations/charts';
 
 import { DottedArea } from './DottedArea';
 import { GradientArea } from './GradientArea';
@@ -12,10 +11,10 @@ export type AreaComponentProps = {
   d: SVGProps<SVGPathElement>['d'];
   fill: string;
   fillOpacity?: number;
-  disableAnimations?: boolean;
   stroke?: string;
   strokeWidth?: number;
   yAxisId?: string;
+  animate?: boolean;
 };
 
 export type AreaComponent = React.FC<AreaComponentProps>;
@@ -52,11 +51,6 @@ export type AreaProps = {
    * @default 1
    */
   fillOpacity?: number;
-  /**
-   * Disable animations for the line.
-   * Overrides the disableAnimations prop on the Chart component.
-   */
-  disableAnimations?: boolean;
   stroke?: string;
   strokeWidth?: number;
 };
@@ -69,24 +63,22 @@ export const Area = memo<AreaProps>(
     AreaComponent: SelectedAreaComponent,
     fill: specifiedFill,
     fillOpacity = 1,
-    disableAnimations,
     stroke,
     strokeWidth,
   }) => {
-    const { getSeries, getSeriesData, getStackedSeriesData, getXScale, getYScale, getXAxis } =
-      useChartContext();
+    const { getSeries, getSeriesData, getXScale, getYScale, getXAxis } = useChartContext();
 
     // Get sourceData from series (using stacked data if available)
     const matchedSeries = useMemo(() => getSeries(seriesId), [seriesId, getSeries]);
 
     // Check for stacked data first, then fall back to raw data
     const sourceData = useMemo(() => {
-      const stackedData = getStackedSeriesData(seriesId);
+      const stackedData = getSeriesData(seriesId);
       if (stackedData) {
         return stackedData;
       }
       return getSeriesData(seriesId) || null;
-    }, [seriesId, getSeriesData, getStackedSeriesData]);
+    }, [seriesId, getSeriesData]);
 
     // Get scales and axes for this series
     const xScale = getXScale?.(matchedSeries?.xAxisId);
@@ -139,7 +131,6 @@ export const Area = memo<AreaProps>(
     return (
       <AreaComponent
         d={area}
-        disableAnimations={disableAnimations}
         fill={fill}
         fillOpacity={fillOpacity}
         stroke={stroke}

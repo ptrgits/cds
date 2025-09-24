@@ -2,10 +2,10 @@ import React, { forwardRef, memo, useImperativeHandle, useRef } from 'react';
 import type { SVGProps } from 'react';
 import type { ThemeVars } from '@coinbase/cds-common/core/theme';
 import type { Rect, SharedProps } from '@coinbase/cds-common/types';
+import { useChartContext } from '@coinbase/cds-common/visualizations/charts';
 import { AnimatePresence, m } from 'framer-motion';
 
 import { useHighlightContext } from './Chart';
-import { useChartContext } from './ChartContext';
 import { Point, type PointRef } from './point';
 import type { ChartTextChildren } from './text';
 
@@ -116,22 +116,15 @@ export const ScrubberHead = memo(
       },
       ref,
     ) => {
-      const {
-        getSeries,
-        getXScale,
-        getYScale,
-        getXAxis,
-        getYAxis,
-        getStackedSeriesData,
-        getSeriesData,
-      } = useChartContext();
+      const { getSeries, getXScale, getYScale, getXAxis, getYAxis, getSeriesData } =
+        useChartContext();
       const pointRef = useRef<PointRef>(null);
 
       const { highlightedIndex } = useHighlightContext();
 
       // Find target series for color and data
       const targetSeries = getSeries(seriesId);
-      const sourceData = getStackedSeriesData(seriesId) || getSeriesData(seriesId);
+      const sourceData = getSeriesData(seriesId);
 
       // Get scales for this series
       const xScale = getXScale?.(targetSeries?.xAxisId);

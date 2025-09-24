@@ -1,10 +1,14 @@
-import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
 import { prices } from '@coinbase/cds-common/internal/data/prices';
 import { sparklineInteractiveData } from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
 import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
 import type { TabValue } from '@coinbase/cds-common/tabs/useTabs';
-import { projectPoint } from '@coinbase/cds-common/visualizations/charts/getPoints';
+import {
+  projectPoint,
+  useChartContext,
+  useChartDrawingAreaContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import type { ChartAxisScaleType } from '@coinbase/cds-common/visualizations/charts/scale';
 import { Box, HStack, VStack } from '@coinbase/cds-web/layout';
 import { RemoteImage } from '@coinbase/cds-web/media';
@@ -27,10 +31,10 @@ import {
   PeriodSelector,
   PeriodSelectorActiveIndicator,
   Scrubber,
-  useChartContext,
+  type ScrubberRef,
 } from '../..';
 import { Area, type AreaComponentProps, DottedArea, GradientArea } from '../../area';
-import { XAxis } from '../../axis';
+import { XAxis, YAxis } from '../../axis';
 import { Chart } from '../../Chart';
 import { ChartHeader } from '../../ChartHeader';
 import { Point } from '../../point';
@@ -841,11 +845,11 @@ export const ReturnsChart = () => {
   const negativeColor = 'var(--color-fgMuted)';
 
   const ChartDefs = ({ threshold = 0 }) => {
-    const { height, series, rect, getYScale, getYAxis } = useChartContext();
+    const { height, getYScale, getYAxis } = useChartContext();
     const yScale = getYScale?.();
     const yAxis = getYAxis?.();
 
-    if (!series || !rect || !yScale) return null;
+    if (!yScale) return null;
 
     const thresholdPixel = projectPoint({ x: 0, y: threshold, xScale: (() => 0) as any, yScale });
     const thresholdY = thresholdPixel.y;
@@ -1487,14 +1491,17 @@ export const AssetPriceDotted = () => {
   const [scrubIndex, setScrubIndex] = useState<number | null>(null);
   const currentPrice =
     sparklineInteractiveData.hour[sparklineInteractiveData.hour.length - 1].value;
-  const tabs = [
-    { id: 'hour', label: '1H' },
-    { id: 'day', label: '1D' },
-    { id: 'week', label: '1W' },
-    { id: 'month', label: '1M' },
-    { id: 'year', label: '1Y' },
-    { id: 'all', label: 'All' },
-  ];
+  const tabs = useMemo(
+    () => [
+      { id: 'hour', label: '1H' },
+      { id: 'day', label: '1D' },
+      { id: 'week', label: '1W' },
+      { id: 'month', label: '1M' },
+      { id: 'year', label: '1Y' },
+      { id: 'all', label: 'All' },
+    ],
+    [],
+  );
   const [timePeriod, setTimePeriod] = useState<TabValue>(tabs[0]);
 
   const sparklineTimePeriodData = useMemo(() => {
@@ -1552,7 +1559,7 @@ export const AssetPriceDotted = () => {
         <tspan style={{ fontWeight: 'bold' }}>{price} USD</tspan> {date}
       </>
     );
-  }, [sparklineTimePeriodDataValues, scrubIndex]);
+  }, [scrubIndex, sparklineTimePeriodDataValues, formatDate, sparklineTimePeriodDataTimestamps]);
 
   return (
     <VStack gap={2}>
@@ -1590,5 +1597,200 @@ export const AssetPriceDotted = () => {
         tabs={tabs}
       />
     </VStack>
+  );
+};
+
+export const LiveAssetPrice = () => {
+  const scrubberRef = useRef<ScrubberRef>(null);
+
+  const initialData = useMemo(() => {
+    return sparklineInteractiveData.hour.map((d) => d.value);
+  }, []);
+
+  const [priceData, setPriceData] = useState(initialData);
+
+  const lastDataPointTimeRef = useRef(Date.now());
+  const updateCountRef = useRef(0);
+
+  const intervalSeconds = 3600 / initialData.length;
+
+  const maxPercentChange = Math.abs(initialData[initialData.length - 1] - initialData[0]) * 0.05;
+
+  useEffect(() => {
+    const priceUpdateInterval = setInterval(
+      () => {
+        setPriceData((currentData) => {
+          const newData = [...currentData];
+          const lastPrice = newData[newData.length - 1];
+
+          const priceChange = (Math.random() - 0.5) * maxPercentChange;
+          const newPrice = Math.round((lastPrice + priceChange) * 100) / 100;
+
+          // Check if we should roll over to a new data point
+          const currentTime = Date.now();
+          const timeSinceLastPoint = (currentTime - lastDataPointTimeRef.current) / 1000;
+
+          if (timeSinceLastPoint >= intervalSeconds) {
+            // Time for a new data point - remove first, add new at end
+            lastDataPointTimeRef.current = currentTime;
+            newData.shift(); // Remove oldest data point
+            newData.push(newPrice); // Add new data point
+            updateCountRef.current = 0;
+          } else {
+            // Just update the last data point
+            newData[newData.length - 1] = newPrice;
+            updateCountRef.current++;
+          }
+
+          return newData;
+        });
+
+        // Pulse the scrubber on each update
+        scrubberRef.current?.pulse();
+      },
+      2000 + Math.random() * 1000,
+    );
+
+    return () => clearInterval(priceUpdateInterval);
+  }, [intervalSeconds, maxPercentChange]);
+
+  return (
+    <LineChart
+      enableScrubbing
+      showArea
+      height={300}
+      series={[
+        {
+          id: 'btc',
+          data: priceData,
+          color: assets.btc.color,
+        },
+      ]}
+    >
+      <Scrubber ref={scrubberRef} scrubberLabelConfig={{ elevation: 1 }} />
+    </LineChart>
+  );
+};
+
+export const AvailabilityChart = () => {
+  const availabilityEvents = [
+    {
+      date: new Date('2022-01-01'),
+      availability: 79,
+    },
+    {
+      date: new Date('2022-01-03'),
+      availability: 81,
+    },
+    {
+      date: new Date('2022-01-04'),
+      availability: 82,
+    },
+    {
+      date: new Date('2022-01-06'),
+      availability: 91,
+    },
+    {
+      date: new Date('2022-01-07'),
+      availability: 92,
+    },
+    {
+      date: new Date('2022-01-10'),
+      availability: 86,
+    },
+  ];
+
+  const ChartDefs = memo(
+    ({
+      yellowThresholdPercentage = 85,
+      greenThresholdPercentage = 90,
+    }: {
+      yellowThresholdPercentage?: number;
+      greenThresholdPercentage?: number;
+    }) => {
+      const { drawingArea } = useChartDrawingAreaContext();
+      const { height, series, getYScale, getYAxis } = useChartContext();
+      const yScale = getYScale?.();
+      const yAxis = getYAxis?.();
+
+      if (!series || !drawingArea || !yScale) return null;
+
+      const rangeBounds = yAxis?.domain;
+      const rangeMin = rangeBounds?.min ?? 0;
+      const rangeMax = rangeBounds?.max ?? 100;
+
+      // Calculate the Y positions in the chart coordinate system
+      const yellowThresholdY = yScale(yellowThresholdPercentage) ?? 0;
+      const greenThresholdY = yScale(greenThresholdPercentage) ?? 0;
+      const minY = yScale(rangeMax) ?? 0; // Top of chart (max value)
+      const maxY = yScale(rangeMin) ?? drawingArea.height; // Bottom of chart (min value)
+
+      // Calculate percentages based on actual chart positions
+      const yellowThreshold = ((yellowThresholdY - minY) / (maxY - minY)) * 100;
+      const greenThreshold = ((greenThresholdY - minY) / (maxY - minY)) * 100;
+
+      return (
+        <defs>
+          <linearGradient
+            gradientUnits="userSpaceOnUse"
+            id="availabilityGradient"
+            x1="0%"
+            x2="0%"
+            y1={minY}
+            y2={maxY}
+          >
+            <stop offset="0%" stopColor="var(--color-fgPositive)" />
+            <stop offset={`${greenThreshold}%`} stopColor="var(--color-fgPositive)" />
+            <stop offset={`${greenThreshold}%`} stopColor="var(--color-fgWarning)" />
+            <stop offset={`${yellowThreshold}%`} stopColor="var(--color-fgWarning)" />
+            <stop offset={`${yellowThreshold}%`} stopColor="var(--color-fgNegative)" />
+            <stop offset="100%" stopColor="var(--color-fgNegative)" />
+          </linearGradient>
+        </defs>
+      );
+    },
+  );
+
+  return (
+    <Chart
+      height={300}
+      series={[
+        {
+          id: 'availability',
+          data: availabilityEvents.map((event) => event.availability),
+          color: 'url(#availabilityGradient)',
+        },
+      ]}
+      xAxis={{
+        data: availabilityEvents.map((event) => event.date.getTime()),
+      }}
+      yAxis={{
+        domain: ({ min, max }) => ({ min: Math.max(min - 2, 0), max: Math.min(max + 2, 100) }),
+      }}
+    >
+      <ChartDefs />
+      <XAxis
+        showGrid
+        showLine
+        showTickMarks
+        tickLabelFormatter={(value) => new Date(value).toLocaleDateString()}
+      />
+      <YAxis
+        showGrid
+        showLine
+        showTickMarks
+        position="start"
+        tickLabelFormatter={(value) => `${value}%`}
+      />
+      <Line
+        curve="stepAfter"
+        renderPoints={() => ({
+          fill: 'var(--color-bg)',
+          stroke: 'url(#availabilityGradient)',
+          strokeWidth: 2,
+        })}
+        seriesId="availability"
+      />
+    </Chart>
   );
 };
