@@ -8,25 +8,25 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { type ChartScaleFunction, projectPoint } from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-web';
-import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
-
 import { m } from 'framer-motion';
 
+import { axisTickLabelsInitialAnimationVariants } from '../axis';
 import { useScrubberContext } from '../Chart';
 import { useChartContext } from '../ChartContext';
+import { ReferenceLine, type ReferenceLineProps } from '../line';
+import type { PointProps } from '../point';
+
 import {
   ScrubberHead,
-  type ScrubberHeadProps,
-  type ScrubberHeadRef,
   ScrubberHeadLabel,
   type ScrubberHeadLabelProps,
+  type ScrubberHeadProps,
+  type ScrubberHeadRef,
 } from './';
-import { axisTickLabelsInitialAnimationVariants } from '../axis';
-import type { PointProps } from '../point';
-import { ReferenceLine, type ReferenceLineProps } from '../line';
 
 /**
  * Configuration for scrubber functionality across chart components.
@@ -178,7 +178,7 @@ export const Scrubber = memo(
         }
 
         return { dataX, dataIndex };
-      }, [getXScale, getXAxis, highlightedIndex]);
+      }, [getXScale, getXAxis, series, highlightedIndex, getStackedSeriesData, getSeriesData]);
 
       // TODO: forecast chart is broken
       const headPositions = useMemo(() => {
@@ -228,13 +228,13 @@ export const Scrubber = memo(
         );
       }, [
         getXScale,
-        getXAxis,
-        highlightedIndex,
+        dataX,
+        dataIndex,
         series,
+        seriesIds,
         getStackedSeriesData,
         getSeriesData,
         getYScale,
-        seriesIds,
       ]);
 
       // todo: the padding around the label shouldn't be needed for this collision calculation since the ChatText onDimensionsChange will report the bounding box that includes the padding
@@ -595,12 +595,12 @@ export const Scrubber = memo(
             )}
           {!hideScrubberLine && highlightedIndex !== undefined && dataX !== undefined && (
             <ScrubberLineComponent
-              labelPosition="top"
+              className={scrubberClassNames?.scrubberLine}
               dataX={dataX}
               label={scrubberLabel}
               labelConfig={scrubberLabelConfig}
+              labelPosition="top"
               style={scrubberStyles?.scrubberLine}
-              className={scrubberClassNames?.scrubberLine}
             />
           )}
           {headPositions.map((scrubberHead) => {
@@ -613,14 +613,14 @@ export const Scrubber = memo(
                 {/* todo: fix this type cast, seems to be due to custom components */}
                 <ScrubberHeadComponent
                   ref={createScrubberHeadRef(scrubberHead.targetSeries.id) as any}
+                  className={scrubberClassNames?.scrubberHead}
                   color={scrubberHead.targetSeries?.color}
                   dataX={scrubberHead.x}
                   dataY={scrubberHead.y}
-                  seriesId={scrubberHead.targetSeries.id}
-                  testID={testID ? `${testID}-${scrubberHead.targetSeries.id}-dot` : undefined}
                   pulse={pulse}
+                  seriesId={scrubberHead.targetSeries.id}
                   style={scrubberStyles?.scrubberHead}
-                  className={scrubberClassNames?.scrubberHead}
+                  testID={testID ? `${testID}-${scrubberHead.targetSeries.id}-dot` : undefined}
                 />
                 {scrubberHead.label &&
                   (() => {
@@ -632,6 +632,7 @@ export const Scrubber = memo(
                       <ScrubberHeadLabelComponent
                         background="var(--color-bg)"
                         bounds={rect}
+                        className={scrubberClassNames?.scrubberHeadLabel}
                         color={dotStroke}
                         dx={16}
                         onDimensionsChange={({ width, height }) =>
@@ -645,13 +646,12 @@ export const Scrubber = memo(
                         }
                         padding={labelPadding}
                         preferredSide={finalSide}
+                        style={scrubberStyles?.scrubberHeadLabel}
                         testID={
                           testID ? `${testID}-${scrubberHead.targetSeries.id}-label` : undefined
                         }
                         x={finalAnchorX}
                         y={finalAnchorY}
-                        style={scrubberStyles?.scrubberHeadLabel}
-                        className={scrubberClassNames?.scrubberHeadLabel}
                       >
                         {scrubberHead.label}
                       </ScrubberHeadLabelComponent>

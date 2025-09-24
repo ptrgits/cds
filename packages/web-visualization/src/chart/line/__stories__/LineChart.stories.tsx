@@ -2,6 +2,7 @@ import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
 import { prices } from '@coinbase/cds-common/internal/data/prices';
 import { sparklineInteractiveData } from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
+import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
 import type { TabValue } from '@coinbase/cds-common/tabs/useTabs';
 import { projectPoint } from '@coinbase/cds-common/visualizations/charts/getPoints';
 import type { ChartAxisScaleType } from '@coinbase/cds-common/visualizations/charts/scale';
@@ -35,7 +36,6 @@ import { ChartHeader } from '../../ChartHeader';
 import { Point } from '../../point';
 import { ScrubberHead } from '../../scrubber/ScrubberHead';
 import { DottedLine, GradientLine, Line, LineChart, ReferenceLine, SolidLine } from '..';
-import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
 
 export default {
   component: LineChart,
@@ -190,6 +190,11 @@ export const BasicLineChartWithPoints = () => {
         showGrid: true,
       }}
     >
+      {/* crosshair lines for purple point */}
+      <g>
+        <ReferenceLine dataX={2} stroke="purple" />
+        <ReferenceLine dataY={60} stroke="purple" />
+      </g>
       {/* Standalone points at explicit coordinates (not on the line) */}
       <Point
         pulse
@@ -198,33 +203,17 @@ export const BasicLineChartWithPoints = () => {
         dataY={60}
         label="hello world im on a point!"
         labelConfig={{
+          elevation: 1,
+          padding: 4,
           position: 'top',
           // why does this go in the opposite direction than what i would expect?
-          dy: -16,
+          dy: -24,
         }}
         onClick={() => console.log('clicked')}
         onScrubberEnter={() => console.log('scrubber entered')}
         radius={6}
-        stroke="purple"
-        strokeOpacity={0.2}
-        strokeWidth={7}
       />
-      <ReferenceLine
-        dataX={2}
-        label="testing 123"
-        labelConfig={{
-          color: 'var(--color-bgPositive)',
-          elevation: 1,
-        }}
-        labelPosition="center"
-      />
-      <ReferenceLine
-        dataY={60}
-        label="testing 123"
-        labelConfig={{ elevation: 1 }}
-        labelPosition="left"
-      />
-      <Point color="orange" dataX={5} dataY={50} radius={5} />
+      <Point pulse color="orange" dataX={5} dataY={50} pulseRadius={24} radius={5} />
       <Scrubber />
     </LineChart>
   );
@@ -577,15 +566,15 @@ export const BTCPriceChart = () => {
             )}
           </AnimatePresence>
           <Scrubber
-            scrubberLabel={displayDate}
+            pulse={!isHovering}
             scrubberComponents={{
               ScrubberLineComponent: ReferenceLine,
             }}
+            scrubberLabel={displayDate}
             scrubberStyles={{
               scrubberLine: { stroke: 'black' },
               scrubberHead: { stroke: 'white' },
             }}
-            pulse={!isHovering}
           />
         </Chart>
         <Box paddingX={{ phone: 2, tablet: 4, desktop: 4 }}>
@@ -819,7 +808,7 @@ export const ColorShiftChart = () => {
                   : 'var(--color-bgNegative)',
             }}
             labelPosition="right"
-            lineStroke={
+            stroke={
               currentPrice - startPrice > 0 ? 'var(--color-bgPositive)' : 'var(--color-bgNegative)'
             }
           />
@@ -910,14 +899,14 @@ export const ReturnsChart = () => {
       <ReferenceLine
         LineComponent={(props) => <SolidLine {...props} strokeWidth={8} />}
         dataY={0}
-        lineStroke="var(--color-bg)"
+        stroke="var(--color-bg)"
       />
       <ReferenceLine
         LineComponent={(props) => (
           <DottedLine {...props} strokeDasharray="0.01 6" strokeWidth={3} />
         )}
         dataY={0}
-        lineStroke="var(--color-fgMuted)"
+        stroke="var(--color-fgMuted)"
       />
       <Scrubber />
     </Chart>
@@ -1251,24 +1240,24 @@ export const DataFormat = () => {
     <VStack gap={2}>
       <LineChart
         enableScrubbing
+        showArea
+        showXAxis
+        showYAxis
+        curve="natural"
+        height={300}
+        renderPoints={() => true}
         series={[
           {
             id: 'line',
             data: [2, 5.5, 2, 8.5, 1.5, 5],
           },
         ]}
-        height={300}
-        showArea
-        renderPoints={() => true}
-        curve="natural"
-        showXAxis
         xAxis={{
           data: [1, 2, 3, 5, 8, 10],
           showLine: true,
           showTickMarks: true,
           showGrid: true,
         }}
-        showYAxis
         yAxis={{
           domain: { min: 0 },
           position: 'start',
@@ -1281,17 +1270,18 @@ export const DataFormat = () => {
       </LineChart>
       <LineChart
         enableScrubbing
+        showArea
+        showXAxis
+        showYAxis
+        curve="natural"
+        height={300}
+        renderPoints={() => true}
         series={[
           {
             id: 'line',
             data: [2, 5.5, 2, 8.5, 1.5, 5],
           },
         ]}
-        height={300}
-        showArea
-        renderPoints={() => true}
-        curve="natural"
-        showXAxis
         xAxis={{
           domain: { min: 0, max: 10 },
           data: [1, 2, 3, 5, 8, 10],
@@ -1299,7 +1289,6 @@ export const DataFormat = () => {
           showTickMarks: true,
           showGrid: true,
         }}
-        showYAxis
         yAxis={{
           domain: { min: 0 },
           position: 'start',
@@ -1312,17 +1301,18 @@ export const DataFormat = () => {
       </LineChart>
       <LineChart
         enableScrubbing
+        showArea
+        showXAxis
+        showYAxis
+        curve="natural"
+        height={300}
+        renderPoints={() => true}
         series={[
           {
             id: 'line',
             data: [2, 5.5, 2, 8.5, 1.5, 5],
           },
         ]}
-        height={300}
-        showArea
-        renderPoints={() => true}
-        curve="natural"
-        showXAxis
         xAxis={{
           domain: { min: 0, max: 20 },
           data: [1, 2, 3, 5, 8, 10],
@@ -1330,7 +1320,6 @@ export const DataFormat = () => {
           showTickMarks: true,
           showGrid: true,
         }}
-        showYAxis
         yAxis={{
           domain: { min: 0 },
           position: 'start',
@@ -1343,17 +1332,18 @@ export const DataFormat = () => {
       </LineChart>{' '}
       <LineChart
         enableScrubbing
+        showArea
+        showXAxis
+        showYAxis
+        curve="natural"
+        height={300}
+        renderPoints={() => true}
         series={[
           {
             id: 'line',
             data: [2, 5.5, 2, 8.5, 1.5, 5],
           },
         ]}
-        height={300}
-        showArea
-        renderPoints={() => true}
-        curve="natural"
-        showXAxis
         xAxis={{
           domain: { min: 5, max: 10 },
           data: [1, 2, 3, 5, 8, 10],
@@ -1361,7 +1351,6 @@ export const DataFormat = () => {
           showTickMarks: true,
           showGrid: true,
         }}
-        showYAxis
         yAxis={{
           domain: { min: 0 },
           position: 'start',
@@ -1399,31 +1388,31 @@ export const BitcoinChartWithScrubberHead = () => {
 
   return (
     <VStack
+      borderRadius={300}
+      gap={2}
+      overflow="hidden"
+      padding={2}
+      paddingBottom={0}
       style={{
         background:
           'linear-gradient(0deg, rgba(0, 0, 0, 0.80) 0%, rgba(0, 0, 0, 0.80) 100%), #ED702F',
       }}
-      borderRadius={300}
-      gap={2}
-      padding={2}
-      paddingBottom={0}
-      overflow="hidden"
     >
-      <HStack gap={2} alignItems="center">
-        <RemoteImage source={assets.btc.imageUrl} size="xxl" shape="circle" />
-        <VStack gap={0.25} flexGrow={1}>
+      <HStack alignItems="center" gap={2}>
+        <RemoteImage shape="circle" size="xxl" source={assets.btc.imageUrl} />
+        <VStack flexGrow={1} gap={0.25}>
           <Text font="title1" style={{ color: 'white' }}>
             BTC
           </Text>
-          <Text font="label1" color="fgMuted">
+          <Text color="fgMuted" font="label1">
             Bitcoin
           </Text>
         </VStack>
-        <VStack gap={0.25} alignItems="flex-end">
+        <VStack alignItems="flex-end" gap={0.25}>
           <Text font="title1" style={{ color: 'white' }}>
             {formatPrice(latestPrice)}
           </Text>
-          <Text font="label1" color="fgPositive">
+          <Text color="fgPositive" font="label1">
             +{formatPercentChange(percentChange)}
           </Text>
         </VStack>
@@ -1435,6 +1424,8 @@ export const BitcoinChartWithScrubberHead = () => {
         }}
       >
         <LineChart
+          showArea
+          height={92}
           padding={{ left: 0, right: 24, bottom: 0, top: 0 }}
           series={[
             {
@@ -1443,9 +1434,7 @@ export const BitcoinChartWithScrubberHead = () => {
               color: assets.btc.color,
             },
           ]}
-          showArea
           width="100%"
-          height={92}
         >
           <Scrubber
             pulse
@@ -1568,17 +1557,20 @@ export const AssetPriceDotted = () => {
   return (
     <VStack gap={2}>
       <SectionHeader
-        style={{ padding: 0 }}
-        title={<Text font="title1">Bitcoin</Text>}
         balance={<Text font="title2">{formatPrice(currentPrice)}</Text>}
         end={
           <VStack justifyContent="center">
-            <RemoteImage source={assets.btc.imageUrl} size="xl" shape="circle" />
+            <RemoteImage shape="circle" size="xl" source={assets.btc.imageUrl} />
           </VStack>
         }
+        style={{ padding: 0 }}
+        title={<Text font="title1">Bitcoin</Text>}
       />
       <LineChart
         enableScrubbing
+        showArea
+        areaType="dotted"
+        height={300}
         onScrubberPosChange={setScrubIndex}
         series={[
           {
@@ -1587,18 +1579,15 @@ export const AssetPriceDotted = () => {
             color: assets.btc.color,
           },
         ]}
-        showArea
-        areaType="dotted"
-        height={300}
       >
-        <Scrubber scrubberLabel={scrubberLabel} scrubberLabelConfig={{ elevation: 1 }} pulse />
+        <Scrubber pulse scrubberLabel={scrubberLabel} scrubberLabelConfig={{ elevation: 1 }} />
       </LineChart>
       <PeriodSelector
         TabComponent={BTCTab}
         TabsActiveIndicatorComponent={BTCActiveIndicator}
-        tabs={tabs}
         activeTab={timePeriod}
         onChange={onPeriodChange}
+        tabs={tabs}
       />
     </VStack>
   );

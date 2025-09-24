@@ -143,8 +143,19 @@ export type PointConfig = {
   yAxisId?: string;
   /**
    * Radius of the point.
+   * @default 4
    */
   radius?: number;
+  /**
+   * Radius of the point's outer, lower-opacity ring.
+   * When pulse is enabled, defaults to average length of radius and pulseRadius, else 0;
+   */
+  outerRingRadius?: number;
+  /**
+   * Radius of the pulse ring. Only used when pulse is enabled.
+   * @default 16
+   */
+  pulseRadius?: number;
   /**
    * Opacity of the point.
    */
@@ -161,12 +172,14 @@ export type PointConfig = {
    */
   onScrubberEnter?: (point: { x: number; y: number }) => void;
   /**
-   * Stroke color around the point.
+   * Color of the outer stroke around the point.
+   * @default 'var(--color-bg)'
    */
   stroke?: string;
   /**
-   * Stroke width of the point.
-   * Adding a stroke creates a ring around the Point
+   * Outer stroke width of the point.
+   * Set to  0 to remove the stroke.
+   * @default 2
    */
   strokeWidth?: number;
   /**
@@ -207,11 +220,6 @@ export type PointProps = SharedProps &
      */
     dataY: number;
     /**
-     * Radius of the pulse ring. Only used when pulse is enabled.
-     * @default 15
-     */
-    pulseRadius?: number;
-    /**
      * Whether to animate the point with a pulsing effect.
      * @default false
      */
@@ -221,11 +229,6 @@ export type PointProps = SharedProps &
      * @default 'scale' when onClick is provided, 'none' otherwise
      */
     hoverEffect?: 'scale' | 'pulse' | 'none';
-    /**
-     * Whether to disable animations for this point.
-     * Overrides the chart context's disableAnimations setting.
-     */
-    disableAnimations?: boolean;
     /**
      * Custom class names for the component.
      */
@@ -279,20 +282,20 @@ export const Point = memo(
         xAxisId,
         yAxisId,
         color = 'var(--color-fgPrimary)',
-        radius = 4,
-        pulseRadius = 15,
         pulse = false,
+        radius = 4,
+        pulseRadius = 16,
+        outerRingRadius = pulse ? (radius + pulseRadius) / 2 : 0,
         opacity,
         onClick,
         onScrubberEnter,
         hoverEffect = onClick ? 'scale' : 'none',
-        disableAnimations: disableAnimationsProp,
         className,
         style,
         classNames,
         styles,
-        stroke,
-        strokeWidth,
+        stroke = 'var(--color-bg)',
+        strokeWidth = 2,
         label,
         labelConfig,
         renderLabel,
@@ -302,19 +305,12 @@ export const Point = memo(
       ref,
     ) => {
       const [scope, animate] = useAnimate();
-      const {
-        getXScale,
-        getYScale,
-        disableAnimations: disableAnimationsContext,
-      } = useChartContext();
+      const { getXScale, getYScale } = useChartContext();
       const { highlightedIndex } = useScrubberContext();
       const [isHovered, setIsHovered] = useState(false);
 
       const xScale = getXScale(xAxisId);
       const yScale = getYScale(yAxisId);
-
-      const disableAnimations =
-        disableAnimationsProp !== undefined ? disableAnimationsProp : disableAnimationsContext;
 
       // Point is interactive if onClick is provided or hoverEffect is set (and not 'none')
       const isInteractive = !!onClick || hoverEffect !== 'none';
@@ -357,8 +353,7 @@ export const Point = memo(
 
       const effectiveHover = isScrubbing ? isScrubberHighlighted : isHovered;
 
-      const shouldShowPulse =
-        !disableAnimations && (pulse || (hoverEffect === 'pulse' && effectiveHover));
+      const shouldShowPulse = pulse || (hoverEffect === 'pulse' && effectiveHover);
 
       const containerStyle = {
         ...styles?.container,
@@ -401,7 +396,7 @@ export const Point = memo(
           ...styles?.innerPoint,
         };
 
-        return hoverEffect === 'scale' && !disableAnimations ? (
+        return hoverEffect === 'scale' ? (
           <motion.circle
             animate={
               effectiveHover
@@ -460,7 +455,6 @@ export const Point = memo(
         pixelCoordinate.y,
         color,
         hoverEffect,
-        disableAnimations,
         effectiveHover,
         radius,
         className,
@@ -484,7 +478,7 @@ export const Point = memo(
             data-testid={testID}
             opacity={opacity}
             style={containerStyle}
-            whileTap={!disableAnimations ? { scale: 0.9 } : undefined}
+            whileTap={{ scale: 0.9 }}
           >
             {/* pulse ring */}
             <motion.circle
@@ -512,7 +506,7 @@ export const Point = memo(
               cy={pixelCoordinate.y}
               fill={color}
               opacity={0.15}
-              r={(radius + pulseRadius) / 2}
+              r={outerRingRadius}
               style={styles?.outerRing}
             />
             {/* inner point */}

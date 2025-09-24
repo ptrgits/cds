@@ -174,7 +174,7 @@ export const BasicLineChartWithPoints = () => {
           // why does this go in the opposite direction than what i would expect?
           dy: -16,
         }}
-        onClick={() => console.log('clicked')}
+        onPress={() => console.log('clicked')}
         radius={6}
         stroke="purple"
         strokeWidth={7}
@@ -652,7 +652,7 @@ export const ColorShiftChart = () => {
             textAnchor: 'start',
           }}
           labelPosition="right"
-          lineStroke={chartActiveColor}
+          stroke={chartActiveColor}
         />
       </LineChart>
     </VStack>
@@ -732,7 +732,7 @@ export const ReturnsChart = () => {
         LineComponent={(props) => <SolidLine {...props} strokeWidth={8} />}
         dataY={0}
         disableAnimations={false}
-        lineStroke="#ffffff"
+        stroke="#ffffff"
       />
       <ReferenceLine
         LineComponent={(props) => (
@@ -740,7 +740,7 @@ export const ReturnsChart = () => {
         )}
         dataY={0}
         disableAnimations={false}
-        lineStroke="#6b7280"
+        stroke="#6b7280"
       />
     </Chart>
   );

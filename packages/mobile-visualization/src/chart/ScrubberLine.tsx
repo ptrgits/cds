@@ -30,7 +30,7 @@ export type ScrubberLineProps = SharedProps &
      * The color of the line.
      * @default theme.color.bgLineHeavy
      */
-    lineStroke?: string;
+    stroke?: string;
     /**
      * Label to display at the top of the scrubber line.
      * When null is returned, no label will be displayed.
@@ -55,7 +55,7 @@ export const ScrubberLine = memo<ScrubberLineProps>(
     x: directX,
     xAxisId,
     LineComponent = DottedLine,
-    lineStroke,
+    stroke,
     label,
     testID,
     hideOverlay,
@@ -74,7 +74,7 @@ export const ScrubberLine = memo<ScrubberLineProps>(
     const { highlightedIndex } = useHighlightContext();
 
     // Use theme colors as defaults
-    const effectiveLineStroke = lineStroke ?? theme.color.bgLineHeavy;
+    const effectiveLineStroke = stroke ?? theme.color.bgLineHeavy;
     const effectiveOverlayColor = overlayColor ?? theme.color.bg;
 
     const calculatedLabel = useMemo(() => {
@@ -162,7 +162,7 @@ export const ScrubberLine = memo<ScrubberLineProps>(
           label={calculatedLabel}
           labelConfig={labelConfig}
           labelPosition="top"
-          lineStroke={effectiveLineStroke}
+          stroke={effectiveLineStroke}
           xAxisId={xAxisId}
         />
       </G>

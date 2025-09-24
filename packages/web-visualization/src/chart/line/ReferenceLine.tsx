@@ -58,7 +58,7 @@ type BaseReferenceLineProps = SharedProps & {
    * The color of the line.
    * @default 'var(--color-bgLine)'
    */
-  lineStroke?: string;
+  stroke?: string;
   /**
    * Configuration for the label rendering.
    * Consolidates styling and positioning options for the ChartText component.
@@ -150,7 +150,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     labelPosition,
     testID,
     LineComponent = DottedLine,
-    lineStroke = 'var(--color-bgLine)',
+    stroke = 'var(--color-bgLine)',
     labelConfig,
     className,
     style,
@@ -213,11 +213,11 @@ export const ReferenceLine = memo<ReferenceLineProps>(
       if (yPixel === undefined) return null;
 
       return (
-        <g data-testid={testID} className={rootClassName} style={rootStyle}>
+        <g className={rootClassName} data-testid={testID} style={rootStyle}>
           <LineComponent
             disableAnimations
             d={`M${rect.x},${yPixel} L${rect.x + rect.width},${yPixel}`}
-            stroke={lineStroke}
+            stroke={stroke}
           />
           {label && (
             <ChartText
@@ -271,11 +271,11 @@ export const ReferenceLine = memo<ReferenceLineProps>(
       if (xPixel === undefined) return null;
 
       return (
-        <g data-testid={testID} className={rootClassName} style={rootStyle}>
+        <g className={rootClassName} data-testid={testID} style={rootStyle}>
           <LineComponent
             disableAnimations
             d={`M${xPixel},${rect.y} L${xPixel},${rect.y + rect.height}`}
-            stroke={lineStroke}
+            stroke={stroke}
           />
           {label && (
             <ChartText textAnchor="middle" {...finalLabelConfig} x={xPixel} y={getLabelY()}>

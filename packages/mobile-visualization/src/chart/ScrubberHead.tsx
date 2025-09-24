@@ -33,7 +33,7 @@ export type ScrubberHeadRef = PointRef;
 // todo: expand available props
 export type ScrubberHeadProps = /*Omit<SVGProps<SVGCircleElement>, 'r' | 'opacity'>*/ Pick<
   SVGProps<SVGCircleElement>,
-  'style' | 'className' | 'stroke'
+  'stroke'
 > &
   SharedProps & {
     /**
@@ -77,11 +77,6 @@ export type ScrubberHeadProps = /*Omit<SVGProps<SVGCircleElement>, 'r' | 'opacit
      */
     labelPadding?: ThemeVars.Space;
     /**
-     * Whether to disable animations for this scrubber head.
-     * Overrides the chart context's disableAnimations setting.
-     */
-    disableAnimations?: boolean;
-    /**
      * Label text color
      * If not set, will default to the stroke for the scrubber head
      */
@@ -106,8 +101,6 @@ export const ScrubberHead = memo(
         seriesId,
         x: directX,
         y: directY,
-        className,
-        style,
         stroke,
         testID,
         pulse = false,
@@ -116,7 +109,6 @@ export const ScrubberHead = memo(
         labelBounds,
         labelSide = 'auto',
         labelPadding = 2,
-        disableAnimations: disableAnimationsProp,
         labelTextColor,
         labelBackgroundColor = 'var(--color-bg)',
         dataKey,
@@ -126,7 +118,6 @@ export const ScrubberHead = memo(
     ) => {
       const {
         getSeries,
-        disableAnimations: disableAnimationsContext,
         getXScale,
         getYScale,
         getXAxis,
@@ -135,8 +126,6 @@ export const ScrubberHead = memo(
         getSeriesData,
       } = useChartContext();
       const pointRef = useRef<PointRef>(null);
-      const disableAnimations =
-        disableAnimationsProp !== undefined ? disableAnimationsProp : disableAnimationsContext;
 
       const { highlightedIndex } = useHighlightContext();
 
@@ -223,7 +212,6 @@ export const ScrubberHead = memo(
       return (
         <Point
           ref={pointRef}
-          className={className}
           color={dotStroke}
           dataX={x}
           dataY={y}
@@ -232,7 +220,6 @@ export const ScrubberHead = memo(
           radius={innerRadius}
           stroke={dotStroke}
           strokeWidth={outerRingRadius}
-          style={style}
           {...props}
         />
       );

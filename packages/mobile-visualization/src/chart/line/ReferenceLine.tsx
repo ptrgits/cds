@@ -56,7 +56,7 @@ type BaseReferenceLineProps = SharedProps & {
    * The color of the line.
    * @default theme.color.bgLine
    */
-  lineStroke?: string;
+  stroke?: string;
   /**
    * Disable animation for the line.
    */
@@ -118,14 +118,14 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     labelPosition,
     testID,
     LineComponent = DottedLine,
-    lineStroke,
+    stroke,
     disableAnimations = true,
     labelConfig,
   }) => {
     const theme = useTheme();
     const { width, height, rect, getXScale, getYScale } = useChartContext();
 
-    const effectiveLineStroke = lineStroke ?? theme.color.bgLine;
+    const effectiveLineStroke = stroke ?? theme.color.bgLine;
 
     // Merge default config with user provided config
     const finalLabelConfig: ReferenceLineLabelConfig = useMemo(
