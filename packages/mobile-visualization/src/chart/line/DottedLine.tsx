@@ -31,7 +31,6 @@ export const DottedLine = memo<DottedLineProps>(
 
     return (
       <Path
-        disableAnimations={disableAnimations !== undefined ? disableAnimations : !context.animate}
         fill={fill}
         stroke={stroke ?? theme.color.bgLine}
         strokeDasharray={strokeDasharray}

@@ -37,7 +37,6 @@ import { Area, type AreaComponentProps, DottedArea, GradientArea } from '../../a
 import { XAxis, YAxis } from '../../axis';
 import { Chart } from '../../Chart';
 import { Point } from '../../point';
-import { ScrubberHead } from '../../scrubber/ScrubberHead';
 import { DottedLine, GradientLine, Line, LineChart, ReferenceLine, SolidLine } from '..';
 
 export default {
@@ -165,6 +164,11 @@ export const BasicLineChartWithPoints = () => {
         showGrid: true,
       }}
     >
+      {/* crosshair lines for purple point */}
+      <g>
+        <ReferenceLine dataX={2} stroke="purple" />
+        <ReferenceLine dataY={60} stroke="purple" />
+      </g>
       {/* Standalone points at explicit coordinates (not on the line) */}
       <Point
         pulse
@@ -173,34 +177,18 @@ export const BasicLineChartWithPoints = () => {
         dataY={60}
         label="hello world im on a point!"
         labelConfig={{
+          elevation: 1,
+          padding: 4,
           position: 'top',
           // why does this go in the opposite direction than what i would expect?
-          dy: -16,
+          dy: -24,
         }}
         onClick={() => console.log('clicked')}
         onScrubberEnter={() => console.log('scrubber entered')}
         radius={6}
-        stroke="purple"
-        strokeOpacity={0.2}
-        strokeWidth={7}
       />
-      <ReferenceLine
-        dataX={2}
-        label="testing 123"
-        labelConfig={{
-          color: 'var(--color-bgPositive)',
-          elevation: 1,
-        }}
-        labelPosition="center"
-      />
-      <ReferenceLine
-        dataY={60}
-        label="testing 123"
-        labelConfig={{ elevation: 1 }}
-        labelPosition="left"
-      />
-      <Point color="orange" dataX={5} dataY={50} radius={5} />
-      <Scrubber />
+      <Point pulse color="orange" dataX={5} dataY={50} radius={5} />
+      <Scrubber idlePulse />
     </LineChart>
   );
 };
@@ -299,14 +287,7 @@ export const AssetPrice = () => {
           ticks={(index) => index % (12 * 6) === 0}
         />
         <ReferenceLine dataY={parsedPrices[0]} />
-        <Scrubber />
-        <ScrubberHead
-          pulse
-          dataX={parsedPrices.length - 1}
-          dataY={parsedPrices[parsedPrices.length - 1]}
-          opacity={isHovering ? 0 : 1}
-          seriesId="price"
-        />
+        <Scrubber idlePulse />
       </LineChart>
     </VStack>
   );
@@ -554,15 +535,15 @@ export const BTCPriceChart = () => {
             )}
           </AnimatePresence>
           <Scrubber
-            pulse={!isHovering}
-            scrubberComponents={{
-              ScrubberLineComponent: ReferenceLine,
-            }}
+            idlePulse
+            // scrubberComponents={{
+            //   ScrubberLineComponent: ReferenceLine,
+            // }}
             scrubberLabel={displayDate}
-            scrubberStyles={{
-              scrubberLine: { stroke: 'black' },
-              scrubberHead: { stroke: 'white' },
-            }}
+            // scrubberStyles={{
+            //   scrubberLine: { stroke: 'black' },
+            //   scrubberHead: { stroke: 'white' },
+            // }}
           />
         </Chart>
         <Box paddingX={{ phone: 2, tablet: 4, desktop: 4 }}>
@@ -766,13 +747,6 @@ export const ColorShiftChart = () => {
             tickLabelFormatter: indexToTime,
           }}
         >
-          <ScrubberHead
-            dataKey={dataKey}
-            pulse={!isHovering}
-            seriesId="price"
-            {...latestPriceCoords}
-            opacity={isHovering ? 0 : 1}
-          />
           <Scrubber scrubberLabel={scrubberLabel} />
           <ReferenceLine
             dataY={startPrice}
@@ -787,7 +761,7 @@ export const ColorShiftChart = () => {
                   : 'var(--color-bgNegative)',
             }}
             labelPosition="right"
-            lineStroke={
+            stroke={
               currentPrice - startPrice > 0 ? 'var(--color-bgPositive)' : 'var(--color-bgNegative)'
             }
           />
@@ -878,14 +852,14 @@ export const ReturnsChart = () => {
       <ReferenceLine
         LineComponent={(props) => <SolidLine {...props} strokeWidth={8} />}
         dataY={0}
-        lineStroke="var(--color-bg)"
+        stroke="var(--color-bg)"
       />
       <ReferenceLine
         LineComponent={(props) => (
           <DottedLine {...props} strokeDasharray="0.01 6" strokeWidth={3} />
         )}
         dataY={0}
-        lineStroke="var(--color-fgMuted)"
+        stroke="var(--color-fgMuted)"
       />
       <Scrubber />
     </Chart>
@@ -1408,7 +1382,7 @@ export const BitcoinChartWithScrubberHead = () => {
           width="100%"
         >
           <Scrubber
-            pulse
+            idlePulse
             scrubberStyles={{
               scrubberHead: {
                 stroke: 'white',
@@ -1571,7 +1545,7 @@ export const AssetPriceDotted = () => {
           },
         ]}
       >
-        <Scrubber pulse scrubberLabel={scrubberLabel} scrubberLabelConfig={{ elevation: 1 }} />
+        <Scrubber idlePulse scrubberLabel={scrubberLabel} scrubberLabelConfig={{ elevation: 1 }} />
       </LineChart>
       <PeriodSelector
         TabComponent={BTCTab}

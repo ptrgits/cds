@@ -1,13 +1,5 @@
-import React, {
-  forwardRef,
-  memo,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import { Animated } from 'react-native';
 import { Circle, G } from 'react-native-svg';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import {
@@ -22,12 +14,6 @@ import type { ChartTextChildren } from '../text/ChartText';
 
 export const singlePulseDuration = 1000; // 1 second
 export const pulseDuration = 2000; // 2 seconds
-
-const styles = StyleSheet.create({
-  container: {
-    // React Native doesn't need outline styles
-  },
-});
 
 /**
  * Calculate text alignment props based on position preset.
@@ -144,8 +130,14 @@ export type PointConfig = {
   yAxisId?: string;
   /**
    * Radius of the point.
+   * @default 4
    */
   radius?: number;
+  /**
+   * Radius of the pulse ring. Only used when pulse is enabled.
+   * @default 16
+   */
+  pulseRadius?: number;
   /**
    * Opacity of the point.
    */
@@ -153,31 +145,22 @@ export type PointConfig = {
   /**
    * Handler for when the point is clicked.
    */
-  onClick?: (
-    event: React.MouseEvent,
-    point: { x: number; y: number; dataX: number; dataY: number },
-  ) => void;
+  onPress?: (point: { x: number; y: number; dataX: number; dataY: number }) => void;
   /**
    * Handler for when the scrubber enters this point.
    */
   onScrubberEnter?: (point: { x: number; y: number }) => void;
   /**
-   * Stroke color around the point.
+   * Color of the outer stroke around the point.
+   * @default theme.color.bg
    */
   stroke?: string;
   /**
-   * Stroke width of the point.
-   * Adding a stroke creates a ring around the Point
+   * Outer stroke width of the point.
+   * Set to  0 to remove the stroke.
+   * @default 2
    */
   strokeWidth?: number;
-  /**
-   * Custom class name for the point.
-   */
-  className?: string;
-  /**
-   * Custom styles for the point.
-   */
-  style?: React.CSSProperties;
   /**
    * Simple text label to display at the point position.
    * If provided, a ChartText will be automatically rendered.
@@ -207,37 +190,10 @@ export type PointProps = SharedProps &
      */
     dataY: number;
     /**
-     * Radius of the pulse ring. Only used when pulse is enabled.
-     * @default 15
-     */
-    pulseRadius?: number;
-    /**
      * Whether to animate the point with a pulsing effect.
      * @default false
      */
     pulse?: boolean;
-    /**
-     * Type of hover effect to apply. Setting this (except 'none') makes the point interactive.
-     * @default 'scale' when onClick is provided, 'none' otherwise
-     */
-    hoverEffect?: 'scale' | 'pulse' | 'none';
-    /**
-     * Custom styles for the component.
-     */
-    styles?: {
-      /**
-       * Custom styles for the point container element.
-       */
-      container?: React.CSSProperties;
-      /**
-       * Custom styles for the pulse circle element.
-       */
-      pulseCircle?: React.CSSProperties;
-      /**
-       * Custom styles for the inner circle element.
-       */
-      innerPoint?: React.CSSProperties;
-    };
   };
 
 export const Point = memo(
@@ -249,18 +205,14 @@ export const Point = memo(
         xAxisId,
         yAxisId,
         color,
-        radius = 4,
-        pulseRadius = 15,
         pulse = false,
+        radius = 4,
+        pulseRadius = 16,
         opacity,
-        onClick,
+        onPress,
         onScrubberEnter,
-        hoverEffect = onClick ? 'scale' : 'none',
-        className,
-        style,
-        styles,
         stroke,
-        strokeWidth,
+        strokeWidth = 2,
         label,
         labelConfig,
         renderLabel,
@@ -270,20 +222,16 @@ export const Point = memo(
       ref,
     ) => {
       const theme = useTheme();
+      const effectiveStroke = stroke ?? theme.color.bg;
       const pulseOpacity = useRef(new Animated.Value(0)).current;
-      const scaleValue = useRef(new Animated.Value(1)).current;
-      const { getXScale, getYScale, animate } = useChartContext();
+      const { getXScale, getYScale } = useChartContext();
       const { highlightedIndex } = useScrubberContext();
-      const [isHovered, setIsHovered] = useState(false);
 
       const xScale = getXScale(xAxisId);
       const yScale = getYScale(yAxisId);
 
       // Use theme color as default if no color is provided
       const effectiveColor = color ?? theme.color.fgPrimary;
-
-      // Point is interactive if onClick is provided or hoverEffect is set (and not 'none')
-      const isInteractive = !!onClick || hoverEffect !== 'none';
 
       // Scrubber detection: check if this point is highlighted by the scrubber
       const isScrubbing = highlightedIndex !== undefined;
@@ -326,13 +274,9 @@ export const Point = memo(
         }
       }, [isScrubberHighlighted, onScrubberEnter, pixelCoordinate.x, pixelCoordinate.y]);
 
-      const effectiveHover = isScrubbing ? isScrubberHighlighted : isHovered;
-
-      const shouldShowPulse = animate && (pulse || (hoverEffect === 'pulse' && effectiveHover));
-
       // Set up pulse animation
       useEffect(() => {
-        if (shouldShowPulse) {
+        if (pulse) {
           const pulseAnimation = Animated.loop(
             Animated.sequence([
               Animated.timing(pulseOpacity, {
@@ -356,18 +300,7 @@ export const Point = memo(
             useNativeDriver: true,
           }).start();
         }
-      }, [shouldShowPulse, pulseOpacity]);
-
-      // Set up scale animation for hover
-      useEffect(() => {
-        if (hoverEffect === 'scale' && animate) {
-          Animated.timing(scaleValue, {
-            toValue: effectiveHover ? 1.2 : 1,
-            duration: 200,
-            useNativeDriver: true,
-          }).start();
-        }
-      }, [effectiveHover, hoverEffect, animate, scaleValue]);
+      }, [pulse, pulseOpacity]);
 
       const LabelContent = useMemo(() => {
         // Custom render function takes precedence
@@ -401,87 +334,39 @@ export const Point = memo(
 
       const AnimatedCircle = useMemo(() => Animated.createAnimatedComponent(Circle), []);
 
-      const PointContent = useMemo(() => {
-        if (!animate) {
-          // Simple non-animated version
-          return (
-            <G opacity={opacity}>
-              <Circle
-                cx={pixelCoordinate.x}
-                cy={pixelCoordinate.y}
-                fill={effectiveColor}
-                onPress={
-                  onClick
-                    ? (event: any) =>
-                        onClick(event, { dataX, dataY, x: pixelCoordinate.x, y: pixelCoordinate.y })
-                    : undefined
-                }
-                r={radius}
-                stroke={effectiveColor}
-                strokeWidth={strokeWidth}
-              />
-            </G>
-          );
-        }
-
-        return (
-          <G opacity={opacity}>
-            {/* Pulse circle - only show if pulsing */}
-            {(pulse || (hoverEffect === 'pulse' && effectiveHover)) && (
-              <AnimatedCircle
-                cx={pixelCoordinate.x}
-                cy={pixelCoordinate.y}
-                fill={effectiveColor}
-                opacity={pulseOpacity}
-                r={pulseRadius}
-              />
-            )}
-            {/* Main circle */}
-            <Circle
-              cx={pixelCoordinate.x}
-              cy={pixelCoordinate.y}
-              fill={effectiveColor}
-              onPress={
-                onClick
-                  ? (event: any) =>
-                      onClick(event, { dataX, dataY, x: pixelCoordinate.x, y: pixelCoordinate.y })
-                  : undefined
-              }
-              r={radius}
-              stroke={effectiveColor}
-              strokeOpacity={0.15}
-              strokeWidth={strokeWidth}
-            />
-          </G>
-        );
-      }, [
-        AnimatedCircle,
-        opacity,
-        pulseOpacity,
-        pixelCoordinate.x,
-        pixelCoordinate.y,
-        effectiveColor,
-        pulseRadius,
-        hoverEffect,
-        animate,
-        radius,
-        onClick,
-        strokeWidth,
-        dataX,
-        dataY,
-        pulse,
-        effectiveHover,
-      ]);
-
       if (!xScale || !yScale) {
         return null;
       }
 
       return (
-        <G testID={testID}>
-          {PointContent}
+        <>
+          <G opacity={opacity} testID={testID}>
+            {/* pulse ring */}
+            <AnimatedCircle
+              cx={pixelCoordinate.x}
+              cy={pixelCoordinate.y}
+              fill={effectiveColor}
+              opacity={pulse ? pulseOpacity : 0}
+              r={pulseRadius}
+            />
+            {/* inner point */}
+            <Circle
+              cx={pixelCoordinate.x}
+              cy={pixelCoordinate.y}
+              fill={effectiveColor}
+              onPress={
+                onPress
+                  ? (event: any) =>
+                      onPress({ dataX, dataY, x: pixelCoordinate.x, y: pixelCoordinate.y })
+                  : undefined
+              }
+              r={radius}
+              stroke={effectiveStroke}
+              strokeWidth={strokeWidth}
+            />
+          </G>
           {LabelContent}
-        </G>
+        </>
       );
     },
   ),

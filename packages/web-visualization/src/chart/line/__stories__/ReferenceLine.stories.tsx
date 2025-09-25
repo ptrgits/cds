@@ -362,7 +362,7 @@ export const All = () => {
               font: 'label1',
             }}
             labelPosition="left"
-            lineStroke="var(--color-bgWarning)"
+            stroke="var(--color-bgWarning)"
           />
           <ReferenceLine
             dataY={25}
@@ -377,7 +377,7 @@ export const All = () => {
               font: 'label1',
             }}
             labelPosition="right"
-            lineStroke="transparent"
+            stroke="transparent"
           />
         </LineChart>
       </Example>

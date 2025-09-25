@@ -61,7 +61,7 @@ type BaseReferenceLineProps = SharedProps & {
    * The color of the line.
    * @default 'var(--color-bgLine)'
    */
-  lineStroke?: string;
+  stroke?: string;
   /**
    * Configuration for the label rendering.
    * Consolidates styling and positioning options for the ChartText component.
@@ -153,7 +153,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     labelPosition,
     testID,
     LineComponent = DottedLine,
-    lineStroke = 'var(--color-bgLine)',
+    stroke = 'var(--color-bgLine)',
     labelConfig,
     className,
     style,
@@ -222,7 +222,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
           <LineComponent
             animate={false}
             d={`M${drawingArea.x},${yPixel} L${drawingArea.x + drawingArea.width},${yPixel}`}
-            stroke={lineStroke}
+            stroke={stroke}
           />
           {label && (
             <ChartText
@@ -270,7 +270,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
           <LineComponent
             animate={false}
             d={`M${xPixel},${drawingArea.y} L${xPixel},${drawingArea.y + drawingArea.height}`}
-            stroke={lineStroke}
+            stroke={stroke}
           />
           {label && (
             <ChartText textAnchor="middle" {...finalLabelConfig} x={xPixel} y={getLabelY()}>

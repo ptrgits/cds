@@ -282,7 +282,7 @@ const ReferenceLineStories = () => {
               background: theme.color.accentSubtleYellow,
             }}
             labelPosition="left"
-            lineStroke={theme.color.bgWarning}
+            stroke={theme.color.bgWarning}
           />
         </LineChart>
       </Example>

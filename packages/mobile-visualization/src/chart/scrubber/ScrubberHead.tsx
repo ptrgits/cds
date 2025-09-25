@@ -1,6 +1,11 @@
-import { forwardRef, memo, useImperativeHandle, useRef } from 'react';
+import { forwardRef, memo, useCallback, useImperativeHandle, useRef } from 'react';
+import { Circle } from 'react-native-svg';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import { useChartContext, useScrubberContext } from '@coinbase/cds-common/visualizations/charts';
+import {
+  projectPoint,
+  useChartContext,
+  useScrubberContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-mobile';
 
 import { Point, type PointProps, type PointRef } from '../point';
@@ -29,6 +34,7 @@ export type ScrubberHeadRef = PointRef;
 export type ScrubberHeadProps = SharedProps &
   Omit<
     PointProps,
+    | 'pulse'
     | 'yAxisId'
     | 'xAxisId'
     | 'onClick'
@@ -40,6 +46,11 @@ export type ScrubberHeadProps = SharedProps &
     | 'dataY'
     | 'hoverEffect'
   > & {
+    /**
+     * Applies the Point's pulse effect to the scrubber head while it is at rest.
+     * @default false
+     */
+    idlePulse?: boolean;
     // make Point's coordinates optional for ScrubberHead
     dataX?: PointProps['dataX'];
     dataY?: PointProps['dataY'];
@@ -69,7 +80,7 @@ export const ScrubberHead = memo(
         color,
         radius = 4,
         testID,
-        pulse = false,
+        idlePulse = false,
         opacity = 1,
         dataKey,
         ...props
@@ -77,9 +88,8 @@ export const ScrubberHead = memo(
       ref,
     ) => {
       const theme = useTheme();
-      const { getSeries, getXScale, getYScale, getSeriesData } = useChartContext();
       const pointRef = useRef<PointRef>(null);
-
+      const { getSeries, getXScale, getYScale, getSeriesData } = useChartContext();
       const { highlightedIndex } = useScrubberContext();
 
       // Find target series for color and data
@@ -89,6 +99,22 @@ export const ScrubberHead = memo(
       // Get scales for this series
       const xScale = getXScale?.(targetSeries?.xAxisId);
       const yScale = getYScale?.(targetSeries?.yAxisId);
+
+      const getPixelCoordinate = useCallback(
+        (dataX: number, dataY: number) => {
+          if (!xScale || !yScale) {
+            return { x: 0, y: 0 };
+          }
+
+          return projectPoint({
+            x: dataX,
+            y: dataY,
+            xScale,
+            yScale,
+          });
+        },
+        [xScale, yScale],
+      );
 
       useImperativeHandle(ref, () => ({
         pulse: () => pointRef.current?.pulse(),
@@ -145,21 +171,35 @@ export const ScrubberHead = memo(
         }
       }
 
+      const pixelCoordinate = getPixelCoordinate(x, y);
       const pointColor = color || targetSeries?.color || theme.color.fgPrimary;
+      const pulseRadius = radius * 4;
+      const innerRingRadius = (radius + pulseRadius) / 2;
 
       return (
-        <Point
-          ref={pointRef}
-          color={pointColor}
-          dataX={x}
-          dataY={y}
-          opacity={opacity}
-          pulse={pulse}
-          radius={radius}
-          stroke={theme.color.bg}
-          strokeWidth={2}
-          {...props}
-        />
+        <>
+          <Circle
+            cx={pixelCoordinate.x}
+            cy={pixelCoordinate.y}
+            fill={pointColor}
+            opacity={0.15}
+            r={innerRingRadius}
+          />
+          <Point
+            ref={pointRef}
+            color={pointColor}
+            dataX={x}
+            dataY={y}
+            opacity={opacity}
+            pulse={idlePulse}
+            radius={radius}
+            stroke={theme.color.bg}
+            strokeWidth={2}
+            xAxisId={targetSeries?.xAxisId}
+            yAxisId={targetSeries?.yAxisId}
+            {...props}
+          />
+        </>
       );
     },
   ),

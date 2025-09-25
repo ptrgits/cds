@@ -18,6 +18,7 @@ export type AreaComponentProps = {
   clipRect?: Rect;
   stroke?: string;
   strokeWidth?: number;
+  disableAnimations?: boolean;
 };
 
 export type AreaComponent = React.FC<AreaComponentProps>;
@@ -56,6 +57,7 @@ export type AreaProps = {
   fillOpacity?: number;
   stroke?: string;
   strokeWidth?: number;
+  disableAnimations?: boolean;
 };
 
 export const Area = memo<AreaProps>(
@@ -68,6 +70,7 @@ export const Area = memo<AreaProps>(
     fillOpacity = 1,
     stroke,
     strokeWidth,
+    disableAnimations,
   }) => {
     const theme = useTheme();
     const { getSeries, getSeriesData, getXScale, getYScale, getXAxis } = useChartContext();
@@ -133,6 +136,7 @@ export const Area = memo<AreaProps>(
       <AreaComponent
         clipRect={drawingArea}
         d={area}
+        disableAnimations={disableAnimations}
         fill={fill}
         fillOpacity={fillOpacity}
         stroke={stroke}

@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { useChartContext } from '@coinbase/cds-common/visualizations/charts';
 
 import { Path, type PathProps } from '../Path';
 
@@ -12,7 +11,6 @@ export type SolidAreaProps = Omit<PathProps, 'd' | 'fill' | 'fillOpacity'> & Are
  */
 export const SolidArea = memo<SolidAreaProps>(
   ({ d, fill, fillOpacity = 1, clipRect, ...props }) => {
-    const context = useChartContext();
     return <Path clipRect={clipRect} d={d} fill={fill} fillOpacity={fillOpacity} {...props} />;
   },
 );
