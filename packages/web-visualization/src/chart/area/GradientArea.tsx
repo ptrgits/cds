@@ -20,7 +20,7 @@ export type GradientAreaProps = Omit<PathProps, 'd' | 'fill' | 'fillOpacity'> &
     baselineColor?: string;
     /**
      * Opacity at peak values.
-     * @default 1
+     * @default 0.3
      */
     peakOpacity?: number;
     /**

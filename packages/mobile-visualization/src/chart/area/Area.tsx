@@ -19,6 +19,16 @@ export type AreaComponentProps = {
   stroke?: string;
   strokeWidth?: number;
   disableAnimations?: boolean;
+  /**
+   * ID of the y-axis to use.
+   * If not provided, defaults to the default y-axis.
+   */
+  yAxisId?: string;
+  /**
+   * Baseline value for the gradient.
+   * When set, overrides the default baseline.
+   */
+  baseline?: number;
 };
 
 export type AreaComponent = React.FC<AreaComponentProps>;
@@ -58,6 +68,11 @@ export type AreaProps = {
   stroke?: string;
   strokeWidth?: number;
   disableAnimations?: boolean;
+  /**
+   * Baseline value for the gradient.
+   * When set, overrides the default baseline.
+   */
+  baseline?: number;
 };
 
 export const Area = memo<AreaProps>(
@@ -71,6 +86,7 @@ export const Area = memo<AreaProps>(
     stroke,
     strokeWidth,
     disableAnimations,
+    baseline,
   }) => {
     const theme = useTheme();
     const { getSeries, getSeriesData, getXScale, getYScale, getXAxis } = useChartContext();
@@ -134,6 +150,7 @@ export const Area = memo<AreaProps>(
 
     return (
       <AreaComponent
+        baseline={baseline}
         clipRect={drawingArea}
         d={area}
         disableAnimations={disableAnimations}
@@ -141,6 +158,7 @@ export const Area = memo<AreaProps>(
         fillOpacity={fillOpacity}
         stroke={stroke}
         strokeWidth={strokeWidth}
+        yAxisId={matchedSeries?.yAxisId}
       />
     );
   },

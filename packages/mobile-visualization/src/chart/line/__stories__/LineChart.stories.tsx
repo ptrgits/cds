@@ -1420,7 +1420,9 @@ const LineChartStories = () => {
             showGrid: true,
             tickLabelFormatter: (value) => value.toLocaleString(),
           }}
-        />
+        >
+          <Scrubber />
+        </LineChart>
       </Example>
       <Example title="Points">
         <Chart

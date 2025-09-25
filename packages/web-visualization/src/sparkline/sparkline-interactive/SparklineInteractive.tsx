@@ -188,7 +188,7 @@ export const SparklineInteractive = memo(
     hidePeriodSelector = false,
     disableScrubbing = false,
     fill = true,
-    fillType = 'dotted',
+    fillType,
     yAxisScalingFactor = 1.0,
     compact,
     formatHoverDate,

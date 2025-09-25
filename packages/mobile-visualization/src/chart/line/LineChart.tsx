@@ -1,11 +1,14 @@
 import React, { forwardRef, memo, useMemo } from 'react';
-import type { View } from 'react-native';
+import { View } from 'react-native';
 import {
   type AxisConfigProps,
   defaultChartPadding,
   getPadding,
   type Series,
 } from '@coinbase/cds-common/visualizations/charts';
+import { chartFallbackNegative, chartFallbackPositive } from '@coinbase/cds-lottie-files';
+import { Lottie } from '@coinbase/cds-mobile/animation';
+import { Box } from '@coinbase/cds-mobile/layout';
 
 import { XAxis, type XAxisProps, YAxis, type YAxisProps } from '../axis';
 import { Chart, type ChartProps } from '../Chart';
@@ -19,21 +22,30 @@ export type LineChartDefaultFallbackProps = {
   fallbackType?: 'positive' | 'negative';
 };
 
+// Default fallback component with Lottie animations
+const DefaultFallback = memo(({ fallbackType = 'positive' }: LineChartDefaultFallbackProps) => {
+  const source = fallbackType === 'negative' ? chartFallbackNegative : chartFallbackPositive;
+  return <Lottie autoplay loop height="100%" source={source} width="100%" />;
+});
+
 /**
  * Series type specifically for line charts - enforces single number arrays and supports Line props
  */
 export type LineSeries = Omit<Series, 'data'> & {
   /**
    * The data array for this series. Use null values to create gaps in the line.
-   * Must be single numbers only for line charts.
+   * - Single numbers: Area (if shown) will extend from the y-axis minimum to the value
+   * - Tuples [baseline, value]: Area will extend from baseline to value (line still shows at value)
    */
-  data?: Array<number | null>;
+  data?: Array<number | null> | Array<[number, number] | null>;
 } & Partial<
     Pick<
       LineProps,
       | 'curve'
+      | 'onPointPress'
       | 'showArea'
       | 'areaType'
+      | 'areaBaseline'
       | 'type'
       | 'type'
       | 'LineComponent'
@@ -47,7 +59,14 @@ export type LineSeries = Omit<Series, 'data'> & {
 export type LineChartProps = Omit<ChartProps, 'xAxis' | 'yAxis' | 'series'> &
   Pick<
     LineProps,
-    'showArea' | 'areaType' | 'type' | 'LineComponent' | 'AreaComponent' | 'curve' | 'renderPoints'
+    | 'showArea'
+    | 'areaType'
+    | 'type'
+    | 'onPointPress'
+    | 'LineComponent'
+    | 'AreaComponent'
+    | 'curve'
+    | 'renderPoints'
   > & {
     /**
      * Configuration objects that define how to visualize the data.
@@ -92,6 +111,7 @@ export const LineChart = memo(
         showArea,
         areaType,
         type,
+        onPointPress,
         LineComponent,
         AreaComponent,
         curve,
@@ -175,39 +195,56 @@ export const LineChart = memo(
       };
 
       return (
-        <Chart
-          {...chartProps}
-          ref={ref}
-          enableScrubbing={enableScrubbing}
-          padding={calculatedPadding}
-          series={chartSeries}
-          xAxis={xAxisConfig}
-          yAxis={yAxisConfig}
-        >
-          {/* Render axes first for grid lines to appear behind everything else */}
-          {showXAxis && (
-            <XAxis axisId={xAxisId} dataKey={dataKey} position="end" {...xAxisVisualProps} />
+        <View style={{ position: 'relative' }}>
+          <Chart
+            {...chartProps}
+            ref={ref}
+            enableScrubbing={enableScrubbing}
+            padding={calculatedPadding}
+            series={chartSeries}
+            xAxis={xAxisConfig}
+            yAxis={yAxisConfig}
+          >
+            {/* Render axes first for grid lines to appear behind everything else */}
+            {showXAxis && (
+              <XAxis axisId={xAxisId} dataKey={dataKey} position="end" {...xAxisVisualProps} />
+            )}
+            {showYAxis && (
+              <YAxis axisId={yAxisId} dataKey={dataKey} position="end" {...yAxisVisualProps} />
+            )}
+            {hasData &&
+              series?.map(
+                ({ id, data, label, color, xAxisId, yAxisId, ...linePropsFromSeries }) => (
+                  <Line
+                    key={id}
+                    AreaComponent={AreaComponent}
+                    LineComponent={LineComponent}
+                    areaType={areaType}
+                    curve={curve}
+                    onPointPress={onPointPress}
+                    renderPoints={renderPoints}
+                    seriesId={id}
+                    showArea={showArea}
+                    type={type}
+                    {...linePropsFromSeries}
+                  />
+                ),
+              )}
+            {children}
+          </Chart>
+          {!hasData && !disableFallback && (
+            <Box
+              alignItems="center"
+              height="100%"
+              justifyContent="center"
+              position="absolute"
+              top={0}
+              width="100%"
+            >
+              {fallback ?? <DefaultFallback fallbackType={fallbackType} />}
+            </Box>
           )}
-          {showYAxis && (
-            <YAxis axisId={yAxisId} dataKey={dataKey} position="end" {...yAxisVisualProps} />
-          )}
-          {hasData &&
-            series?.map(({ id, data, label, color, xAxisId, yAxisId, ...linePropsFromSeries }) => (
-              <Line
-                key={id}
-                AreaComponent={AreaComponent}
-                LineComponent={LineComponent}
-                areaType={areaType}
-                curve={curve}
-                renderPoints={renderPoints}
-                seriesId={id}
-                showArea={showArea}
-                type={type}
-                {...linePropsFromSeries}
-              />
-            ))}
-          {children}
-        </Chart>
+        </View>
       );
     },
   ),
