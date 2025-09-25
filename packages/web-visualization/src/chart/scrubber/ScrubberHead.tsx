@@ -1,8 +1,7 @@
 import { forwardRef, memo, useCallback, useImperativeHandle, useRef } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import { projectPoint, useChartContext } from '@coinbase/cds-common/visualizations/charts';
+import { projectPoint, useChartContext, useScrubberContext } from '@coinbase/cds-common/visualizations/charts';
 
-import { useScrubberContext } from '../Chart';
 import { Point, type PointProps, type PointRef } from '../point';
 
 export const dataKeyUpdateAnimationVariants = {
@@ -190,6 +189,8 @@ export const ScrubberHead = memo(
             radius={radius}
             stroke="var(--color-bg)"
             strokeWidth={2}
+            xAxisId={targetSeries?.xAxisId}
+            yAxisId={targetSeries?.yAxisId}
             {...props}
           />
         </>

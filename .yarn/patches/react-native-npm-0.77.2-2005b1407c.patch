@@ -1,8 +1,8 @@
 diff --git a/React/Views/RCTModalHostViewManager.m b/React/Views/RCTModalHostViewManager.m
-index b0295e05ae4d54091bd80f77809ca2aeaaa8562b..81f8f4fa738cfe80ec89f32ebe5bab7ed21f5958 100644
+index eccf05f9cb679559714cd135737da6825896cfc2..247928492fcb3cbd0fc7e035db1cdb77bf6ce67c 100644
 --- a/React/Views/RCTModalHostViewManager.m
 +++ b/React/Views/RCTModalHostViewManager.m
-@@ -75,7 +75,6 @@ - (void)presentModalHostView:(RCTModalHostView *)modalHostView
+@@ -60,7 +60,6 @@ - (void)presentModalHostView:(RCTModalHostView *)modalHostView
        modalHostView.onShow(nil);
      }
    };
@@ -10,7 +10,7 @@ index b0295e05ae4d54091bd80f77809ca2aeaaa8562b..81f8f4fa738cfe80ec89f32ebe5bab7e
      if (self->_presentationBlock) {
        self->_presentationBlock([modalHostView reactViewController], viewController, animated, completionBlock);
      } else {
-@@ -83,7 +82,6 @@ - (void)presentModalHostView:(RCTModalHostView *)modalHostView
+@@ -68,7 +67,6 @@ - (void)presentModalHostView:(RCTModalHostView *)modalHostView
                                                          animated:animated
                                                        completion:completionBlock];
      }
@@ -18,7 +18,7 @@ index b0295e05ae4d54091bd80f77809ca2aeaaa8562b..81f8f4fa738cfe80ec89f32ebe5bab7e
  }
  
  - (void)dismissModalHostView:(RCTModalHostView *)modalHostView
-@@ -95,7 +93,6 @@ - (void)dismissModalHostView:(RCTModalHostView *)modalHostView
+@@ -80,7 +78,6 @@ - (void)dismissModalHostView:(RCTModalHostView *)modalHostView
        [[self.bridge moduleForClass:[RCTModalManager class]] modalDismissed:modalHostView.identifier];
      }
    };
@@ -26,7 +26,7 @@ index b0295e05ae4d54091bd80f77809ca2aeaaa8562b..81f8f4fa738cfe80ec89f32ebe5bab7e
      if (self->_dismissalBlock) {
        self->_dismissalBlock([modalHostView reactViewController], viewController, animated, completionBlock);
      } else if (viewController.presentingViewController) {
-@@ -106,7 +103,6 @@ - (void)dismissModalHostView:(RCTModalHostView *)modalHostView
+@@ -91,7 +88,6 @@ - (void)dismissModalHostView:(RCTModalHostView *)modalHostView
        // This, somehow, invalidate the presenting view controller and the modal remains always visible.
        completionBlock();
      }

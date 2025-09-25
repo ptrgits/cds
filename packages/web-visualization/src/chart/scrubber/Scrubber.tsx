@@ -10,7 +10,12 @@ import React, {
 } from 'react';
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import { type ChartScaleFunction, projectPoint } from '@coinbase/cds-common/visualizations/charts';
+import {
+  type ChartScaleFunction,
+  getPointOnScale,
+  projectPoint,
+  useScrubberContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import {
   useChartContext,
   useChartDrawingAreaContext,
@@ -19,7 +24,6 @@ import { useTheme } from '@coinbase/cds-web';
 import { m } from 'framer-motion';
 
 import { axisTickLabelsInitialAnimationVariants } from '../axis';
-import { useScrubberContext } from '../Chart';
 import { ReferenceLine, type ReferenceLineProps } from '../line';
 
 import {
@@ -53,6 +57,13 @@ export type ScrubberProps = SharedProps &
      * Whether to hide the overlay rect which hides future data.
      */
     hideOverlay?: boolean;
+
+    /**
+     * Offset of the overlay rect relative to the drawing area.
+     * Useful for when scrubbing over lines, where the stroke width would cause part of the line to be visible.
+     * @default 2
+     */
+    overlayOffset?: number;
 
     /**
      * Label content for scrubber (shows above the scrubber line).
@@ -118,6 +129,7 @@ export const Scrubber = memo(
         scrubberLabelConfig,
         scrubberComponents,
         hideOverlay,
+        overlayOffset = 2,
         testID,
         idlePulse,
         scrubberStyles,
@@ -188,6 +200,7 @@ export const Scrubber = memo(
             })
             ?.map((s) => {
               const sourceData = getStackedSeriesData(s.id) || getSeriesData(s.id);
+
               // Use dataIndex to get the y value from the series data array
               const stuff = sourceData?.[dataIndex];
               let dataY: number | undefined;
@@ -199,6 +212,10 @@ export const Scrubber = memo(
 
               if (dataY !== undefined) {
                 const yScale = getYScale(s.yAxisId) as ChartScaleFunction;
+                if (!yScale) {
+                  return undefined;
+                }
+
                 const pixelPosition = projectPoint({
                   x: dataX,
                   y: dataY,
@@ -543,10 +560,9 @@ export const Scrubber = memo(
         });
       }, [headPositions]);
 
-      // Check if we have at least the default scales
+      // Check if we have at least the default X scale
       const defaultXScale = getXScale?.();
-      const defaultYScale = getYScale?.();
-      if (!defaultXScale || !defaultYScale) return null;
+      if (!defaultXScale) return null;
 
       // Use custom components if provided
       const ScrubberLineComponent = scrubberComponents?.ScrubberLineComponent ?? ReferenceLine;
@@ -557,7 +573,8 @@ export const Scrubber = memo(
       // todo: figure out why scrubber heads across dataKey values isn't working anymore
       // for animations
 
-      const pixelX = dataX !== undefined ? defaultXScale(dataX) : undefined;
+      const pixelX =
+        dataX !== undefined && defaultXScale ? getPointOnScale(dataX, defaultXScale) : undefined;
 
       // todo: figure out if we should disable 'pulse' animation when scrubbing
       return (
@@ -580,11 +597,11 @@ export const Scrubber = memo(
             pixelX !== undefined && (
               <rect
                 fill="var(--color-bg)"
-                height={drawingArea.height}
+                height={drawingArea.height + overlayOffset * 2}
                 opacity={0.8}
-                width={drawingArea.x + drawingArea.width - pixelX}
+                width={drawingArea.x + drawingArea.width - pixelX + overlayOffset}
                 x={pixelX}
-                y={drawingArea.y}
+                y={drawingArea.y - overlayOffset}
               />
             )}
           {!hideScrubberLine && highlightedIndex !== undefined && dataX !== undefined && (

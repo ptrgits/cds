@@ -2,10 +2,13 @@ import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRe
 import { Animated } from 'react-native';
 import { Circle, G } from 'react-native-svg';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import { projectPoint, useChartContext } from '@coinbase/cds-common/visualizations/charts';
+import {
+  projectPoint,
+  useChartContext,
+  useScrubberContext,
+} from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
-import { useHighlightContext } from '../Chart';
 import { ChartText, type ChartTextProps } from '../text';
 import type { ChartTextChildren } from '../text/ChartText';
 
@@ -17,33 +20,33 @@ export const pulseDuration = 2000; // 2 seconds
  */
 function calculateLabelAlignment(
   position: PointLabelConfig['position'],
-): Pick<ChartTextProps, 'textAnchor' | 'dominantBaseline'> {
+): Pick<ChartTextProps, 'textAnchor' | 'alignmentBaseline'> {
   switch (position) {
     case 'top':
       return {
         textAnchor: 'middle',
-        dominantBaseline: 'baseline',
+        alignmentBaseline: 'baseline',
       };
     case 'bottom':
       return {
         textAnchor: 'middle',
-        dominantBaseline: 'hanging',
+        alignmentBaseline: 'hanging',
       };
     case 'left':
       return {
         textAnchor: 'end',
-        dominantBaseline: 'central',
+        alignmentBaseline: 'central',
       };
     case 'right':
       return {
         textAnchor: 'start',
-        dominantBaseline: 'central',
+        alignmentBaseline: 'central',
       };
     case 'center':
     default:
       return {
         textAnchor: 'middle',
-        dominantBaseline: 'central',
+        alignmentBaseline: 'central',
       };
   }
 }
@@ -95,7 +98,7 @@ export type PointLabelConfig = Pick<
   | 'disableRepositioning'
   | 'bounds'
   | 'styles'
-  | 'dominantBaseline'
+  | 'alignmentBaseline'
   | 'textAnchor'
 > & {
   /**
@@ -222,7 +225,7 @@ export const Point = memo(
       const effectiveStroke = stroke ?? theme.color.bg;
       const pulseOpacity = useRef(new Animated.Value(0)).current;
       const { getXScale, getYScale } = useChartContext();
-      const { highlightedIndex } = useHighlightContext();
+      const { highlightedIndex } = useScrubberContext();
 
       const xScale = getXScale(xAxisId);
       const yScale = getYScale(yAxisId);
@@ -336,8 +339,8 @@ export const Point = memo(
       }
 
       return (
-        <G testID={testID}>
-          <G opacity={opacity}>
+        <>
+          <G opacity={opacity} testID={testID}>
             {/* pulse ring */}
             <AnimatedCircle
               cx={pixelCoordinate.x}
@@ -363,7 +366,7 @@ export const Point = memo(
             />
           </G>
           {LabelContent}
-        </G>
+        </>
       );
     },
   ),

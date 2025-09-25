@@ -1,12 +1,4 @@
-import React, {
-  createContext,
-  forwardRef,
-  memo,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import type { Rect } from '@coinbase/cds-common/types';
 import {
   type AxisConfig,
@@ -27,6 +19,8 @@ import {
   getStackedSeriesData as calculateStackedSeriesData,
   isCategoricalScale,
   type RegisteredAxis,
+  ScrubberContext,
+  type ScrubberContextValue,
   type Series,
 } from '@coinbase/cds-common/visualizations/charts';
 import { cx } from '@coinbase/cds-web';
@@ -44,26 +38,6 @@ const focusStylesCss = css`
     outline-offset: 2px;
   }
 `;
-
-// Chart highlighting context
-export type ScrubberContextValue = {
-  /** Whether scrubbing is enabled on the parent Chart component */
-  scrubbingEnabled: boolean;
-  /** The currently highlighted data index, or undefined if nothing is highlighted */
-  highlightedIndex?: number;
-  /** Update the highlighted data index */
-  updateHighlightedIndex: (index: number | undefined) => void;
-};
-
-export const ScrubberContext = createContext<ScrubberContextValue | undefined>(undefined);
-
-export const useScrubberContext = (): ScrubberContextValue => {
-  const context = useContext(ScrubberContext);
-  if (!context) {
-    throw new Error('useScrubberContext must be used within a Chart component');
-  }
-  return context;
-};
 
 export type ChartBaseProps = BoxBaseProps & {
   /**
@@ -278,11 +252,6 @@ export const Chart = memo(
         return scales;
       }, [chartRect, yAxes]);
 
-      /*
-      A helper function that finds the nearest dataX to the pixel coordinates from hover interaction.
-      todo: handle multiple scales
-      todo: can we simplify this a lot to rely on numbers only?
-    */
       const getDataIndexFromX = useCallback(
         (mouseX: number): number => {
           const defaultXScale = xScales.get(defaultAxisId);
@@ -379,12 +348,35 @@ export const Chart = memo(
           if (!defaultXScale || !defaultXAxis) return;
 
           const isBand = isCategoricalScale(defaultXScale as any);
-          const categories = isBand
-            ? (defaultXScale.domain?.() ?? (defaultXAxis.data as string[] | undefined))
-            : (defaultXAxis.data as string[] | undefined);
-          const domain = defaultXAxis.domain;
-          const minIndex = isBand ? 0 : (domain.min ?? 0);
-          const maxIndex = isBand ? (categories?.length ?? 1) - 1 : (domain.max ?? 0);
+
+          // Determine the actual data indices we can navigate to
+          let minIndex: number;
+          let maxIndex: number;
+          let dataPoints: number | undefined;
+
+          if (isBand) {
+            // For categorical scales, use the categories
+            const categories = defaultXScale.domain?.() ?? defaultXAxis.data ?? [];
+            minIndex = 0;
+            maxIndex = Math.max(0, categories.length - 1);
+            dataPoints = categories.length;
+          } else {
+            // For numeric scales, check if we have specific data points
+            const axisData = defaultXAxis.data;
+            if (axisData && Array.isArray(axisData)) {
+              // We have specific data points - use their indices
+              minIndex = 0;
+              maxIndex = Math.max(0, axisData.length - 1);
+              dataPoints = axisData.length;
+            } else {
+              // Fall back to domain-based navigation for continuous scales without specific data
+              const domain = defaultXAxis.domain;
+              minIndex = domain.min ?? 0;
+              maxIndex = domain.max ?? 0;
+              dataPoints = maxIndex - minIndex + 1;
+            }
+          }
+
           const currentIndex = highlightedIndex ?? minIndex;
           const dataRange = maxIndex - minIndex;
 

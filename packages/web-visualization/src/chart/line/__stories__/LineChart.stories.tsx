@@ -1,5 +1,6 @@
-import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
+import { candles as btcCandles } from '@coinbase/cds-common/internal/data/candles';
 import { prices } from '@coinbase/cds-common/internal/data/prices';
 import { sparklineInteractiveData } from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
 import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
@@ -25,7 +26,6 @@ import { Text, TextLabel1 } from '@coinbase/cds-web/typography';
 import { AnimatePresence, m as motion } from 'framer-motion';
 
 import {
-  btcCandles,
   type ChartTextChildren,
   LiveTabLabel,
   PeriodSelector,
@@ -36,7 +36,6 @@ import {
 import { Area, type AreaComponentProps, DottedArea, GradientArea } from '../../area';
 import { XAxis, YAxis } from '../../axis';
 import { Chart } from '../../Chart';
-import { ChartHeader } from '../../ChartHeader';
 import { Point } from '../../point';
 import { DottedLine, GradientLine, Line, LineChart, ReferenceLine, SolidLine } from '..';
 
@@ -141,34 +140,6 @@ const PeriodSelectorTab: TabComponent = memo(
     />
   )),
 );
-
-export const BasicLineChart = () => {
-  const chartData = [65, 78, 45, 88, 92, 73, 69];
-
-  return (
-    <LineChart
-      enableScrubbing
-      showYAxis
-      height={defaultChartHeight}
-      renderPoints={() => true}
-      series={[
-        {
-          id: 'monthly-growth',
-          data: chartData,
-          label: 'Monthly Growth',
-          color: '#2ca02c',
-        },
-      ]}
-      yAxis={{
-        requestedTickCount: 2,
-        tickLabelFormatter: (value) => `$${value}`,
-        showGrid: true,
-      }}
-    >
-      <Scrubber />
-    </LineChart>
-  );
-};
 
 export const BasicLineChartWithPoints = () => {
   const chartData = [65, 78, 45, 88, 92, 73, 69];
@@ -290,11 +261,10 @@ export const AssetPrice = () => {
 
   return (
     <VStack gap={2}>
-      <ChartHeader
-        description={highlightedPrice}
-        title="Price"
-        trend={trendInfo.text}
-        trendDirection={trendInfo.direction}
+      <SectionHeader
+        balance={<Text font="title2">{highlightedPrice}</Text>}
+        style={{ padding: 0 }}
+        title={<Text font="title1">Price</Text>}
       />
       <LineChart
         enableScrubbing
@@ -522,13 +492,16 @@ export const BTCPriceChart = () => {
       <VStack gap={3} width="100%">
         <HStack alignItems="flex-start" gap={3} justifyContent="space-between" padding={4}>
           {/* todo: set trend to black */}
-          <ChartHeader
-            description={formattedPrice}
-            title={<Text font="headline">Coinbase Wrapped BTC</Text>}
-            trend={formattedPriceChange}
-            trendDirection={trendDirection as 'up' | 'down' | 'neutral'}
+          <SectionHeader
+            balance={<Text font="title2">{formattedPrice}</Text>}
+            end={
+              <VStack justifyContent="center">
+                <RemoteImage shape="circle" size="xxl" source={assets.btc.imageUrl} />
+              </VStack>
+            }
+            style={{ padding: 0 }}
+            title={<Text font="title1">Coinbase Wrapped BTC</Text>}
           />
-          <RemoteImage alt="Bitcoin" shape="circle" size="xxxl" src={assets.btc.imageUrl} />
         </HStack>
         <Chart
           enableScrubbing
@@ -754,15 +727,6 @@ export const ColorShiftChart = () => {
       transition={{ duration: 0.3 }}
     >
       <VStack gap={3} width="100%">
-        <HStack alignItems="flex-start" gap={3} justifyContent="space-between" padding={4}>
-          <ChartHeader
-            description={formattedPrice}
-            title={<Text font="headline">XRP</Text>}
-            trend={formattedPriceChange}
-            trendDirection={trendDirection as 'up' | 'down' | 'neutral'}
-          />
-          <RemoteImage alt="XRP" shape="circle" size="xxxl" src={assets.xrp.imageUrl} />
-        </HStack>
         <LineChart
           enableScrubbing
           showArea
@@ -1064,14 +1028,6 @@ export const PriceChart = () => {
 
   return (
     <VStack gap={3} width="100%">
-      <HStack alignItems="flex-start" gap={3} justifyContent="space-between" padding={4}>
-        <ChartHeader
-          description={formattedPrice}
-          title={<Text font="headline">Ethereum</Text>}
-          trend={formattedPriceChange}
-          trendDirection={trendDirection as 'up' | 'down' | 'neutral'}
-        />
-      </HStack>
       <LineChart
         enableScrubbing
         showArea
@@ -1473,6 +1429,7 @@ const BTCActiveIndicator = memo(({ style, ...props }: TabsActiveIndicatorProps) 
 ));
 
 export const AssetPriceDotted = () => {
+  const currentPriceId = useId();
   const [scrubIndex, setScrubIndex] = useState<number | null>(null);
   const currentPrice =
     sparklineInteractiveData.hour[sparklineInteractiveData.hour.length - 1].value;
@@ -1532,6 +1489,16 @@ export const AssetPriceDotted = () => {
     return `${dayOfWeek}, ${monthDay}, ${time}`;
   }, []);
 
+  const accessibilityLabel: string | undefined = useMemo(() => {
+    if (scrubIndex === null) return undefined;
+    const price = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(sparklineTimePeriodDataValues[scrubIndex]);
+    const date = formatDate(sparklineTimePeriodDataTimestamps[scrubIndex]);
+    return `${price} USD ${date}`;
+  }, [scrubIndex, sparklineTimePeriodDataValues, formatDate, sparklineTimePeriodDataTimestamps]);
+
   const scrubberLabel: ChartTextChildren = useMemo(() => {
     if (scrubIndex === null) return null;
     const price = new Intl.NumberFormat('en-US', {
@@ -1549,7 +1516,11 @@ export const AssetPriceDotted = () => {
   return (
     <VStack gap={2}>
       <SectionHeader
-        balance={<Text font="title2">{formatPrice(currentPrice)}</Text>}
+        balance={
+          <Text font="title2" id={currentPriceId}>
+            {formatPrice(currentPrice)}
+          </Text>
+        }
         end={
           <VStack justifyContent="center">
             <RemoteImage shape="circle" size="xl" source={assets.btc.imageUrl} />
@@ -1561,7 +1532,9 @@ export const AssetPriceDotted = () => {
       <LineChart
         enableScrubbing
         showArea
+        accessibilityLabel={accessibilityLabel}
         areaType="dotted"
+        aria-labelledby={!accessibilityLabel ? currentPriceId : undefined}
         height={300}
         onScrubberPosChange={setScrubIndex}
         series={[
@@ -1777,5 +1750,151 @@ export const AvailabilityChart = () => {
         seriesId="availability"
       />
     </Chart>
+  );
+};
+
+const Example: React.FC<
+  React.PropsWithChildren<{ title: string; description?: string | React.ReactNode }>
+> = ({ children, title, description }) => {
+  return (
+    <VStack gap={2}>
+      <Text as="h2" display="block" font="title3">
+        {title}
+      </Text>
+      {description}
+      {children}
+    </VStack>
+  );
+};
+
+const GainLossChart = () => {
+  const gradientId = useId();
+
+  const data = [-40, -28, -21, -5, 48, -5, -28, 2, -29, -46, 16, -30, -29, 8];
+
+  const ChartDefs = ({ threshold = 0 }) => {
+    const { getYScale } = useChartContext();
+    // get the default y-axis scale
+    const yScale = getYScale?.();
+
+    if (yScale) {
+      const domain = yScale.domain();
+      const range = yScale.range();
+
+      const baselinePercentage = ((threshold - domain[0]) / (domain[1] - domain[0])) * 100;
+
+      const negativeColor = 'rgb(var(--gray15))';
+      const positiveColor = 'var(--color-fgPositive)';
+
+      return (
+        <defs>
+          <linearGradient
+            gradientUnits="userSpaceOnUse"
+            id={`${gradientId}-solid`}
+            x1="0%"
+            x2="0%"
+            y1={range[0]}
+            y2={range[1]}
+          >
+            <stop offset="0%" stopColor={negativeColor} />
+            <stop offset={`${baselinePercentage}%`} stopColor={negativeColor} />
+            <stop offset={`${baselinePercentage}%`} stopColor={positiveColor} />
+            <stop offset="100%" stopColor={positiveColor} />
+          </linearGradient>
+          <linearGradient
+            gradientUnits="userSpaceOnUse"
+            id={`${gradientId}-gradient`}
+            x1="0%"
+            x2="0%"
+            y1={range[0]}
+            y2={range[1]}
+          >
+            <stop offset="0%" stopColor={negativeColor} stopOpacity={0.3} />
+            <stop offset={`${baselinePercentage}%`} stopColor={negativeColor} stopOpacity={0} />
+            <stop offset={`${baselinePercentage}%`} stopColor={positiveColor} stopOpacity={0} />
+            <stop offset="100%" stopColor={positiveColor} stopOpacity={0.3} />
+          </linearGradient>
+        </defs>
+      );
+    }
+
+    return null;
+  };
+
+  const tickLabelFormatter = useCallback(
+    (value: number) =>
+      new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+      }).format(value),
+    [],
+  );
+
+  const solidColor = `url(#${gradientId}-solid)`;
+
+  return (
+    <Chart
+      enableScrubbing
+      height={250}
+      padding={{ top: 12, bottom: 12, left: 0, right: 0 }}
+      series={[
+        {
+          id: 'prices',
+          data: data,
+          color: solidColor,
+        },
+      ]}
+    >
+      <ChartDefs />
+      <YAxis showGrid requestedTickCount={2} tickLabelFormatter={tickLabelFormatter} />
+      <Area curve="monotone" fill={`url(#${gradientId}-gradient)`} seriesId="prices" />
+      <Line curve="monotone" seriesId="prices" stroke={solidColor} strokeWidth={3} />
+      <Scrubber hideOverlay />
+    </Chart>
+  );
+};
+
+const sampleData = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
+
+export const All = () => {
+  return (
+    <VStack gap={2}>
+      <Example title="Basic">
+        <LineChart
+          enableScrubbing
+          showArea
+          showYAxis
+          curve="monotone"
+          height={250}
+          series={[
+            {
+              id: 'prices',
+              data: sampleData,
+            },
+          ]}
+          yAxis={{
+            showGrid: true,
+          }}
+        >
+          <Scrubber />
+        </LineChart>
+      </Example>
+      <Example title="Simple">
+        <LineChart
+          curve="monotone"
+          height={250}
+          series={[
+            {
+              id: 'prices',
+              data: sampleData,
+            },
+          ]}
+        />
+      </Example>
+      <Example title="Gain/Loss">
+        <GainLossChart />
+      </Example>
+    </VStack>
   );
 };

@@ -29,12 +29,10 @@ export const DottedLine = memo<DottedLineProps>(
     const context = useChartContext();
     const theme = useTheme();
 
-    const effectiveStroke = stroke ?? theme.color.bgLine;
-
     return (
       <Path
         fill={fill}
-        stroke={effectiveStroke}
+        stroke={stroke ?? theme.color.bgLine}
         strokeDasharray={strokeDasharray}
         strokeLinecap={strokeLinecap}
         strokeLinejoin={strokeLinejoin}
