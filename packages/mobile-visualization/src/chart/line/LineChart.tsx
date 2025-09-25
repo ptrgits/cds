@@ -57,14 +57,7 @@ export type LineSeries = Omit<Series, 'data'> & {
 export type LineChartProps = Omit<ChartProps, 'xAxis' | 'yAxis' | 'series'> &
   Pick<
     LineProps,
-    | 'showArea'
-    | 'areaType'
-    | 'type'
-    | 'onPointPress'
-    | 'LineComponent'
-    | 'AreaComponent'
-    | 'curve'
-    | 'renderPoints'
+    'showArea' | 'areaType' | 'type' | 'LineComponent' | 'AreaComponent' | 'curve' | 'renderPoints'
   > & {
     /**
      * Configuration objects that define how to visualize the data.
