@@ -5,6 +5,7 @@ import {
   useChartContext,
   useChartDrawingAreaContext,
 } from '@coinbase/cds-common/visualizations/charts';
+import { cx } from '@coinbase/cds-web';
 
 import { ChartText } from '../text';
 import type { ChartTextChildren, ChartTextProps } from '../text/ChartText';
@@ -86,7 +87,7 @@ type BaseReferenceLineProps = SharedProps & {
     /**
      * Custom class name for the text label.
      */
-    text?: string;
+    label?: string;
   };
   /**
    * Custom styles for the component parts.
@@ -99,7 +100,7 @@ type BaseReferenceLineProps = SharedProps & {
     /**
      * Custom styles for the text label.
      */
-    text?: React.CSSProperties;
+    label?: React.CSSProperties;
   };
 };
 
@@ -175,22 +176,22 @@ export const ReferenceLine = memo<ReferenceLineProps>(
         // Merge classNames for text
         classNames: {
           ...labelConfig?.classNames,
-          ...(classNames?.text && { text: classNames.text }),
+          ...(classNames?.label && { text: classNames.label }),
         },
         // Merge styles for text
         styles: {
           ...labelConfig?.styles,
-          ...(styles?.text && { text: styles.text }),
+          ...(styles?.label && { text: styles.label }),
         },
       }),
-      [labelConfig, classNames?.text, styles?.text],
+      [labelConfig, classNames?.label, styles?.label],
     );
 
     // Combine root classNames
-    const rootClassName = [className, classNames?.root].filter(Boolean).join(' ') || undefined;
-
+    const rootClassName = cx(className, classNames?.root);
     // Combine root styles
     const rootStyle = { ...style, ...styles?.root } as React.CSSProperties | undefined;
+
     // Horizontal reference line logic
     if (dataY !== undefined) {
       const yScale = getYScale?.(yAxisId);

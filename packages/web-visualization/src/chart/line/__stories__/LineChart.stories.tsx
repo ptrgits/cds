@@ -465,19 +465,11 @@ export const BTCPriceChart = () => {
   }, [highlightedItem, currentData, currentTimestamps, startPrice, currentPrice, activeTab]);
 
   const calculatedPriceChange = trendPrice - trendPreviousPrice;
-  const calculatedPercentChange = (calculatedPriceChange / trendPreviousPrice) * 100;
 
   const formattedPrice = `$${displayPrice.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
-
-  const formattedPriceChange = `${calculatedPriceChange >= 0 ? '+' : ''}$${Math.abs(
-    calculatedPriceChange,
-  ).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} (${Math.abs(calculatedPercentChange).toFixed(2)}%)`;
 
   const AreaComponent = useMemo(
     () => (props: AreaComponentProps) => <GradientArea {...props} peakOpacity={0.15} />,
@@ -491,7 +483,6 @@ export const BTCPriceChart = () => {
     >
       <VStack gap={3} width="100%">
         <HStack alignItems="flex-start" gap={3} justifyContent="space-between" padding={4}>
-          {/* todo: set trend to black */}
           <SectionHeader
             balance={<Text font="title2">{formattedPrice}</Text>}
             end={
@@ -536,14 +527,13 @@ export const BTCPriceChart = () => {
           </AnimatePresence>
           <Scrubber
             idlePulse
-            // scrubberComponents={{
-            //   ScrubberLineComponent: ReferenceLine,
-            // }}
             scrubberLabel={displayDate}
-            // scrubberStyles={{
-            //   scrubberLine: { stroke: 'black' },
-            //   scrubberHead: { stroke: 'white' },
-            // }}
+            scrubberLabelProps={{
+              color: 'black',
+            }}
+            styles={{
+              scrubberOverlay: { fill: btcAccentColor },
+            }}
           />
         </Chart>
         <Box paddingX={{ phone: 2, tablet: 4, desktop: 4 }}>
@@ -614,9 +604,6 @@ export const ColorShiftChart = () => {
 
   const [activeTab, setActiveTab] = useState<TabValue | null>(tabs[0]);
 
-  const [isHovering, setIsHovering] = useState(false);
-  const [highlightedItem, setHighlightedItem] = useState<number | null>(null);
-
   const tabConversion = {
     '1H': 'hour',
     '1D': 'day',
@@ -643,15 +630,6 @@ export const ColorShiftChart = () => {
   const startPrice = currentData[0];
   const currentPrice = currentData[currentData.length - 1];
 
-  const latestPriceCoords = useMemo(() => {
-    if (currentData.length === 0) return {};
-    return {
-      dataX: currentData.length - 1,
-      dataY: currentData[currentData.length - 1],
-      y: currentData[currentData.length - 1],
-    };
-  }, [currentData]);
-
   const [scrubberLabel, setScrubberLabel] = useState<string | null>(null);
   const onScrubberPosChange = useCallback(
     (dataX: number | null) => {
@@ -659,43 +637,9 @@ export const ColorShiftChart = () => {
 
       const timestamp = currentTimestamps[dataX];
       setScrubberLabel(formatChartDate(timestamp, activeTab?.id || '1H'));
-      setHighlightedItem(dataX);
-      setIsHovering(!!dataX);
     },
     [activeTab?.id, currentTimestamps],
   );
-
-  const displayPrice =
-    highlightedItem !== null && highlightedItem !== undefined
-      ? currentData[highlightedItem]
-      : currentPrice;
-
-  // Calculate trend based on current context (hovering vs current)
-  const { trendPrice, trendPreviousPrice, trendDirection } = useMemo(() => {
-    return calculateTrendData(
-      highlightedItem,
-      currentData,
-      currentTimestamps,
-      startPrice,
-      currentPrice,
-      activeTab?.id || '1H',
-    );
-  }, [highlightedItem, currentData, currentTimestamps, startPrice, currentPrice, activeTab]);
-
-  const calculatedPriceChange = trendPrice - trendPreviousPrice;
-  const calculatedPercentChange = (calculatedPriceChange / trendPreviousPrice) * 100;
-
-  const formattedPrice = `$${displayPrice.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-
-  const formattedPriceChange = `${calculatedPriceChange >= 0 ? '+' : ''}$${Math.abs(
-    calculatedPriceChange,
-  ).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} (${Math.abs(calculatedPercentChange).toFixed(2)}%)`;
 
   const chartActiveColor = useMemo(() => {
     const priceChange = currentPrice - startPrice;
@@ -1071,7 +1015,7 @@ export const PriceChart = () => {
         ]}
         yAxis={{ domainLimit: 'strict' }}
       >
-        <Scrubber scrubberLabel={scrubberLabel} scrubberLabelConfig={{ elevation: 1 }} />
+        <Scrubber scrubberLabel={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
       </LineChart>
       <Box paddingX={{ phone: 2, tablet: 4, desktop: 4 }}>
         <PeriodSelector
@@ -1381,14 +1325,7 @@ export const BitcoinChartWithScrubberHead = () => {
           ]}
           width="100%"
         >
-          <Scrubber
-            idlePulse
-            scrubberStyles={{
-              scrubberHead: {
-                stroke: 'white',
-              },
-            }}
-          />
+          <Scrubber idlePulse />
         </LineChart>
       </div>
     </VStack>
@@ -1545,7 +1482,7 @@ export const AssetPriceDotted = () => {
           },
         ]}
       >
-        <Scrubber idlePulse scrubberLabel={scrubberLabel} scrubberLabelConfig={{ elevation: 1 }} />
+        <Scrubber idlePulse scrubberLabel={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
       </LineChart>
       <PeriodSelector
         TabComponent={BTCTab}
@@ -1625,7 +1562,7 @@ export const LiveAssetPrice = () => {
         },
       ]}
     >
-      <Scrubber ref={scrubberRef} scrubberLabelConfig={{ elevation: 1 }} />
+      <Scrubber ref={scrubberRef} scrubberLabelProps={{ elevation: 1 }} />
     </LineChart>
   );
 };
