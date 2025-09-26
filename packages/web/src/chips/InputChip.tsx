@@ -13,6 +13,7 @@ export const InputChip = memo(
       accessibilityLabel = typeof children === 'string' ? `Remove ${children}` : 'Remove option',
       invertColorScheme = true,
       testID = 'input-chip',
+      invertColorScheme = true,
       ...props
     }: InputChipProps,
     ref: React.ForwardedRef<HTMLButtonElement>,
