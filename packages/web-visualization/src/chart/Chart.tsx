@@ -22,9 +22,20 @@ import { cx } from '@coinbase/cds-web';
 import { useDimensions } from '@coinbase/cds-web/hooks/useDimensions';
 import { useTheme } from '@coinbase/cds-web/hooks/useTheme';
 import { Box, type BoxBaseProps, type BoxProps } from '@coinbase/cds-web/layout';
+import { css } from '@linaria/core';
 
 import { ScrubberProvider } from './scrubber/ScrubberProvider';
 import { ChartProvider } from './ChartProvider';
+
+const focusStylesCss = css`
+  &:focus {
+    outline: none;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-bgPrimary);
+    outline-offset: 2px;
+  }
+`;
 
 export type ChartBaseProps = BoxBaseProps & {
   /**
@@ -347,8 +358,9 @@ export const Chart = memo(
             }
           }}
           as="svg"
-          className={cx(className)}
+          className={cx(enableScrubbing && focusStylesCss, className)}
           height={height}
+          tabIndex={enableScrubbing ? 0 : undefined}
           width={width}
           {...props}
         >

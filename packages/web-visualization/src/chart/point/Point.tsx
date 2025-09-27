@@ -1,10 +1,7 @@
 import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo } from 'react';
 import type { SVGProps } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import {
-  projectPoint,
-  useScrubberContext,
-} from '@coinbase/cds-common/visualizations/charts';
+import { projectPoint, useScrubberContext } from '@coinbase/cds-common/visualizations/charts';
 import { cx } from '@coinbase/cds-web';
 import { css } from '@linaria/core';
 import { m as motion, useAnimate } from 'framer-motion';
@@ -29,7 +26,17 @@ const containerCss = css`
 `;
 
 const innerPointCss = css`
+  border-radius: var(--borderRadius-1000);
   outline: none;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-fgPrimary);
+    outline-offset: 2px;
+  }
 `;
 
 /**
@@ -383,6 +390,15 @@ export const Point = memo(
           },
         };
 
+        const handleKeyDown = onClick
+          ? (event: React.KeyboardEvent) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onClick(event as any, { dataX, dataY, x: pixelCoordinate.x, y: pixelCoordinate.y });
+              }
+            }
+          : undefined;
+
         return (
           <motion.circle
             className={cx(innerPointCss, className, classNames?.point)}
@@ -395,10 +411,12 @@ export const Point = memo(
                     onClick(event, { dataX, dataY, x: pixelCoordinate.x, y: pixelCoordinate.y })
                 : undefined
             }
+            onKeyDown={handleKeyDown}
             r={radius}
             stroke={stroke}
             strokeWidth={strokeWidth}
             style={mergedStyles}
+            tabIndex={onClick ? 0 : -1}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             variants={variants}
             whileHover={animationEnabled && onClick ? 'hovered' : 'default'}

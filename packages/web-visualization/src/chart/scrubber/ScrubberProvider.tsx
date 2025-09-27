@@ -216,16 +216,10 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
     svg.addEventListener('mouseleave', handleMouseLeave);
     svg.addEventListener('keydown', handleKeyDown);
 
-    // Add tabIndex for keyboard support
-    svg.setAttribute('tabIndex', '0');
-
     return () => {
       svg.removeEventListener('mousemove', handleMouseMove);
       svg.removeEventListener('mouseleave', handleMouseLeave);
       svg.removeEventListener('keydown', handleKeyDown);
-      if (svg.hasAttribute('tabIndex')) {
-        svg.removeAttribute('tabIndex');
-      }
     };
   }, [svgRef, enableScrubbing, handleMouseMove, handleMouseLeave, handleKeyDown]);
 

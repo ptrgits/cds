@@ -1,13 +1,10 @@
 import { forwardRef, memo, useCallback, useImperativeHandle, useRef } from 'react';
 import { Circle } from 'react-native-svg';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import {
-  projectPoint,
-  useScrubberContext,
-} from '@coinbase/cds-common/visualizations/charts';
-import { useChartContext } from '../ChartProvider';
+import { projectPoint, useScrubberContext } from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-mobile';
 
+import { useChartContext } from '../ChartProvider';
 import { Point, type PointProps, type PointRef } from '../point';
 
 export const dataKeyUpdateAnimationVariants = {
