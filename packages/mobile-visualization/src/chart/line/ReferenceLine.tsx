@@ -2,9 +2,9 @@ import { memo, useMemo } from 'react';
 import { G } from 'react-native-svg';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { getPointOnScale } from '@coinbase/cds-common/visualizations/charts';
-import { useChartContext } from '../ChartProvider';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
+import { useChartContext } from '../ChartProvider';
 import { ChartText } from '../text';
 import type { ChartTextChildren, ChartTextProps } from '../text/ChartText';
 
@@ -121,7 +121,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
         borderRadius: 200,
         color: theme.color.fgMuted,
         elevation: 0,
-        padding: { top: 7.5, bottom: 7.5, left: 12, right: 12 },
+        padding: { top: 1, bottom: 1, left: 1.5, right: 1.5 },
         ...labelConfig,
       }),
       [labelConfig, theme.color.fgMuted],

@@ -1,10 +1,7 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { ThemeVars } from '@coinbase/cds-common';
 import type { ElevationLevels, Rect, SharedProps } from '@coinbase/cds-common/types';
-import {
-  type ChartPadding,
-  getPadding,
-} from '@coinbase/cds-common/visualizations/charts';
+import { type ChartPadding, getPadding } from '@coinbase/cds-common/visualizations/charts';
 import { cx, useTheme } from '@coinbase/cds-web';
 import { Box, type BoxProps } from '@coinbase/cds-web/layout';
 import { Text } from '@coinbase/cds-web/typography';
@@ -85,7 +82,7 @@ export type ChartTextProps = SharedProps &
      * Padding around the text content for the background rect.
      * Only affects the background, text position remains unchanged.
      */
-    padding?: number | ChartPadding;
+    padding?: ThemeVars.Space | ChartPadding;
     style?: React.CSSProperties;
     styles?: {
       root?: React.CSSProperties;

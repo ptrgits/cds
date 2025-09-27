@@ -1,20 +1,20 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import type { LayoutChangeEvent } from 'react-native';
 import {
-  Circle,
   ForeignObject,
   // Defs,
   G,
-  Rect as SvgRect,
   Text,
   type TextProps,
 } from 'react-native-svg';
 import type { ThemeVars } from '@coinbase/cds-common';
 import type { ElevationLevels, Rect, SharedProps } from '@coinbase/cds-common/types';
 import { type ChartPadding, getPadding } from '@coinbase/cds-common/visualizations/charts';
-import { useChartContext } from '../ChartProvider';
 import { useLayout } from '@coinbase/cds-mobile/hooks/useLayout';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 import { Box } from '@coinbase/cds-mobile/layout';
+
+import { useChartContext } from '../ChartProvider';
 
 // Define the valid SVG children for the <text> element.
 type ValidChartTextChildElements =
@@ -90,7 +90,7 @@ export type ChartTextProps = SharedProps &
      * Padding around the text content for the background rect.
      * Only affects the background, text position remains unchanged.
      */
-    padding?: number | ChartPadding;
+    padding?: ThemeVars.Space | ChartPadding;
     // override box responsive style
     borderRadius?: ThemeVars.BorderRadius;
   };
@@ -107,7 +107,7 @@ type ChartTextVisibleProps = {
   textDimensions: Rect;
   fill: string;
   borderRadius?: ThemeVars.BorderRadius;
-  padding?: number | ChartPadding;
+  padding?: ThemeVars.Space | ChartPadding;
   dx?: TextProps['dx'];
   dy?: TextProps['dy'];
 };
@@ -236,21 +236,7 @@ export const ChartText = memo<ChartTextProps>(
       [chartWidth, chartHeight],
     );
 
-    const [_textSize, onTextSizeLayout] = useLayout();
     const [textSize, setTextSize] = useState<Rect | null>(null);
-
-    // Sometimes dimensions will be incorrect and report 0, so we update each time they are non zero
-    // todo: we could move the size logic into separate function which only reports then
-    useEffect(() => {
-      if (_textSize && _textSize.width > 0 && _textSize.height > 0) {
-        setTextSize({
-          x: _textSize.x,
-          y: _textSize.y,
-          width: _textSize.width,
-          height: _textSize.height,
-        });
-      }
-    }, [_textSize]);
 
     const textBBox = useMemo(() => {
       if (!textSize) {
@@ -346,6 +332,12 @@ export const ChartText = memo<ChartTextProps>(
       }
     }, [reportedRect, onDimensionsChange]);
 
+    const onLayout = useCallback((event: LayoutChangeEvent) => {
+      if (event.nativeEvent.layout.width > 0 && event.nativeEvent.layout.height > 0) {
+        setTextSize(event.nativeEvent.layout);
+      }
+    }, []);
+
     return (
       <G opacity={isDimensionsReady ? opacity : 0} testID={testID}>
         {textSize && (
@@ -377,7 +369,7 @@ export const ChartText = memo<ChartTextProps>(
           fontFamily={fontFamily}
           fontSize={fontSize}
           fontWeight={fontWeight}
-          onLayout={onTextSizeLayout}
+          onLayout={onLayout}
           opacity={0}
           textAnchor={textAnchor}
         >

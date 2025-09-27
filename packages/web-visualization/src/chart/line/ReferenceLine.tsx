@@ -160,7 +160,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
         borderRadius: 200,
         color: 'var(--color-fgMuted)',
         elevation: 0,
-        padding: { top: 7.5, bottom: 7.5, left: 12, right: 12 },
+        padding: { top: 1, bottom: 1, left: 1.5, right: 1.5 },
         ...labelConfig,
         // Merge classNames for text
         classNames: {
