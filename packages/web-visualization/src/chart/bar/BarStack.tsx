@@ -165,36 +165,22 @@ export const BarStack = memo<BarStackProps>(
         // Only apply gap logic if the original data wasn't tuple format
         const shouldApplyGap = !Array.isArray(originalValue);
 
-        let barBottom: number;
-        let barTop: number;
-
         // Sort to be in ascending order
         const [bottom, top] = (value as [number, number]).sort((a, b) => a - b);
 
         const isAboveBaseline = bottom >= 0 && top !== bottom;
         const isBelowBaseline = bottom <= 0 && bottom !== top;
 
-        let gapOffset = 0;
+        const barBottom = yScale(bottom) ?? baseline;
+        const barTop = yScale(top) ?? baseline;
+
+        // Track bar counts for later gap calculations
         if (shouldApplyGap) {
           if (isAboveBaseline) {
-            gapOffset = positiveBarCount > 0 ? stackGapPx * positiveBarCount : 0;
             positiveBarCount++;
           } else if (isBelowBaseline) {
-            gapOffset = negativeBarCount > 0 ? stackGapPx * negativeBarCount : 0;
             negativeBarCount++;
           }
-        }
-
-        if (isAboveBaseline) {
-          barBottom = (yScale(bottom) ?? baseline) - gapOffset;
-          barTop = (yScale(top) ?? baseline) - gapOffset;
-        } else if (isBelowBaseline) {
-          barBottom = (yScale(bottom) ?? baseline) + gapOffset;
-          barTop = (yScale(top) ?? baseline) + gapOffset;
-        } else {
-          // Tuple data or mixed/edge case - no gap modification
-          barBottom = yScale(bottom) ?? baseline;
-          barTop = yScale(top) ?? baseline;
         }
 
         // Calculate height (remember SVG y coordinates are inverted)
@@ -229,6 +215,84 @@ export const BarStack = memo<BarStackProps>(
           shouldApplyGap,
         });
       });
+
+      // Apply proportional gap distribution to maintain total stack height
+      if (stackGapPx > 0 && allBars.length > 1) {
+        // Separate bars by baseline side
+        const barsAboveBaseline = allBars.filter((bar) => {
+          const [bottom, top] = (bar.dataY as [number, number]).sort((a, b) => a - b);
+          return bottom >= 0 && top !== bottom && bar.shouldApplyGap;
+        });
+        const barsBelowBaseline = allBars.filter((bar) => {
+          const [bottom, top] = (bar.dataY as [number, number]).sort((a, b) => a - b);
+          return bottom <= 0 && bottom !== top && bar.shouldApplyGap;
+        });
+
+        // Apply proportional gaps to bars above baseline
+        if (barsAboveBaseline.length > 1) {
+          const totalGapSpace = stackGapPx * (barsAboveBaseline.length - 1);
+          const totalDataHeight = barsAboveBaseline.reduce((sum, bar) => sum + bar.height, 0);
+          const heightReduction = totalGapSpace / totalDataHeight;
+
+          // Sort bars by position (from baseline upward)
+          const sortedBars = barsAboveBaseline.sort((a, b) => b.y - a.y);
+
+          let currentY = baseline;
+          sortedBars.forEach((bar, index) => {
+            // Reduce bar height proportionally
+            const newHeight = bar.height * (1 - heightReduction);
+            const newY = currentY - newHeight;
+
+            // Update the bar in allBars array
+            const barIndex = allBars.findIndex((b) => b.seriesId === bar.seriesId);
+            if (barIndex !== -1) {
+              allBars[barIndex] = {
+                ...allBars[barIndex],
+                height: newHeight,
+                y: newY,
+              };
+            }
+
+            // Move to next position (include gap for next bar)
+            currentY = newY - (index < sortedBars.length - 1 ? stackGapPx : 0);
+          });
+        }
+
+        // Apply proportional gaps to bars below baseline
+        if (barsBelowBaseline.length > 1) {
+          const totalGapSpace = stackGapPx * (barsBelowBaseline.length - 1);
+          const totalDataHeight = barsBelowBaseline.reduce((sum, bar) => sum + bar.height, 0);
+          const heightReduction = totalGapSpace / totalDataHeight;
+
+          // Sort bars by position (from baseline downward)
+          const sortedBars = barsBelowBaseline.sort((a, b) => a.y - b.y);
+
+          let currentY = baseline;
+          sortedBars.forEach((bar, index) => {
+            // Reduce bar height proportionally
+            const newHeight = bar.height * (1 - heightReduction);
+
+            // Update the bar in allBars array
+            const barIndex = allBars.findIndex((b) => b.seriesId === bar.seriesId);
+            if (barIndex !== -1) {
+              allBars[barIndex] = {
+                ...allBars[barIndex],
+                height: newHeight,
+                y: currentY,
+              };
+            }
+
+            // Move to next position (include gap for next bar)
+            currentY = currentY + newHeight + (index < sortedBars.length - 1 ? stackGapPx : 0);
+          });
+        }
+
+        // Recalculate stack bounds after gap adjustments
+        if (allBars.length > 0) {
+          minY = Math.min(...allBars.map((bar) => bar.y));
+          maxY = Math.max(...allBars.map((bar) => bar.y + bar.height));
+        }
+      }
 
       // Apply barMinSize constraints
       if (barMinSizePx > 0) {

@@ -256,7 +256,7 @@ function MonthlyGainsByAsset() {
           id: 'xrp',
           data: [
             170.22, 340.34, 305.98, 225.39, 250.76, 130.53, 115.81, 195.04, 210.28, 60.42, 120.94,
-            85.12,
+            500,
           ],
           color: assets.xrp.color,
         },
@@ -264,7 +264,7 @@ function MonthlyGainsByAsset() {
           id: 'ltc',
           data: [
             450.77, 615.33, 355.68, 880.15, 810.99, 520.46, 590.29, 960.52, 910.07, 1020.41, 851.89,
-            750.61,
+            500,
           ],
           color: assets.ltc.color,
         },
@@ -272,7 +272,7 @@ function MonthlyGainsByAsset() {
           id: 'eth',
           data: [
             270.49, 425.21, 190.75, 680.91, 610.88, 350.67, 440.11, 780.08, 705.83, 840.26, 920.65,
-            550.93,
+            500,
           ],
           color: assets.eth.color,
         },
@@ -280,7 +280,7 @@ function MonthlyGainsByAsset() {
           id: 'btc',
           data: [
             345.82, 510.63, 280.19, 720.5, 655.37, 410.23, 580.96, 815.44, 740.18, 910.71, 975.02,
-            620.57,
+            500,
           ],
           color: assets.btc.color,
         },
@@ -293,6 +293,7 @@ function MonthlyGainsByAsset() {
         GridLineComponent: ThinSolidLine,
         tickLabelFormatter: tickFormatter,
         size: 62,
+        domainLimit: 'strict'
       }}
     />
   );
