@@ -6,7 +6,7 @@ import { cx } from '@coinbase/cds-web';
 import { css } from '@linaria/core';
 import { m as motion, useAnimate } from 'framer-motion';
 
-import { useChartContext } from '../ChartProvider';
+import { useCartesianChartContext } from '../ChartProvider';
 import { ChartText, type ChartTextProps } from '../text';
 import type { ChartTextChildren } from '../text/ChartText';
 
@@ -194,6 +194,11 @@ export type PointConfig = {
    */
   style?: React.CSSProperties;
   /**
+   * Accessibility label for screen readers to describe the point.
+   * If not provided, a default label will be generated using the data coordinates.
+   */
+  accessibilityLabel?: string;
+  /**
    * Simple text label to display at the point position.
    * If provided, a ChartText will be automatically rendered.
    */
@@ -222,6 +227,11 @@ export type PointProps = SharedProps &
      * Y coordinate in data space (not pixel coordinates).
      */
     dataY: number;
+    /**
+     * Coordinates in SVG pixel space.
+     * Overrides dataX and dataY for pixel coordinate calculation.
+     */
+    pixelCoordinates?: { x: number; y: number };
     /**
      * Whether to animate the point with a pulsing effect.
      * @default false
@@ -283,27 +293,33 @@ export const Point = memo(
         styles,
         stroke = 'var(--color-bg)',
         strokeWidth = 2,
+        accessibilityLabel,
         label,
         labelConfig,
         renderLabel,
         testID,
+        pixelCoordinates,
         ...svgProps
       },
       ref,
     ) => {
       const [scope, animate] = useAnimate();
-      const { getXScale, getYScale, animate: animationEnabled } = useChartContext();
-      const { highlightedIndex } = useScrubberContext();
+      const { getXScale, getYScale, animate: animationEnabled } = useCartesianChartContext();
+      const { scrubberPosition } = useScrubberContext();
 
       const xScale = getXScale();
       const yScale = getYScale(yAxisId);
 
       // Scrubber detection: check if this point is highlighted by the scrubber
-      const isScrubbing = highlightedIndex !== undefined;
-      const isScrubberHighlighted = isScrubbing && highlightedIndex === dataX;
+      const isScrubbing = scrubberPosition !== undefined;
+      const isScrubberHighlighted = isScrubbing && scrubberPosition === dataX;
 
       // Project the point to pixel coordinates
       const pixelCoordinate = useMemo(() => {
+        if (pixelCoordinates) {
+          return pixelCoordinates;
+        }
+
         if (!xScale || !yScale) {
           return { x: 0, y: 0 };
         }
@@ -314,7 +330,7 @@ export const Point = memo(
           xScale,
           yScale,
         });
-      }, [xScale, yScale, dataX, dataY]);
+      }, [xScale, yScale, dataX, dataY, pixelCoordinates]);
 
       useImperativeHandle(ref, () => ({
         pulse: () => {
@@ -335,11 +351,6 @@ export const Point = memo(
       }, [isScrubberHighlighted, onScrubberEnter, pixelCoordinate.x, pixelCoordinate.y]);
 
       const shouldShowPulse = animationEnabled && pulse;
-
-      const containerStyle = {
-        ...styles?.container,
-        cursor: onClick !== undefined ? 'pointer' : undefined,
-      };
 
       const LabelContent = useMemo(() => {
         // Custom render function takes precedence
@@ -373,6 +384,7 @@ export const Point = memo(
 
       const innerPoint = useMemo(() => {
         const mergedStyles = {
+          cursor: onClick !== undefined ? 'pointer' : undefined,
           ...style,
           ...styles?.point,
         };
@@ -401,6 +413,7 @@ export const Point = memo(
 
         return (
           <motion.circle
+            aria-label={accessibilityLabel}
             className={cx(innerPointCss, className, classNames?.point)}
             cx={pixelCoordinate.x}
             cy={pixelCoordinate.y}
@@ -413,6 +426,7 @@ export const Point = memo(
             }
             onKeyDown={handleKeyDown}
             r={radius}
+            role={onClick ? 'button' : undefined}
             stroke={stroke}
             strokeWidth={strokeWidth}
             style={mergedStyles}
@@ -440,6 +454,7 @@ export const Point = memo(
         svgProps,
         dataX,
         dataY,
+        accessibilityLabel,
       ]);
 
       if (!xScale || !yScale) {
@@ -452,7 +467,7 @@ export const Point = memo(
             className={cx(containerCss, classNames?.container)}
             data-testid={testID}
             opacity={opacity}
-            style={containerStyle}
+            style={styles?.container}
           >
             {/* pulse ring */}
             <motion.circle
@@ -473,15 +488,11 @@ export const Point = memo(
               r={pulseRadius}
               style={styles?.pulseRing}
             />
-            {/* point */}
             {innerPoint}
           </g>
-          {/* point label */}
           {LabelContent}
         </>
       );
     },
   ),
 );
-
-Point.displayName = 'Point';

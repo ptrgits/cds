@@ -1,10 +1,10 @@
 import React, { memo, useMemo } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { type ChartPathCurveType, getLinePath } from '@coinbase/cds-common/visualizations/charts';
-import { useChartContext } from '../ChartProvider';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
-import { Area, type AreaComponent } from '../area';
+import { Area, type AreaComponent } from '../area/Area';
+import { useCartesianChartContext } from '../ChartProvider';
 import { Point, type PointConfig, type RenderPointsParams } from '../point/Point';
 
 import { DottedLine } from './DottedLine';
@@ -102,7 +102,7 @@ export const Line = memo<LineProps>(
     ...props
   }) => {
     const theme = useTheme();
-    const { getSeries, getSeriesData, getXScale, getYScale, getXAxis } = useChartContext();
+    const { getSeries, getSeriesData, getXScale, getYScale, getXAxis } = useCartesianChartContext();
 
     const matchedSeries = getSeries(seriesId);
 

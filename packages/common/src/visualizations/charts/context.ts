@@ -6,7 +6,11 @@ import type { AxisConfig } from './axis';
 import type { Series } from './chart';
 import type { ChartScaleFunction } from './scale';
 
-export type ChartContextValue<TRef> = {
+/**
+ * Context value for Cartesian (X/Y) coordinate charts.
+ * Contains axis-specific methods and properties for rectangular coordinate systems.
+ */
+export type CartesianChartContextValue<TRef> = {
   /**
    * A reference to the root SVG element.
    */
@@ -76,14 +80,21 @@ export type ChartContextValue<TRef> = {
   getAxisBounds: (id: string) => Rect | undefined;
 };
 
-// Chart highlighting context
 export type ScrubberContextValue = {
-  /** Whether scrubbing is enabled on the parent Chart component */
-  scrubbingEnabled: boolean;
-  /** The currently highlighted data index, or undefined if nothing is highlighted */
-  highlightedIndex?: number;
-  /** Update the highlighted data index */
-  updateHighlightedIndex: (index: number | undefined) => void;
+  /**
+   * Enables scrubbing interactions.
+   * When true, allows scrubbing and makes scrubber components interactive.
+   */
+  enableScrubbing: boolean;
+  /**
+   * The current position of the scrubber.
+   */
+  scrubberPosition?: number;
+  /**
+   * Callback fired when the scrubber position changes.
+   * Receives the dataIndex of the scrubber or undefined when not scrubbing.
+   */
+  onScrubberPositionChange: (index: number | undefined) => void;
 };
 
 export const ScrubberContext = createContext<ScrubberContextValue | undefined>(undefined);

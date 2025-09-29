@@ -5,8 +5,8 @@ import { useTheme } from '@coinbase/cds-web/hooks/useTheme';
 import { css } from '@linaria/core';
 import { AnimatePresence, m as motion } from 'framer-motion';
 
-import { useChartContext } from '../ChartProvider';
-import { DottedLine } from '../line';
+import { useCartesianChartContext } from '../ChartProvider';
+import { DottedLine } from '../line/DottedLine';
 import { ReferenceLine } from '../line/ReferenceLine';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
 
@@ -43,7 +43,6 @@ export const XAxis = memo<XAxisProps>(
     classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 0.25,
-    dataKey,
     size = 32,
     minTickLabelGap = 0.5,
     showTickMarks,
@@ -55,7 +54,7 @@ export const XAxis = memo<XAxisProps>(
     const theme = useTheme();
     const registrationId = useId();
     const { animate, getXScale, getXAxis, registerAxis, unregisterAxis, getAxisBounds } =
-      useChartContext();
+      useCartesianChartContext();
 
     const xScale = getXScale();
     const xAxis = getXAxis();
@@ -190,7 +189,7 @@ export const XAxis = memo<XAxisProps>(
 
               return animate ? (
                 <motion.g
-                  key={`grid-${tick.tick}-${index}-${dataKey}`}
+                  key={`grid-${tick.tick}-${index}`}
                   animate="animate"
                   exit="exit"
                   initial="initial"
@@ -199,7 +198,7 @@ export const XAxis = memo<XAxisProps>(
                   {verticalLine}
                 </motion.g>
               ) : (
-                <g key={`grid-${tick.tick}-${index}-${dataKey}`}>{verticalLine}</g>
+                <g key={`grid-${tick.tick}-${index}`}>{verticalLine}</g>
               );
             })}
           </AnimatePresence>

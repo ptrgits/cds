@@ -1,16 +1,24 @@
-import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
-import { Animated } from 'react-native';
+import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo } from 'react';
+import Reanimated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedProps,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { Circle, G } from 'react-native-svg';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import {
-  projectPoint,
-  useScrubberContext,
-} from '@coinbase/cds-common/visualizations/charts';
-import { useChartContext } from '../ChartProvider';
+import { projectPoint, useScrubberContext } from '@coinbase/cds-common/visualizations/charts';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
+import { useCartesianChartContext } from '../ChartProvider';
 import { ChartText, type ChartTextProps } from '../text';
 import type { ChartTextChildren } from '../text/ChartText';
+
+// Create animated component once at module level for better performance
+const AnimatedCircle = Reanimated.createAnimatedComponent(Circle);
 
 export const singlePulseDuration = 1000; // 1 second
 export const pulseDuration = 2000; // 2 seconds
@@ -188,6 +196,11 @@ export type PointProps = SharedProps &
      * @default false
      */
     pulse?: boolean;
+    /**
+     * Optional pixel coordinates to use instead of calculating from dataX/dataY.
+     * Useful for performance when coordinates are already calculated.
+     */
+    pixelCoordinates?: { x: number; y: number };
   };
 
 export const Point = memo(
@@ -209,6 +222,7 @@ export const Point = memo(
         label,
         labelConfig,
         renderLabel,
+        pixelCoordinates,
         testID,
         ...props
       },
@@ -216,9 +230,13 @@ export const Point = memo(
     ) => {
       const theme = useTheme();
       const effectiveStroke = stroke ?? theme.color.bg;
-      const pulseOpacity = useRef(new Animated.Value(0)).current;
-      const { getXScale, getYScale, animate: animationEnabled } = useChartContext();
-      const { highlightedIndex } = useScrubberContext();
+
+      // Use Reanimated shared values for better performance
+      const pulseOpacity = useSharedValue(0);
+      const pulseScale = useSharedValue(1);
+
+      const { getXScale, getYScale, animate: animationEnabled } = useCartesianChartContext();
+      const { scrubberPosition: scrubberPosition } = useScrubberContext();
 
       const xScale = getXScale();
       const yScale = getYScale(yAxisId);
@@ -227,11 +245,15 @@ export const Point = memo(
       const effectiveColor = color ?? theme.color.fgPrimary;
 
       // Scrubber detection: check if this point is highlighted by the scrubber
-      const isScrubbing = highlightedIndex !== undefined;
-      const isScrubberHighlighted = isScrubbing && highlightedIndex === dataX;
+      const isScrubbing = scrubberPosition !== undefined;
+      const isScrubberHighlighted = isScrubbing && scrubberPosition === dataX;
 
-      // Project the point to pixel coordinates
+      // Use provided pixelCoordinates or calculate from data coordinates
       const pixelCoordinate = useMemo(() => {
+        if (pixelCoordinates) {
+          return pixelCoordinates;
+        }
+
         if (!xScale || !yScale) {
           return { x: 0, y: 0 };
         }
@@ -242,22 +264,33 @@ export const Point = memo(
           xScale,
           yScale,
         });
-      }, [xScale, yScale, dataX, dataY]);
+      }, [pixelCoordinates, xScale, yScale, dataX, dataY]);
+
+      // Animated props for pulse circle - runs entirely on UI thread
+      const pulseAnimatedProps = useAnimatedProps(() => {
+        return {
+          opacity: pulseOpacity.value,
+          r: radius * pulseScale.value,
+        };
+      });
 
       useImperativeHandle(ref, () => ({
         pulse: () => {
-          Animated.sequence([
-            Animated.timing(pulseOpacity, {
-              toValue: 0.1,
+          // Trigger a single pulse using Reanimated
+          pulseOpacity.value = withSequence(
+            withTiming(0.15, {
               duration: singlePulseDuration / 2,
-              useNativeDriver: true,
+              easing: Easing.inOut(Easing.ease),
             }),
-            Animated.timing(pulseOpacity, {
-              toValue: 0,
+            withTiming(0, { duration: singlePulseDuration / 2, easing: Easing.inOut(Easing.ease) }),
+          );
+          pulseScale.value = withSequence(
+            withTiming(pulseRadius / radius, {
               duration: singlePulseDuration / 2,
-              useNativeDriver: true,
+              easing: Easing.out(Easing.ease),
             }),
-          ]).start();
+            withTiming(1, { duration: singlePulseDuration / 2, easing: Easing.in(Easing.ease) }),
+          );
         },
       }));
 
@@ -267,35 +300,40 @@ export const Point = memo(
         }
       }, [isScrubberHighlighted, onScrubberEnter, pixelCoordinate.x, pixelCoordinate.y]);
 
-      // Set up pulse animation
+      // Set up pulse animation with Reanimated for smoother performance
       const shouldPulse = animationEnabled && pulse;
 
       useEffect(() => {
         if (shouldPulse) {
-          const pulseAnimation = Animated.loop(
-            Animated.sequence([
-              Animated.timing(pulseOpacity, {
-                toValue: 0.1,
-                duration: pulseDuration / 2,
-                useNativeDriver: true,
-              }),
-              Animated.timing(pulseOpacity, {
-                toValue: 0,
-                duration: pulseDuration / 2,
-                useNativeDriver: true,
-              }),
-            ]),
+          // Start infinite pulse animation using Reanimated
+          pulseOpacity.value = withRepeat(
+            withSequence(
+              withTiming(0.15, { duration: pulseDuration / 2, easing: Easing.inOut(Easing.ease) }),
+              withTiming(0, { duration: pulseDuration / 2, easing: Easing.inOut(Easing.ease) }),
+            ),
+            -1, // infinite repeat
+            false, // don't reverse
           );
-          pulseAnimation.start();
-          return () => pulseAnimation.stop();
+
+          pulseScale.value = withRepeat(
+            withSequence(
+              withTiming(pulseRadius / radius, {
+                duration: pulseDuration / 2,
+                easing: Easing.out(Easing.ease),
+              }),
+              withTiming(1, { duration: pulseDuration / 2, easing: Easing.in(Easing.ease) }),
+            ),
+            -1, // infinite repeat
+            false, // don't reverse
+          );
         } else {
-          Animated.timing(pulseOpacity, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }).start();
+          // Stop animations smoothly
+          cancelAnimation(pulseOpacity);
+          cancelAnimation(pulseScale);
+          pulseOpacity.value = withTiming(0, { duration: 200 });
+          pulseScale.value = withTiming(1, { duration: 200 });
         }
-      }, [shouldPulse, pulseOpacity]);
+      }, [shouldPulse, pulseOpacity, pulseScale, pulseRadius, radius]);
 
       const LabelContent = useMemo(() => {
         // Custom render function takes precedence
@@ -327,8 +365,6 @@ export const Point = memo(
         return null;
       }, [renderLabel, label, labelConfig, pixelCoordinate.x, pixelCoordinate.y, dataX, dataY]);
 
-      const AnimatedCircle = useMemo(() => Animated.createAnimatedComponent(Circle), []);
-
       if (!xScale || !yScale) {
         return null;
       }
@@ -336,14 +372,13 @@ export const Point = memo(
       return (
         <>
           <G opacity={opacity} testID={testID}>
-            {/* pulse ring */}
+            {/* pulse ring - using native animated props for optimal performance */}
             {shouldPulse && (
               <AnimatedCircle
+                animatedProps={pulseAnimatedProps}
                 cx={pixelCoordinate.x}
                 cy={pixelCoordinate.y}
                 fill={effectiveColor}
-                opacity={pulseOpacity}
-                r={pulseRadius}
               />
             )}
             {/* inner point */}

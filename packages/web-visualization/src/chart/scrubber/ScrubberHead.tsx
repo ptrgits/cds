@@ -1,31 +1,10 @@
-import { forwardRef, memo, useCallback, useImperativeHandle, useRef } from 'react';
+import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
-import {
-  projectPoint,
-  useScrubberContext,
-} from '@coinbase/cds-common/visualizations/charts';
+import { projectPoint, useScrubberContext } from '@coinbase/cds-common/visualizations/charts';
+import { m, useAnimation } from 'framer-motion';
 
-import { useChartContext } from '../ChartProvider';
+import { useCartesianChartContext } from '../ChartProvider';
 import { Point, type PointProps, type PointRef } from '../point';
-
-export const dataKeyUpdateAnimationVariants = {
-  initial: {
-    opacity: 0,
-  },
-  animate: {
-    opacity: 1,
-    transition: {
-      duration: 0.15,
-      delay: 0.3,
-    },
-  },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: 0.05,
-    },
-  },
-};
 
 export type ScrubberHeadRef = PointRef;
 
@@ -55,12 +34,6 @@ export type ScrubberHeadProps = SharedProps &
      * Filter to only show dot for specific series (used for hover-based positioning).
      */
     seriesId?: string;
-    /**
-     * Key that identifies the current dataset.
-     * When this changes, triggers a fade-out/fade-in transition animation.
-     * Useful for distinguishing between live updates vs complete dataset changes.
-     */
-    dataKey?: string | number;
   };
 
 /**
@@ -72,122 +45,194 @@ export const ScrubberHead = memo(
     (
       {
         seriesId,
-        dataX: directX,
-        dataY: directY,
+        dataX: dataXProp,
+        dataY: dataYProp,
         color,
         radius = 4,
         testID,
         idlePulse = false,
         opacity = 1,
-        dataKey,
         ...props
       },
       ref,
     ) => {
       const pointRef = useRef<PointRef>(null);
-      const { getSeries, getXScale, getYScale, getSeriesData } = useChartContext();
-      const { highlightedIndex } = useScrubberContext();
+      const { getSeries, getXScale, getYScale, getSeriesData, animate } = useCartesianChartContext();
+      const { scrubberPosition } = useScrubberContext();
 
-      // Find target series for color and data
+      const controls = useAnimation();
+
       const targetSeries = getSeries(seriesId);
       const sourceData = getSeriesData(seriesId);
-
-      // Get scales for this series
       const xScale = getXScale();
       const yScale = getYScale(targetSeries?.yAxisId);
 
-      const getPixelCoordinate = useCallback(
-        (dataX: number, dataY: number) => {
-          if (!xScale || !yScale) {
-            return { x: 0, y: 0 };
-          }
+      const { dataX, dataY } = useMemo(() => {
+        let x: number | undefined;
+        let y: number | undefined;
 
-          return projectPoint({
-            x: dataX,
-            y: dataY,
-            xScale,
-            yScale,
-          });
-        },
-        [xScale, yScale],
+        if (xScale && yScale) {
+          if (
+            dataXProp !== undefined &&
+            dataYProp !== undefined &&
+            !isNaN(dataYProp) &&
+            !isNaN(dataXProp)
+          ) {
+            // Use direct coordinates if provided
+            x = dataXProp;
+            y = dataYProp;
+          } else if (
+            sourceData &&
+            scrubberPosition != null &&
+            scrubberPosition >= 0 &&
+            scrubberPosition < sourceData.length
+          ) {
+            // Use series data at highlight index
+            x = scrubberPosition;
+            const dataValue = sourceData[scrubberPosition];
+
+            if (typeof dataValue === 'number') {
+              y = dataValue;
+            } else if (Array.isArray(dataValue)) {
+              const validValues = dataValue.filter((val): val is number => val !== null);
+              if (validValues.length >= 2) {
+                y = validValues[1];
+              }
+            }
+          }
+        }
+
+        return { dataX: x, dataY: y };
+      }, [dataXProp, dataYProp, sourceData, scrubberPosition, xScale, yScale]);
+
+      // Calculate the target position
+      const targetPosition = useMemo(
+        () =>
+          dataX !== undefined && dataY !== undefined && xScale && yScale
+            ? projectPoint({
+                x: dataX,
+                y: dataY,
+                xScale,
+                yScale,
+              })
+            : undefined,
+        [dataX, dataY, xScale, yScale],
       );
 
+      const previousPositionRef = useRef<{ x: number; y: number } | undefined>(undefined);
+      const isInitializedRef = useRef(false);
+      const wasScrubbing = useRef(false);
+
+      const isIdleState = scrubberPosition === undefined;
+
+      // Effect for animations
+      useEffect(() => {
+        if (!targetPosition) return;
+
+        // Initialize on first render
+        if (!isInitializedRef.current) {
+          controls.set({ x: targetPosition.x, y: targetPosition.y });
+          previousPositionRef.current = targetPosition;
+          isInitializedRef.current = true;
+          return;
+        }
+
+        const positionChanged =
+          !previousPositionRef.current ||
+          previousPositionRef.current.x !== targetPosition.x ||
+          previousPositionRef.current.y !== targetPosition.y;
+
+        if (!positionChanged) return;
+
+        if (!isIdleState) {
+          // When scrubbing - track that we're scrubbing but don't update controls
+          // The scrubbing render doesn't use the animation controls
+          wasScrubbing.current = true;
+        } else {
+          // When idle
+          if (wasScrubbing.current) {
+            // Just stopped scrubbing - snap to position without animation
+            controls.set({ x: targetPosition.x, y: targetPosition.y });
+            wasScrubbing.current = false;
+          } else if (animate) {
+            // Idle state with data update - animate to new position
+            controls.start({
+              x: targetPosition.x,
+              y: targetPosition.y,
+              transition: { duration: 0.3, ease: 'easeInOut' },
+            });
+          } else {
+            // Idle but no animation - snap to position
+            controls.set({ x: targetPosition.x, y: targetPosition.y });
+          }
+        }
+
+        // Update previous position
+        previousPositionRef.current = targetPosition;
+      }, [targetPosition, isIdleState, animate, controls]);
+
       useImperativeHandle(ref, () => ({
-        pulse: () => pointRef.current?.pulse(),
+        pulse: () => {
+          if (isIdleState) pointRef.current?.pulse();
+        },
       }));
 
-      if (!xScale || !yScale) {
+      // Don't render until we have a position and it's been initialized
+      if (
+        !targetPosition ||
+        dataX === undefined ||
+        dataY === undefined ||
+        !isInitializedRef.current
+      )
         return null;
-      }
 
-      let x: number;
-      let y: number;
-
-      // Use direct coordinates if provided
-      if (directX !== undefined && directY !== undefined) {
-        // ensures that both directX/Y are specified and real numbers
-        if (directY === null || directY === undefined || isNaN(directY) || isNaN(directX)) {
-          return null;
-        }
-
-        x = directX;
-        y = directY;
-      } else {
-        // Use series data and highlight (i.e scrubber) index to plot the Point
-        if (!sourceData || highlightedIndex === undefined) {
-          return null;
-        }
-
-        // edge case: ignore potential out of bounds scrubber positions
-        if (highlightedIndex < 0 || highlightedIndex >= sourceData.length) {
-          return null;
-        }
-
-        x = highlightedIndex;
-        const highlightedYValue = sourceData[highlightedIndex];
-
-        // If dataPoint is null, don't render
-        if (highlightedYValue === null) {
-          return null;
-        }
-
-        if (typeof highlightedYValue === 'number') {
-          y = highlightedYValue;
-        } else if (Array.isArray(highlightedYValue)) {
-          const validValues = highlightedYValue.filter((val): val is number => val !== null);
-          // If all values in the array are null, don't render
-          if (validValues.length < 2) {
-            return null;
-          }
-
-          y = validValues[1];
-        } else {
-          // Fallback case - shouldn't happen with proper typing
-          return null;
-        }
-      }
-
-      const pixelCoordinate = getPixelCoordinate(x, y);
-      const pointColor = color || targetSeries?.color || 'var(--color-fgPrimary)';
+      const pointColor = color ?? targetSeries?.color ?? 'var(--color-fgPrimary)';
       const pulseRadius = radius * 4;
       const innerRingRadius = (radius + pulseRadius) / 2;
 
+      // When scrubbing - render without animation wrapper
+      if (!isIdleState) {
+        return (
+          <g>
+            <circle
+              cx={targetPosition.x}
+              cy={targetPosition.y}
+              fill={pointColor}
+              opacity={0.15}
+              r={innerRingRadius}
+            />
+            <Point
+              ref={pointRef}
+              color={pointColor}
+              dataX={dataX}
+              dataY={dataY}
+              opacity={opacity}
+              pixelCoordinates={targetPosition}
+              pulse={false}
+              pulseRadius={pulseRadius}
+              radius={radius}
+              stroke="var(--color-bg)"
+              strokeWidth={2}
+              yAxisId={targetSeries?.yAxisId}
+              {...props}
+            />
+          </g>
+        );
+      }
+
+      // When idle - render with animation wrapper for smooth data updates
+      // Render at origin (0,0) and use transform to position
       return (
-        <>
-          <circle
-            cx={pixelCoordinate.x}
-            cy={pixelCoordinate.y}
-            fill={pointColor}
-            opacity={0.15}
-            r={innerRingRadius}
-          />
+        <m.g animate={controls} initial={{ x: targetPosition.x, y: targetPosition.y }}>
+          <circle cx={0} cy={0} fill={pointColor} opacity={0.15} r={innerRingRadius} />
           <Point
             ref={pointRef}
             color={pointColor}
-            dataX={x}
-            dataY={y}
+            dataX={dataX}
+            dataY={dataY}
             opacity={opacity}
-            pulse={idlePulse && highlightedIndex === undefined}
+            pixelCoordinates={{ x: 0, y: 0 }}
+            pulse={idlePulse}
             pulseRadius={pulseRadius}
             radius={radius}
             stroke="var(--color-bg)"
@@ -195,7 +240,7 @@ export const ScrubberHead = memo(
             yAxisId={targetSeries?.yAxisId}
             {...props}
           />
-        </>
+        </m.g>
       );
     },
   ),

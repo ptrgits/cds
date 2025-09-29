@@ -12,15 +12,15 @@ import { Text, TextHeadline } from '@coinbase/cds-web/typography';
 
 import { Area } from '../area/Area';
 import { XAxis, YAxis } from '../axis';
-import { useChartContext } from '../ChartProvider';
+import { useCartesianChartContext } from '../ChartProvider';
 import { SolidLine, type SolidLineProps } from '../line';
 import { Line } from '../line/Line';
 import { LineChart } from '../line/LineChart';
-import { BarPlot, Chart, type ChartTextChildren, PeriodSelector, Scrubber } from '../';
+import { BarPlot, CartesianChart, type ChartTextChildren, PeriodSelector, Scrubber } from '../';
 
 export default {
-  component: Chart,
-  title: 'Components/Chart',
+  component: CartesianChart,
+  title: 'Components/Chart/CartesianChart',
 };
 
 const MultipleChart = () => {
@@ -30,7 +30,7 @@ const MultipleChart = () => {
 
   return (
     <VStack gap={3}>
-      <Chart
+      <CartesianChart
         height={350}
         series={[
           { id: 'bar', data: barData },
@@ -39,7 +39,7 @@ const MultipleChart = () => {
       >
         <Area seriesId="bar" type="dotted" />
         <Line curve="natural" seriesId="line" />
-      </Chart>
+      </CartesianChart>
     </VStack>
   );
 };
@@ -154,15 +154,15 @@ const PredictionMarket = () => {
 
   const [scrubberLabel, setScrubberLabel] = useState<string | null>(null);
   const updateScrubberLabel = useCallback(
-    (highlightedIndex: number | null) => {
+    (scrubberPosition: number | undefined) => {
       if (
-        highlightedIndex === null ||
-        highlightedIndex === undefined ||
-        highlightedIndex >= eaglesData.length
+        scrubberPosition === null ||
+        scrubberPosition === undefined ||
+        scrubberPosition >= eaglesData.length
       )
         return null;
 
-      const timestamp = Date.now() - (eaglesData.length - 1 - highlightedIndex) * 60000;
+      const timestamp = Date.now() - (eaglesData.length - 1 - scrubberPosition) * 60000;
       const date = new Date(timestamp);
       setScrubberLabel(
         date.toLocaleTimeString('en-US', {
@@ -185,10 +185,10 @@ const PredictionMarket = () => {
           Eagles vs. Ravens
         </Text>
       </VStack>
-      <Chart
+      <CartesianChart
         enableScrubbing
         height={300}
-        onScrubberPosChange={updateScrubberLabel}
+        onScrubberPositionChange={updateScrubberLabel}
         padding={{ top: 5, right: 0, bottom: 4, left: 0 }}
         paddingEnd={2}
         series={seriesConfig}
@@ -210,8 +210,8 @@ const PredictionMarket = () => {
           />
         ))}
         <CustomYAxis />
-        <Scrubber scrubberLabel={scrubberLabel} seriesIds={scrubbedSeries} />
-      </Chart>
+        <Scrubber label={scrubberLabel} seriesIds={scrubbedSeries} />
+      </CartesianChart>
       <Box paddingX={2}>
         <PeriodSelector activeTab={activeTab} onChange={setActiveTab} tabs={tabs} />
       </Box>
@@ -241,7 +241,7 @@ const PredictionMarket = () => {
 
 const EarningsHistory = () => {
   const CirclePlot = memo(({ seriesId, opacity = 1 }: { seriesId: string; opacity?: number }) => {
-    const { getSeries, getSeriesData, getXScale, getYScale } = useChartContext();
+    const { getSeries, getSeriesData, getXScale, getYScale } = useCartesianChartContext();
     const series = getSeries(seriesId);
     const data = getSeriesData(seriesId);
     const xScale = getXScale();
@@ -335,7 +335,7 @@ const EarningsHistory = () => {
 
   return (
     <VStack gap={0.5}>
-      <Chart
+      <CartesianChart
         animate={false}
         height={250}
         overflow="visible"
@@ -360,7 +360,7 @@ const EarningsHistory = () => {
         <XAxis size={20} tickLabelFormatter={surprisePercentage} />
         <CirclePlot opacity={0.5} seriesId="estimatedEPS" />
         <CirclePlot seriesId="actualEPS" />
-      </Chart>
+      </CartesianChart>
       <HStack gap={2} justifyContent="flex-end">
         <LegendItem label="Estimated EPS" opacity={0.5} />
         <LegendItem label="Actual EPS" />
@@ -370,7 +370,7 @@ const EarningsHistory = () => {
 };
 
 const PriceWithVolume = () => {
-  const [scrubIndex, setScrubIndex] = useState<number | null>(null);
+  const [scrubIndex, setScrubIndex] = useState<number | undefined>(undefined);
   const btcData = btcCandles.slice(0, 180).reverse();
 
   const btcPrices = btcData.map((candle) => parseFloat(candle.close));
@@ -408,7 +408,7 @@ const PriceWithVolume = () => {
   const currentDate = btcDates[displayIndex];
 
   const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === null)
+    if (scrubIndex === undefined)
       return `Current Bitcoin price: ${formatPrice(currentPrice)}, Volume: ${formatVolume(currentVolume)}`;
     return `Bitcoin price at ${formatDate(currentDate)}: ${formatPrice(currentPrice)}, Volume: ${formatVolume(currentVolume)}`;
   }, [scrubIndex, currentPrice, currentVolume, currentDate, formatPrice, formatVolume, formatDate]);
@@ -436,12 +436,12 @@ const PriceWithVolume = () => {
         style={{ padding: 0 }}
         title={<Text font="title1">Bitcoin</Text>}
       />
-      <Chart
+      <CartesianChart
         enableScrubbing
         accessibilityLabel={accessibilityLabel}
         aria-labelledby={headerId}
         height={250}
-        onScrubberPosChange={setScrubIndex}
+        onScrubberPositionChange={setScrubIndex}
         series={[
           {
             id: 'prices',
@@ -479,7 +479,7 @@ const PriceWithVolume = () => {
         <BarPlot seriesIds={['volume']} />
         <Line showArea curve="monotone" seriesId="prices" />
         <Scrubber seriesIds={['prices']} />
-      </Chart>
+      </CartesianChart>
     </VStack>
   );
 };

@@ -4,9 +4,9 @@ import { isCategoricalScale, ScrubberContext } from '@coinbase/cds-common/visual
 import { VStack } from '@coinbase/cds-web/layout';
 import { Text } from '@coinbase/cds-web/typography';
 
-import { Chart } from '../..';
+import { CartesianChart } from '../..';
 import { XAxis, YAxis } from '../../axis';
-import { useChartContext } from '../../ChartProvider';
+import { useCartesianChartContext } from '../../ChartProvider';
 import { ReferenceLine, SolidLine, type SolidLineProps } from '../../line';
 import { PeriodSelector } from '../../PeriodSelector';
 import { Scrubber } from '../../scrubber';
@@ -67,7 +67,12 @@ const PositiveAndNegativeCashFlow = () => {
   ];
 
   return (
-    <Chart height={420} padding={4} series={series} xAxis={{ data: categories, scaleType: 'band' }}>
+    <CartesianChart
+      height={420}
+      padding={4}
+      series={series}
+      xAxis={{ data: categories, scaleType: 'band' }}
+    >
       <XAxis />
       <YAxis
         showGrid
@@ -76,7 +81,7 @@ const PositiveAndNegativeCashFlow = () => {
       />
       <BarPlot />
       <ReferenceLine LineComponent={SolidLine} dataY={0} />
-    </Chart>
+    </CartesianChart>
   );
 };
 
@@ -188,12 +193,12 @@ const tabs: TimePeriodTab[] = [
 ];
 
 const ScrubberRect = memo(() => {
-  const { getXScale, getYScale } = useChartContext();
-  const { highlightedIndex } = React.useContext(ScrubberContext) ?? {};
+  const { getXScale, getYScale } = useCartesianChartContext();
+  const { scrubberPosition } = React.useContext(ScrubberContext) ?? {};
   const xScale = getXScale();
   const yScale = getYScale();
 
-  if (!xScale || !yScale || highlightedIndex === undefined || !isCategoricalScale(xScale))
+  if (!xScale || !yScale || scrubberPosition === undefined || !isCategoricalScale(xScale))
     return null;
 
   const yScaleDomain = yScale.range();
@@ -206,7 +211,7 @@ const ScrubberRect = memo(() => {
       fill="var(--color-bgLine)"
       height={yMax - yMin}
       width={barWidth}
-      x={xScale(highlightedIndex)}
+      x={xScale(scrubberPosition)}
       y={yMin}
     />
   );
@@ -215,7 +220,7 @@ const ScrubberRect = memo(() => {
 // todo: show a 31 day example on the doc site and explain how bearish vs bullish candles work
 const Candlesticks = () => {
   const infoTextRef = React.useRef<HTMLSpanElement>(null);
-  const selectedIndexRef = React.useRef<number | null>(null);
+  const selectedIndexRef = React.useRef<number | undefined>(undefined);
   const [timePeriod, setTimePeriod] = React.useState<TimePeriodTab>(tabs[0]);
   const stockData = btcCandles
     .slice(0, timePeriod.id === 'week' ? 7 : timePeriod.id === 'month' ? 30 : btcCandles.length)
@@ -229,7 +234,7 @@ const Candlesticks = () => {
 
   const CandlestickBarComponent = memo<BarComponentProps>(
     ({ x, y, width, height, originY, dataX, ...props }) => {
-      const { getYScale } = useChartContext();
+      const { getYScale } = useCartesianChartContext();
       const yScale = getYScale();
 
       const wickX = x + width / 2;
@@ -288,11 +293,11 @@ const Candlesticks = () => {
 
   // Memoize the update function to avoid recreation on each render
   const updateInfoText = React.useCallback(
-    (index: number | null) => {
+    (index: number | undefined) => {
       if (!infoTextRef.current) return;
 
       const text =
-        index !== null
+        index !== undefined
           ? `Open: ${formatPrice(stockData[index].open)}, Close: ${formatPrice(
               stockData[index].close,
             )}, Volume: ${formatVolume(stockData[index].volume)}`
@@ -332,9 +337,8 @@ const Candlesticks = () => {
         animate={false}
         aria-labelledby={infoTextId}
         borderRadius={0}
-        dataKey={timePeriod.id}
         height={400}
-        onScrubberPosChange={updateInfoText}
+        onScrubberPositionChange={updateInfoText}
         series={[
           {
             id: 'stock-prices',
@@ -355,11 +359,7 @@ const Candlesticks = () => {
         {timePeriod.id === 'year' ? (
           <Scrubber
             hideOverlay
-            scrubberComponents={{
-              ScrubberLineComponent: (props) => (
-                <ReferenceLine {...props} LineComponent={ThinSolidLine} />
-              ),
-            }}
+            LineComponent={(props) => <ReferenceLine {...props} LineComponent={ThinSolidLine} />}
             seriesIds={[]}
           />
         ) : (
@@ -420,7 +420,7 @@ export const All = () => {
         <MonthlyRewards />
       </Example>
       <Example title="Multiple Y Axes">
-        <Chart
+        <CartesianChart
           height={400}
           series={[
             {
@@ -469,7 +469,7 @@ export const All = () => {
             tickLabelFormatter={(value) => `$${value}k`}
           />
           <BarPlot />
-        </Chart>
+        </CartesianChart>
       </Example>
       <Example title="Candlestick Chart">
         <Candlesticks />

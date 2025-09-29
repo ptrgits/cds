@@ -1,8 +1,18 @@
-import React, { memo, useMemo } from 'react';
-import type { SVGProps } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  Easing,
+  runOnJS,
+  useAnimatedReaction,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { Path } from 'react-native-svg';
+import { usePreviousValue } from '@coinbase/cds-common/hooks/usePreviousValue';
 import { getBarPath } from '@coinbase/cds-common/visualizations/charts';
-import { useChartContext } from '../ChartProvider';
-import { m as motion, type MotionProps } from 'framer-motion';
+import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
+import * as interpolate from 'd3-interpolate-path';
+
+import { useCartesianChartContext } from '../ChartProvider';
 
 import type { BarComponentProps } from './Bar';
 
@@ -14,44 +24,94 @@ export type DefaultBarProps = BarComponentProps;
 export const DefaultBar = memo<DefaultBarProps>(
   ({
     x,
+    y,
     width,
+    height,
     borderRadius,
     roundTop,
     roundBottom,
     originY,
     d,
-    fill = 'var(--color-fgPrimary)',
+    fill,
     fillOpacity = 1,
     stroke,
     strokeWidth,
   }) => {
-    const { animate } = useChartContext();
-    const initialPath = useMemo(() => {
-      if (!animate) return undefined;
-      // Need a minimum height to allow for animation
+    const pathRef = useRef<Path | null>(null);
+    const { animate } = useCartesianChartContext();
+    const theme = useTheme();
+
+    const animationProgress = useSharedValue(0);
+
+    const targetPath = useMemo(() => {
+      return d || getBarPath(x, y, width, height, borderRadius, roundTop, roundBottom);
+    }, [d, x, y, width, height, borderRadius, roundTop, roundBottom]);
+
+    const previousPath = usePreviousValue(targetPath);
+
+    const baselinePath = useMemo(() => {
       const minHeight = 1;
-      const initialY = originY - minHeight;
+      const initialY = originY ? originY - minHeight : y + height - minHeight;
       return getBarPath(x, initialY, width, minHeight, borderRadius, roundTop, roundBottom);
-    }, [animate, x, originY, width, borderRadius, roundTop, roundBottom]);
+    }, [x, originY, y, height, width, borderRadius, roundTop, roundBottom]);
 
-    const pathProps: SVGProps<SVGPathElement> & MotionProps = {
-      fill,
-      fillOpacity,
-      stroke,
-      strokeWidth,
-    };
+    const fromPath = useMemo(() => {
+      if (!animate) return targetPath;
+      return previousPath || baselinePath;
+    }, [animate, previousPath, baselinePath, targetPath]);
 
-    if (animate && initialPath) {
-      return (
-        <motion.path
-          {...pathProps}
-          animate={{ d }}
-          initial={{ d: initialPath }}
-          transition={{ type: 'spring', duration: 1, bounce: 0 }}
-        />
-      );
-    }
+    const pathInterpolator = useMemo(
+      () => interpolate.interpolatePath(fromPath, targetPath),
+      [fromPath, targetPath],
+    );
 
-    return <path {...pathProps} d={d} />;
+    const updatePath = useCallback(
+      (progress: number) => {
+        const val = Number(progress.toFixed(4));
+        pathRef.current?.setNativeProps({
+          d: pathInterpolator(val),
+        });
+      },
+      [pathInterpolator],
+    );
+
+    const defaultFill = fill || theme.color.fgPrimary;
+
+    useAnimatedReaction(
+      () => animationProgress.value,
+      (progress) => {
+        'worklet';
+        runOnJS(updatePath)(progress);
+      },
+      [updatePath],
+    );
+
+    useEffect(() => {
+      if (!pathRef.current) return;
+
+      if (!animate) {
+        pathRef.current.setNativeProps({
+          d: targetPath,
+        });
+        animationProgress.value = 1;
+        return;
+      }
+
+      animationProgress.value = 0;
+      animationProgress.value = withTiming(1, {
+        duration: 300,
+      });
+    }, [animate, animationProgress, targetPath, baselinePath]);
+
+    return (
+      <Path
+        ref={pathRef}
+        d={fromPath}
+        fill={defaultFill}
+        fillOpacity={fillOpacity}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+      />
+    );
   },
 );

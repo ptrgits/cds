@@ -1,9 +1,12 @@
 import React, { memo, useMemo } from 'react';
 import type { ThemeVars } from '@coinbase/cds-common';
-import { defaultAxisId } from '@coinbase/cds-common/visualizations/charts';
-import { useChartContext } from '../ChartProvider';
-import { getBarSizeAdjustment } from '@coinbase/cds-common/visualizations/charts/bar';
-import { isCategoricalScale } from '@coinbase/cds-common/visualizations/charts/scale';
+import {
+  defaultAxisId,
+  getBarSizeAdjustment,
+  isCategoricalScale,
+} from '@coinbase/cds-common/visualizations/charts';
+
+import { useCartesianChartContext } from '../ChartProvider';
 
 import type { BarComponent, BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
@@ -81,7 +84,7 @@ export type BarStackGroupProps = {
  */
 export const BarStackGroup = memo<BarStackGroupProps>(
   ({ series, yAxisId = defaultAxisId, stackIndex, totalStacks, barPadding = 0.1, ...props }) => {
-    const { getSeriesData, getXScale, getYScale, drawingArea } = useChartContext();
+    const { getSeriesData, getXScale, getYScale, drawingArea } = useCartesianChartContext();
 
     const xScale = getXScale();
     const yScale = getYScale(yAxisId);

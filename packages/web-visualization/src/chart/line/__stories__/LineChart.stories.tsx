@@ -31,8 +31,8 @@ import {
 } from '../..';
 import { Area, type AreaComponentProps, DottedArea, GradientArea } from '../../area';
 import { XAxis, YAxis } from '../../axis';
-import { Chart } from '../../Chart';
-import { useChartContext } from '../../ChartProvider';
+import { CartesianChart } from '../../CartesianChart';
+import { useCartesianChartContext } from '../../ChartProvider';
 import { Point } from '../../point';
 import { DottedLine, GradientLine, Line, LineChart, ReferenceLine, SolidLine } from '..';
 
@@ -93,16 +93,16 @@ type TrendData = {
 };
 
 const calculateTrendData = (
-  highlightedIndex: number | null,
+  scrubberPosition: number | undefined,
   currentData: number[],
   currentTimestamps: string[],
   startPrice: number,
   currentPrice: number,
   activeTimeframe: string,
 ): TrendData => {
-  if (highlightedIndex !== null && highlightedIndex !== undefined) {
+  if (scrubberPosition !== undefined) {
     // When hovering, show trend relative to START of time period (not previous point)
-    const hoverIndex = highlightedIndex;
+    const hoverIndex = scrubberPosition;
     const hoverPrice = currentData[hoverIndex];
     const hoverPriceChange = hoverPrice - startPrice; // Fixed: relative to start price
     const hoverTimestamp = currentTimestamps[hoverIndex];
@@ -221,7 +221,7 @@ const BTCPriceChart = () => {
   ];
   const [activeTab, setActiveTab] = useState<TabValue | null>(tabs[0]); // Data source for chart
   const [isHovering, setIsHovering] = useState(false);
-  const [highlightedItem, setHighlightedItem] = useState<number | null>(null);
+  const [highlightedItem, setHighlightedItem] = useState<number | undefined>();
 
   const currentPriceData = activeTab
     ? sparklineInteractiveData[activeTab.id as keyof typeof sparklineInteractiveData]
@@ -246,7 +246,7 @@ const BTCPriceChart = () => {
     };
   }, [currentData]);
 
-  const onScrubberPosChange = useCallback((item: number | null) => {
+  const onScrubberPositionChange = useCallback((item?: number) => {
     setHighlightedItem(item);
     setIsHovering(!!item);
   }, []);
@@ -300,10 +300,10 @@ const BTCPriceChart = () => {
             title={<Text font="title1">Coinbase Wrapped BTC</Text>}
           />
         </HStack>
-        <Chart
+        <CartesianChart
           enableScrubbing
           height={350}
-          onScrubberPosChange={onScrubberPosChange}
+          onScrubberPositionChange={onScrubberPositionChange}
           overflow="visible"
           padding={{ left: 0, right: 2, bottom: 0, top: 4 }}
           series={[
@@ -319,21 +319,21 @@ const BTCPriceChart = () => {
           <Line showArea AreaComponent={AreaComponent} seriesId="price" strokeWidth={3} />
           <Scrubber
             idlePulse
-            scrubberLabel={displayDate}
+            label={displayDate}
+            lineStroke="black"
             scrubberLabelProps={{
               color: 'black',
             }}
-            scrubberLineStroke="black"
             styles={{
-              scrubberHead: {
+              head: {
                 stroke: btcAccentColor,
               },
-              scrubberOverlay: {
+              overlay: {
                 fill: btcAccentColor,
               },
             }}
           />
-        </Chart>
+        </CartesianChart>
         <Box paddingX={{ phone: 2, tablet: 4, desktop: 4 }}>
           <PeriodSelector
             TabComponent={PeriodSelectorTab}
@@ -430,11 +430,11 @@ const ColorShiftChart = () => {
   const currentPrice = currentData[currentData.length - 1];
 
   const [scrubberLabel, setScrubberLabel] = useState<string | null>(null);
-  const onScrubberPosChange = useCallback(
-    (dataX: number | null) => {
-      if (dataX === null) return null;
+  const onScrubberPositionChange = useCallback(
+    (index?: number) => {
+      if (index === undefined) return null;
 
-      const timestamp = currentTimestamps[dataX];
+      const timestamp = currentTimestamps[index];
       setScrubberLabel(formatChartDate(timestamp, activeTab?.id || '1H'));
     },
     [activeTab?.id, currentTimestamps],
@@ -459,9 +459,6 @@ const ColorShiftChart = () => {
     [currentTimestamps, activeTab],
   );
 
-  // todo: add this to chart context?
-  const dataKey = activeTab?.id ?? '1H';
-
   return (
     <motion.div
       // @ts-expect-error we're using a custom color variable here
@@ -474,9 +471,8 @@ const ColorShiftChart = () => {
           enableScrubbing
           showArea
           showXAxis
-          dataKey={dataKey}
           height={350}
-          onScrubberPosChange={onScrubberPosChange}
+          onScrubberPositionChange={onScrubberPositionChange}
           overflow="visible"
           padding={{ top: 6, left: 0, right: 0, bottom: 0 }}
           series={[
@@ -490,7 +486,7 @@ const ColorShiftChart = () => {
             tickLabelFormatter: indexToTime,
           }}
         >
-          <Scrubber scrubberLabel={scrubberLabel} />
+          <Scrubber label={scrubberLabel} />
           <ReferenceLine
             dataY={startPrice}
             label={`$${startPrice}`}
@@ -627,12 +623,12 @@ const PriceChart = () => {
   }, [currentData]);
 
   const [scrubberLabel, setScrubberLabel] = useState<ChartTextChildren | null>(null);
-  const onScrubberPosChange = useCallback(
-    (dataX: number | null) => {
-      setIsHovering(dataX !== null);
-      if (dataX === null) return null;
-      const timestamp = currentTimestamps[dataX];
-      const price = currentData[dataX];
+  const onScrubberPositionChange = useCallback(
+    (index?: number) => {
+      setIsHovering(index !== undefined);
+      if (index === undefined) return null;
+      const timestamp = currentTimestamps[index];
+      const price = currentData[index];
       const formattedPrice =
         price.toLocaleString('en-US', {
           minimumFractionDigits: 2,
@@ -652,7 +648,7 @@ const PriceChart = () => {
 
   const { trendPrice, trendPreviousPrice, trendDirection } = useMemo(() => {
     return calculateTrendData(
-      null,
+      undefined,
       currentData,
       currentTimestamps,
       startPrice,
@@ -679,17 +675,13 @@ const PriceChart = () => {
     })}`;
   }, []);
 
-  // todo: add this to chart context?
-  const dataKey = activeTab?.id ?? '1H';
-
   return (
     <VStack gap={3} width="100%">
       <LineChart
         enableScrubbing
         showArea
-        dataKey={dataKey}
         height={372}
-        onScrubberPosChange={onScrubberPosChange}
+        onScrubberPositionChange={onScrubberPositionChange}
         overflow="visible"
         padding={{ left: 0, right: 3, bottom: 3, top: 3 }}
         series={[
@@ -728,7 +720,7 @@ const PriceChart = () => {
         ]}
         yAxis={{ domainLimit: 'strict' }}
       >
-        <Scrubber scrubberLabel={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
+        <Scrubber label={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
       </LineChart>
       <Box paddingX={{ phone: 2, tablet: 4, desktop: 4 }}>
         <PeriodSelector
@@ -743,7 +735,7 @@ const PriceChart = () => {
 };
 
 function ForecastAssetPrice() {
-  const [scrubIndex, setScrubIndex] = useState<number | null>(null);
+  const [scrubIndex, setScrubIndex] = useState<number | undefined>();
   const getDataFromSparkline = (startDate: Date) => {
     const allData = sparklineInteractiveData.all;
     if (!allData || allData.length === 0) return [];
@@ -826,7 +818,7 @@ function ForecastAssetPrice() {
   ));
 
   const scrubberLabel: ChartTextChildren = useMemo(() => {
-    if (scrubIndex === null) return null;
+    if (scrubIndex === undefined) return null;
     const price = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -840,7 +832,7 @@ function ForecastAssetPrice() {
   }, [allDataPoints, formatDate, scrubIndex]);
 
   const accessibilityLabel: string | undefined = useMemo(() => {
-    if (scrubIndex === null) return;
+    if (scrubIndex === undefined) return;
     const price = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -858,7 +850,7 @@ function ForecastAssetPrice() {
       accessibilityLabel={accessibilityLabel}
       animate={false}
       height={350}
-      onScrubberPosChange={setScrubIndex}
+      onScrubberPositionChange={setScrubIndex}
       overflow="visible"
       padding={{
         top: 5,
@@ -891,7 +883,7 @@ function ForecastAssetPrice() {
         tickInterval: 2,
       }}
     >
-      <Scrubber scrubberLabel={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
+      <Scrubber label={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
     </LineChart>
   );
 }
@@ -971,7 +963,7 @@ const BitcoinChartWithScrubberHead = () => {
           ]}
           width="100%"
         >
-          <Scrubber idlePulse styles={{ scrubberHead: { stroke: 'white' } }} />
+          <Scrubber idlePulse styles={{ head: { stroke: 'white' } }} />
         </LineChart>
       </div>
     </VStack>
@@ -1111,10 +1103,10 @@ const availabilityEvents = [
 ];
 
 const AvailabilityChart = () => {
-  const [scrubIndex, setScrubIndex] = useState<number | null>(null);
+  const [scrubIndex, setScrubIndex] = useState<number | undefined>();
 
   const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === null) return undefined;
+    if (scrubIndex === undefined) return;
     const event = availabilityEvents[scrubIndex];
     const formattedDate = event.date.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -1135,7 +1127,7 @@ const AvailabilityChart = () => {
       yellowThresholdPercentage?: number;
       greenThresholdPercentage?: number;
     }) => {
-      const { height, series, getYScale, getYAxis, drawingArea } = useChartContext();
+      const { height, series, getYScale, getYAxis, drawingArea } = useCartesianChartContext();
       const yScale = getYScale();
       const yAxis = getYAxis();
 
@@ -1178,11 +1170,11 @@ const AvailabilityChart = () => {
   );
 
   return (
-    <Chart
+    <CartesianChart
       enableScrubbing
       accessibilityLabel={accessibilityLabel}
       height={300}
-      onScrubberPosChange={setScrubIndex}
+      onScrubberPositionChange={setScrubIndex}
       series={[
         {
           id: 'availability',
@@ -1194,7 +1186,10 @@ const AvailabilityChart = () => {
         data: availabilityEvents.map((event) => event.date.getTime()),
       }}
       yAxis={{
-        domain: ({ min, max }) => ({ min: Math.max(min - 2, 0), max: Math.min(max + 2, 100) }),
+        domain: ({ min, max }: { min: number; max: number }) => ({
+          min: Math.max(min - 2, 0),
+          max: Math.min(max + 2, 100),
+        }),
       }}
     >
       <ChartDefs />
@@ -1221,7 +1216,7 @@ const AvailabilityChart = () => {
         seriesId="availability"
       />
       <Scrubber overlayOffset={10} />
-    </Chart>
+    </CartesianChart>
   );
 };
 
@@ -1245,7 +1240,7 @@ const GainLossChart = () => {
   const data = [-40, -28, -21, -5, 48, -5, -28, 2, -29, -46, 16, -30, -29, 8];
 
   const ChartDefs = ({ threshold = 0 }) => {
-    const { getYScale } = useChartContext();
+    const { getYScale } = useCartesianChartContext();
     // get the default y-axis scale
     const yScale = getYScale();
 
@@ -1306,7 +1301,7 @@ const GainLossChart = () => {
   const solidColor = `url(#${gradientId}-solid)`;
 
   return (
-    <Chart
+    <CartesianChart
       enableScrubbing
       height={250}
       padding={{ top: 1.5, bottom: 1.5, left: 0, right: 0 }}
@@ -1323,7 +1318,7 @@ const GainLossChart = () => {
       <Area curve="monotone" fill={`url(#${gradientId}-gradient)`} seriesId="prices" />
       <Line curve="monotone" seriesId="prices" stroke={solidColor} strokeWidth={3} />
       <Scrubber hideOverlay />
-    </Chart>
+    </CartesianChart>
   );
 };
 
@@ -1471,10 +1466,10 @@ const uniqueVisitors = [4000, 3000, 2000, 2780, 1890, 2390, 3490];
 const pages = ['Page A', 'Page B', 'Page C', 'Page D', 'Page E', 'Page F', 'Page G'];
 
 const MultipleSeriesChart = () => {
-  const [scrubIndex, setScrubIndex] = useState<number | null>(null);
+  const [scrubIndex, setScrubIndex] = useState<number | undefined>();
 
   const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === null) return undefined;
+    if (scrubIndex === undefined) return;
     return `${pages[scrubIndex]}: Page Views ${pageViews[scrubIndex].toLocaleString()}, Unique Visitors ${uniqueVisitors[scrubIndex].toLocaleString()}`;
   }, [scrubIndex]);
 
@@ -1485,7 +1480,7 @@ const MultipleSeriesChart = () => {
       showYAxis
       accessibilityLabel={accessibilityLabel}
       height={400}
-      onScrubberPosChange={setScrubIndex}
+      onScrubberPositionChange={setScrubIndex}
       padding={{ left: 1.5 }}
       series={[
         {
@@ -1525,7 +1520,7 @@ const PointsChart = () => {
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
   return (
-    <Chart
+    <CartesianChart
       height={250}
       series={[
         {
@@ -1554,7 +1549,7 @@ const PointsChart = () => {
         }
         seriesId="prices"
       />
-    </Chart>
+    </CartesianChart>
   );
 };
 
@@ -1568,7 +1563,7 @@ const tabs = [
 ];
 
 const AssetPriceDotted = memo(() => {
-  const [scrubIndex, setScrubIndex] = useState<number | null>(null);
+  const [scrubIndex, setScrubIndex] = useState<number | undefined>();
   const currentPrice =
     sparklineInteractiveData.hour[sparklineInteractiveData.hour.length - 1].value;
 
@@ -1618,7 +1613,7 @@ const AssetPriceDotted = memo(() => {
   }, []);
 
   const scrubberLabel: ChartTextChildren = useMemo(() => {
-    if (scrubIndex === null) return null;
+    if (scrubIndex === undefined) return;
     const price = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -1632,7 +1627,7 @@ const AssetPriceDotted = memo(() => {
   }, [scrubIndex, sparklineTimePeriodDataValues, formatDate, sparklineTimePeriodDataTimestamps]);
 
   const accessibilityLabel: string | undefined = useMemo(() => {
-    if (scrubIndex === null) return;
+    if (scrubIndex === undefined) return;
     const price = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -1660,7 +1655,7 @@ const AssetPriceDotted = memo(() => {
         areaType="dotted"
         aria-live="polite"
         height={300}
-        onScrubberPosChange={setScrubIndex}
+        onScrubberPositionChange={setScrubIndex}
         overflow="visible"
         series={[
           {
@@ -1671,7 +1666,7 @@ const AssetPriceDotted = memo(() => {
         ]}
         style={{ outlineColor: assets.btc.color }}
       >
-        <Scrubber idlePulse scrubberLabel={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
+        <Scrubber idlePulse label={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
       </LineChart>
       <PeriodSelector
         TabComponent={BTCTab}

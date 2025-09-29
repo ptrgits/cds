@@ -7,7 +7,7 @@ import { Box, type BoxProps } from '@coinbase/cds-web/layout';
 import { Text } from '@coinbase/cds-web/typography';
 import { m as motion } from 'framer-motion';
 
-import { useChartContext } from '../ChartProvider';
+import { useCartesianChartContext } from '../ChartProvider';
 
 // Define the valid SVG children for the <text> element.
 type ValidChartTextChildElements =
@@ -128,7 +128,7 @@ export const ChartText = memo<ChartTextProps>(
     classNames,
   }) => {
     const theme = useTheme();
-    const { width: chartWidth, height: chartHeight } = useChartContext();
+    const { width: chartWidth, height: chartHeight } = useCartesianChartContext();
     const fullChartBounds = useMemo(
       () => ({ x: 0, y: 0, width: chartWidth, height: chartHeight }),
       [chartWidth, chartHeight],
@@ -143,14 +143,20 @@ export const ChartText = memo<ChartTextProps>(
         return null;
       }
 
-      const padding = getPadding(paddingInput);
+      const paddingWithTheme = getPadding(paddingInput);
+      const padding = {
+        top: theme.space[paddingWithTheme.top],
+        right: theme.space[paddingWithTheme.right],
+        bottom: theme.space[paddingWithTheme.bottom],
+        left: theme.space[paddingWithTheme.left],
+      };
       return {
         x: textBBox.x - padding.left,
         y: textBBox.y - padding.top,
         width: textBBox.width + padding.left + padding.right,
         height: textBBox.height + padding.top + padding.bottom,
       };
-    }, [textBBox, paddingInput]);
+    }, [textBBox, paddingInput, theme.space]);
 
     const overflowAmount = useMemo(() => {
       if (disableRepositioning) {

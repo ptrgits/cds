@@ -17,7 +17,7 @@ function BasicExample() {
   return (
     <LineChart
       enableScrubbing
-      onScrubberPosChange={setScrubIndex}
+      onScrubberPositionChange={setScrubIndex}
       height={250}
       series={[
         {
@@ -41,7 +41,7 @@ function BasicExample() {
 
 ## Customization
 
-When you desire a more custom chart, you can use the `Chart` component and build your own chart from scratch.
+When you desire a more custom chart, you can use the `CartesianChart` component and build your own chart from scratch.
 
 ### Price with Volume
 
@@ -117,9 +117,9 @@ function PriceWithVolume() {
           </HStack>
         }
       />
-      <Chart
+      <CartesianChart
         enableScrubbing
-        onScrubberPosChange={setScrubIndex}
+        onScrubberPositionChange={setScrubIndex}
         height={250}
         series={[
           {
@@ -154,7 +154,7 @@ function PriceWithVolume() {
         <BarPlot seriesIds={['volume']} />
         <Line seriesId="prices" curve="monotone" showArea />
         <Scrubber seriesIds={['prices']} />
-      </Chart>
+      </CartesianChart>
     </VStack>
   );
 }
@@ -167,8 +167,7 @@ You can also create your own type of cartesian chart by using `getSeriesData`, `
 ```jsx live
 function EarningsHistory() {
   const CirclePlot = memo(({ seriesId, opacity = 1 }: { seriesId: string, opacity?: number }) => {
-    const { drawingArea } = useChartContext();
-    const { getSeries, getSeriesData, getXScale, getYScale } = useChartContext();
+    const { drawingArea, getSeries, getSeriesData, getXScale, getYScale } = useCartesianChartContext();
     const series = getSeries(seriesId);
     const data = getSeriesData(seriesId);
     const xScale = getXScale();
@@ -262,7 +261,7 @@ function EarningsHistory() {
 
   return (
     <VStack gap={0.5}>
-      <Chart
+      <CartesianChart
         overflow="visible"
         animate={false}
         height={250}
@@ -287,7 +286,7 @@ function EarningsHistory() {
         <XAxis size={20} tickLabelFormatter={surprisePercentage} />
         <CirclePlot opacity={0.5} seriesId="estimatedEPS" />
         <CirclePlot seriesId="actualEPS" />
-      </Chart>
+      </CartesianChart>
       <HStack justifyContent="flex-end" gap={2}>
         <LegendItem opacity={0.5} label="Estimated EPS" />
         <LegendItem label="Actual EPS" />

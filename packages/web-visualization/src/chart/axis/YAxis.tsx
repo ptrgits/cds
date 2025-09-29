@@ -5,8 +5,8 @@ import { useTheme } from '@coinbase/cds-web/hooks/useTheme';
 import { css } from '@linaria/core';
 import { AnimatePresence, m as motion } from 'framer-motion';
 
-import { useChartContext } from '../ChartProvider';
-import { DottedLine } from '../line';
+import { useCartesianChartContext } from '../ChartProvider';
+import { DottedLine } from '../line/DottedLine';
 import { ReferenceLine } from '../line/ReferenceLine';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
 
@@ -50,7 +50,6 @@ export const YAxis = memo<YAxisProps>(
     classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 1,
-    dataKey,
     size = 44,
     minTickLabelGap = 0,
     showTickMarks,
@@ -63,7 +62,7 @@ export const YAxis = memo<YAxisProps>(
     // todo: probably switch to our own id generator, use id seems to be for accessibility
     const registrationId = useId();
     const { animate, getYScale, getYAxis, registerAxis, unregisterAxis, getAxisBounds } =
-      useChartContext();
+      useCartesianChartContext();
 
     const yScale = getYScale(axisId);
     const yAxis = getYAxis(axisId);
@@ -186,7 +185,7 @@ export const YAxis = memo<YAxisProps>(
 
               return animate ? (
                 <motion.g
-                  key={`grid-${tick.tick}-${index}-${dataKey}`}
+                  key={`grid-${tick.tick}-${index}`}
                   animate="animate"
                   exit="exit"
                   initial="initial"
@@ -195,7 +194,7 @@ export const YAxis = memo<YAxisProps>(
                   {horizontalLine}
                 </motion.g>
               ) : (
-                <g key={`grid-${tick.tick}-${index}-${dataKey}`}>{horizontalLine}</g>
+                <g key={`grid-${tick.tick}-${index}`}>{horizontalLine}</g>
               );
             })}
           </AnimatePresence>

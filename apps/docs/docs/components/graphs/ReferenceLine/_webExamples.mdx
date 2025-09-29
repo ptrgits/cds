@@ -97,7 +97,7 @@ You can adjust the style of the label using the `labelConfig` prop.
     labelConfig={{
       dx: 4,
       borderRadius: 100,
-      padding: { top: 4, bottom: 4, left: 8, right: 8 },
+      padding: { top: 0.5, bottom: 0.5, left: 1, right: 1 },
       textAnchor: 'start',
       color: 'rgb(var(--yellow70))',
       background: 'var(--color-accentSubtleYellow)',
@@ -182,8 +182,7 @@ function DraggablePriceTarget() {
         })}`;
       }, []);
 
-      const { drawingArea } = useChartContext();
-      const { getYScale } = useChartContext();
+      const { drawingArea, getYScale } = useCartesianChartContext();
       const [amount, setAmount] = useState(startAmount);
       const [isDragging, setIsDragging] = useState(false);
       const [textDimensions, setTextDimensions] = useState({ width: 0, height: 0 });
@@ -272,7 +271,7 @@ function DraggablePriceTarget() {
               color: 'white',
               dx: -8,
               font: 'label1',
-              padding: { top: 5, bottom: 5, left: 10, right: 10 },
+              padding: { top: 0.5, bottom: 0.5, left: 1, right: 1 },
               textAnchor: 'end',
             }}
             labelPosition="right"
@@ -336,8 +335,8 @@ function DraggablePriceTarget() {
         ref={chartRef}
         showArea
         curve="monotone"
-        height={250}
-        padding={{ top: 10, bottom: 0.5, left: 0.5, right: 10 }}
+        height={300}
+        padding={{ top: 10, bottom: 4, left: 0.5, right: 10 }}
         series={[
           {
             id: 'prices',

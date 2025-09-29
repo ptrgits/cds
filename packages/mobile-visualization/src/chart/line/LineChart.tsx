@@ -10,8 +10,9 @@ import { chartFallbackNegative, chartFallbackPositive } from '@coinbase/cds-lott
 import { Lottie } from '@coinbase/cds-mobile/animation';
 import { Box } from '@coinbase/cds-mobile/layout';
 
-import { XAxis, type XAxisProps, YAxis, type YAxisProps } from '../axis';
-import { Chart, type ChartProps } from '../Chart';
+import { XAxis, type XAxisProps } from '../axis/XAxis';
+import { YAxis, type YAxisProps } from '../axis/YAxis';
+import { CartesianChart, type CartesianChartProps } from '../CartesianChart';
 
 import { Line, type LineProps } from './Line';
 
@@ -54,7 +55,7 @@ export type LineSeries = Omit<Series, 'data'> & {
     >
   >;
 
-export type LineChartProps = Omit<ChartProps, 'xAxis' | 'yAxis' | 'series'> &
+export type LineChartProps = Omit<CartesianChartProps, 'xAxis' | 'yAxis' | 'series'> &
   Pick<
     LineProps,
     'showArea' | 'areaType' | 'type' | 'LineComponent' | 'AreaComponent' | 'curve' | 'renderPoints'
@@ -72,12 +73,6 @@ export type LineChartProps = Omit<ChartProps, 'xAxis' | 'yAxis' | 'series'> &
      * Whether to show the Y axis.
      */
     showYAxis?: boolean;
-    /**
-     * Key that identifies the current dataset.
-     * When this changes, triggers fade-out/fade-in transitions for axes and scrubber heads.
-     * Useful for distinguishing between live updates vs complete dataset changes.
-     */
-    dataKey?: string | number;
     xAxis?: Partial<AxisConfigProps> & XAxisProps;
     yAxis?: Partial<AxisConfigProps> & YAxisProps;
     /**
@@ -108,7 +103,6 @@ export const LineChart = memo(
         renderPoints,
         showXAxis,
         showYAxis,
-        dataKey,
         xAxis,
         yAxis,
         padding: userPadding,
@@ -185,7 +179,7 @@ export const LineChart = memo(
 
       return (
         <View style={{ position: 'relative' }}>
-          <Chart
+          <CartesianChart
             {...chartProps}
             ref={ref}
             enableScrubbing={enableScrubbing}
@@ -195,10 +189,8 @@ export const LineChart = memo(
             yAxis={yAxisConfig}
           >
             {/* Render axes first for grid lines to appear behind everything else */}
-            {showXAxis && <XAxis dataKey={dataKey} position="end" {...xAxisVisualProps} />}
-            {showYAxis && (
-              <YAxis axisId={yAxisId} dataKey={dataKey} position="end" {...yAxisVisualProps} />
-            )}
+            {showXAxis && <XAxis position="end" {...xAxisVisualProps} />}
+            {showYAxis && <YAxis axisId={yAxisId} position="end" {...yAxisVisualProps} />}
             {hasData &&
               series?.map(({ id, data, label, color, yAxisId, ...linePropsFromSeries }) => (
                 <Line
@@ -215,7 +207,7 @@ export const LineChart = memo(
                 />
               ))}
             {children}
-          </Chart>
+          </CartesianChart>
           {!hasData && !disableFallback && (
             <Box
               alignItems="center"

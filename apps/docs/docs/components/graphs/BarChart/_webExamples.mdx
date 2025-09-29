@@ -617,7 +617,7 @@ You can render bars from separate y axes in one `BarPlot`, however they aren't a
 
 ```jsx live
 <VStack gap={2}>
-  <Chart
+  <CartesianChart
     height={400}
     series={[
       {
@@ -668,7 +668,7 @@ You can render bars from separate y axes in one `BarPlot`, however they aren't a
       tickLabelFormatter={(value) => `${value}%`}
     />
     <BarPlot />
-  </Chart>
+  </CartesianChart>
   <HStack justifyContent="center" gap={2}>
     <Box alignItems="center" gap={0.5}>
       <Box
@@ -716,7 +716,7 @@ function Candlesticks() {
 
   const CandlestickBarComponent = memo<BarComponentProps>(
     ({ x, y, width, height, originY, dataX, ...props }) => {
-      const { getYScale } = useChartContext();
+      const { getYScale } = useCartesianChartContext();
       const yScale = getYScale();
 
       const wickX = x + width / 2;
@@ -809,7 +809,7 @@ function Candlesticks() {
         animate={false}
         borderRadius={0}
         height={400}
-        onScrubberPosChange={updateInfoText}
+        onScrubberPositionChange={updateInfoText}
         series={[
           {
             id: 'stock-prices',
@@ -830,11 +830,9 @@ function Candlesticks() {
       >
         <Scrubber
             hideOverlay
-            scrubberComponents={{
-              ScrubberLineComponent: (props) => (
-                <ReferenceLine {...props} LineComponent={ThinSolidLine} />
-              ),
-            }}
+            LineComponent={(props) => (
+              <ReferenceLine {...props} LineComponent={ThinSolidLine} />
+            )}
             seriesIds={[]}
           />
       </BarChart>

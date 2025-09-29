@@ -8,7 +8,7 @@ import {
 } from '@coinbase/cds-common/visualizations/charts';
 
 import { XAxis, type XAxisProps, YAxis, type YAxisProps } from '../axis';
-import { Chart, type ChartProps } from '../Chart';
+import { CartesianChart, type CartesianChartProps } from '../CartesianChart';
 
 import { type BarProps } from './Bar';
 import { BarPlot, type BarPlotProps } from './BarPlot';
@@ -20,7 +20,7 @@ import { BarPlot, type BarPlotProps } from './BarPlot';
 export type BarSeries = Series &
   Partial<Pick<BarProps, 'BarComponent' | 'fill' | 'fillOpacity' | 'stroke' | 'strokeWidth'>>;
 
-export type BarChartProps = Omit<ChartProps, 'xAxis' | 'yAxis' | 'series'> &
+export type BarChartProps = Omit<CartesianChartProps, 'xAxis' | 'yAxis' | 'series'> &
   Pick<
     BarPlotProps,
     'barPadding' | 'StackComponent' | 'roundBaseline' | 'stackGap' | 'barMinSize' | 'stackMinSize'
@@ -48,12 +48,6 @@ export type BarChartProps = Omit<ChartProps, 'xAxis' | 'yAxis' | 'series'> &
      * Whether to show the Y axis.
      */
     showYAxis?: boolean;
-    /**
-     * Key that identifies the current dataset.
-     * When this changes, triggers fade-out/fade-in transitions for axes and scrubber heads.
-     * Useful for distinguishing between live updates vs complete dataset changes.
-     */
-    dataKey?: string | number;
 
     xAxis?: Partial<AxisConfigProps> & XAxisProps;
     yAxis?: Partial<AxisConfigProps> & YAxisProps;
@@ -67,7 +61,6 @@ export const BarChart = memo(
         stacked,
         showXAxis,
         showYAxis,
-        dataKey,
         xAxis,
         yAxis,
         padding: userPadding,
@@ -172,7 +165,7 @@ export const BarChart = memo(
       };
 
       return (
-        <Chart
+        <CartesianChart
           ref={ref}
           {...chartProps}
           padding={calculatedPadding}
@@ -180,10 +173,8 @@ export const BarChart = memo(
           xAxis={xAxisConfig}
           yAxis={yAxisConfig}
         >
-          {showXAxis && <XAxis dataKey={dataKey} position="end" {...xAxisVisualProps} />}
-          {showYAxis && (
-            <YAxis axisId={yAxisId} dataKey={dataKey} position="end" {...yAxisVisualProps} />
-          )}
+          {showXAxis && <XAxis position="end" {...xAxisVisualProps} />}
+          {showYAxis && <YAxis axisId={yAxisId} position="end" {...yAxisVisualProps} />}
           <BarPlot
             BarComponent={BarComponent}
             StackComponent={StackComponent}
@@ -199,7 +190,7 @@ export const BarChart = memo(
             strokeWidth={strokeWidth}
           />
           {children}
-        </Chart>
+        </CartesianChart>
       );
     },
   ),

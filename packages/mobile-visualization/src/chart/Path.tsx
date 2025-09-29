@@ -1,5 +1,6 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import Reanimated, { useAnimatedProps, useSharedValue, withSpring } from 'react-native-reanimated';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing } from 'react-native';
+import Reanimated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import {
   ClipPath,
   Defs,
@@ -9,14 +10,14 @@ import {
   Rect,
   type RectProps,
 } from 'react-native-svg';
-import { useValueChanges } from '@coinbase/cds-common/hooks/useValueChanges';
 import type { Rect as RectType, SharedProps } from '@coinbase/cds-common/types';
-import { useChartContext } from './ChartProvider';
 import * as interpolate from 'd3-interpolate-path';
+
+import { useCartesianChartContext } from './ChartProvider';
 
 const AnimatedRect = Reanimated.createAnimatedComponent(Rect);
 
-const AnimatedSvgRect = ({ width, rectProps }: { width: number; rectProps: RectProps }) => {
+const AnimatedSvgRect = memo(({ width, rectProps }: { width: number; rectProps: RectProps }) => {
   const animatedWidth = useSharedValue(0);
 
   const animatedProps = useAnimatedProps(() => {
@@ -26,14 +27,13 @@ const AnimatedSvgRect = ({ width, rectProps }: { width: number; rectProps: RectP
   });
 
   React.useEffect(() => {
-    animatedWidth.value = withSpring(width + 4, {
-      damping: 25,
-      stiffness: 120,
+    animatedWidth.value = withTiming(width + 4, {
+      duration: 1000,
     });
   }, [animatedWidth, width]);
 
   return <AnimatedRect animatedProps={animatedProps} {...rectProps} />;
-};
+});
 
 export type PathProps = SharedProps &
   SvgPathProps & {
@@ -90,85 +90,128 @@ export const Path = memo<PathProps>(
     animate: animateProp,
     ...pathProps
   }) => {
-    const { animate: animateContext, drawingArea: contextRect } = useChartContext();
+    const { animate: animateContext, drawingArea: contextRect } = useCartesianChartContext();
     const rect = clipRect ?? contextRect;
     const animate = animateProp ?? animateContext;
-    const pathRef = useRef<SvgPath | null>(null);
 
     const clipPathId = useMemo(() => `clip-path-${Math.random().toString(36).substr(2, 9)}`, []);
 
-    // Track path changes for animation
-    const {
-      previousValue: previousPath,
-      newValue: newPath,
-      hasChanged: shouldUpdatePath,
-      addPreviousValue: addPreviousPath,
-    } = useValueChanges(d || '');
+    // Refs for path animation
+    const pathRef = useRef<SvgPath | null>(null);
+    const [isInitialized, setIsInitialized] = useState(false);
+    // Store the initial path - this never changes and is what we render
+    const initialPathRef = useRef<string>(d);
+    const currentPathRef = useRef<string>(d); // Track current actual path
+    const isAnimatingRef = useRef(false);
+    const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
-    // Create path interpolator
-    const pathInterpolator = useMemo(() => {
-      const fromPath = (previousPath as string) || d;
-      const toPath = (newPath as string) || d;
+    // Animation progress using React Native's Animated API
+    const animationProgress = useRef(new Animated.Value(0)).current;
 
-      // If no previous path, no need to interpolate
-      if (!previousPath || !fromPath || !toPath) {
-        return null;
-      }
+    // Spring-like easing to match ScrubberHead
+    const springEasing = Easing.bezier(0.5, 0, 0.25, 1);
 
-      try {
-        return interpolate.interpolatePath(fromPath, toPath);
-      } catch (error) {
-        // Fallback if interpolation fails
-        return null;
-      }
-    }, [previousPath, newPath, d]);
-
-    // Animation callback
-    const animationCallback = useCallback(
-      ({ value }: { value: number }) => {
-        if (!pathInterpolator || !pathRef.current) return;
-
-        const val = Number(value.toFixed(4));
-        pathRef.current.setNativeProps({
-          d: pathInterpolator(val),
-        });
-      },
-      [pathInterpolator],
+    // Animation listener callback
+    const animationListener = useCallback(
+      (interpolator: (t: number) => string) =>
+        ({ value }: { value: number }) => {
+          const val = Number(value.toFixed(4));
+          pathRef.current?.setNativeProps({
+            d: interpolator(val),
+          });
+        },
+      [],
     );
 
-    // Play animation
-    const playAnimation = useCallback(() => {
-      if (!pathInterpolator) return;
+    // Handle animation completion
+    const onFinishAnimation = useCallback(
+      (targetPath: string) =>
+        ({ finished }: { finished: boolean }) => {
+          if (finished) {
+            animationProgress.removeAllListeners();
+            animationProgress.setValue(0);
+            isAnimatingRef.current = false;
+            currentPathRef.current = targetPath;
+            // Ensure final path is set
+            pathRef.current?.setNativeProps({
+              d: targetPath,
+            });
+          }
+        },
+      [animationProgress],
+    );
 
-      const startTime = Date.now();
-      const duration = 300; // Match DefaultBar animation duration
+    // Initialize path on mount
+    useEffect(() => {
+      if (pathRef.current && !isInitialized) {
+        pathRef.current.setNativeProps({ d });
+        currentPathRef.current = d;
+        setIsInitialized(true);
+      }
+    }, [d, isInitialized]);
 
-      const easeInOutCubic = (t: number) =>
-        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    // Handle path changes after initialization
+    useEffect(() => {
+      if (!d || !isInitialized) return;
 
-      const runAnimation = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easedProgress = easeInOutCubic(progress);
+      const pathChanged = currentPathRef.current !== d;
+      if (!pathChanged) return;
 
-        animationCallback({ value: easedProgress });
+      // Create interpolator for animation
+      if (animate && currentPathRef.current) {
+        try {
+          // Create interpolator from current path to new path
+          const interpolator = interpolate.interpolatePath(currentPathRef.current, d);
 
-        if (progress < 1) {
-          requestAnimationFrame(runAnimation);
+          // Stop any running animation
+          if (isAnimatingRef.current && animationRef.current) {
+            animationRef.current.stop();
+            animationProgress.removeAllListeners();
+          }
+
+          isAnimatingRef.current = true;
+
+          // Reset and start animation
+          animationProgress.setValue(0);
+          animationProgress.addListener(animationListener(interpolator));
+
+          // Create spring-like timing animation to match ScrubberHead
+          animationRef.current = Animated.timing(animationProgress, {
+            toValue: 1,
+            duration: 300, // Approximately matches spring timing
+            easing: springEasing,
+            useNativeDriver: true,
+          });
+
+          animationRef.current.start(onFinishAnimation(d));
+        } catch (error) {
+          // If interpolation fails, update immediately
+          pathRef.current?.setNativeProps({ d });
+          currentPathRef.current = d;
+        }
+      } else {
+        // No animation - update immediately via setNativeProps only
+        pathRef.current?.setNativeProps({ d });
+        currentPathRef.current = d;
+      }
+    }, [
+      d,
+      animate,
+      isInitialized,
+      animationProgress,
+      animationListener,
+      onFinishAnimation,
+      springEasing,
+    ]);
+
+    useEffect(() => {
+      return () => {
+        animationProgress.removeAllListeners();
+        if (animationRef.current) {
+          animationRef.current.stop();
         }
       };
-
-      requestAnimationFrame(runAnimation);
-    }, [pathInterpolator, animationCallback]);
-
-    // Handle path changes
-    useEffect(() => {
-      addPreviousPath(newPath);
-
-      if (shouldUpdatePath && animate && pathInterpolator) {
-        playAnimation();
-      }
-    }, [shouldUpdatePath, animate, pathInterpolator, playAnimation, addPreviousPath, newPath]);
+    }, [animationProgress]);
 
     if (!d || !rect) {
       return null;
@@ -177,22 +220,20 @@ export const Path = memo<PathProps>(
     return (
       <G>
         <Defs>
-          <ClipPath id={clipPathId}>
-            {animate ? (
+          {animate && (
+            <ClipPath id={clipPathId}>
               <AnimatedSvgRect
                 rectProps={{ height: rect.height, x: rect.x, y: rect.y }}
                 width={rect.width}
               />
-            ) : (
-              <Rect height={rect.height} width={rect.width} x={rect.x} y={rect.y} />
-            )}
-          </ClipPath>
+            </ClipPath>
+          )}
         </Defs>
         <SvgPath
           ref={pathRef}
           clipPath={`url(#${clipPathId})`}
           clipRule="nonzero"
-          d={d}
+          d={initialPathRef.current}
           fill={fill}
           fillOpacity={fillOpacity}
           stroke={stroke}

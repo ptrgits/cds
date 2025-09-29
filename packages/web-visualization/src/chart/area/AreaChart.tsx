@@ -8,7 +8,7 @@ import {
 } from '@coinbase/cds-common/visualizations/charts';
 
 import { XAxis, type XAxisProps, YAxis, type YAxisProps } from '../axis';
-import { Chart, type ChartProps } from '../Chart';
+import { CartesianChart, type CartesianChartProps } from '../CartesianChart';
 import { Line, type LineProps } from '../line/Line';
 
 import { Area, type AreaProps } from './Area';
@@ -21,7 +21,7 @@ export type AreaSeries = Series &
   Partial<Pick<AreaProps, 'AreaComponent' | 'curve' | 'fillOpacity' | 'type' | 'fill'>> &
   Partial<Pick<LineProps, 'LineComponent' | 'strokeWidth' | 'stroke' | 'opacity'>>;
 
-export type AreaChartProps = Omit<ChartProps, 'xAxis' | 'yAxis' | 'series'> &
+export type AreaChartProps = Omit<CartesianChartProps, 'xAxis' | 'yAxis' | 'series'> &
   Pick<AreaProps, 'AreaComponent' | 'curve' | 'fillOpacity' | 'type'> &
   Pick<LineProps, 'LineComponent' | 'strokeWidth'> & {
     /**
@@ -57,12 +57,6 @@ export type AreaChartProps = Omit<ChartProps, 'xAxis' | 'yAxis' | 'series'> &
      * @default 'solid'
      */
     lineType?: 'solid' | 'dotted' | 'gradient';
-    /**
-     * Key that identifies the current dataset.
-     * When this changes, triggers fade-out/fade-in transitions for axes and scrubber heads.
-     * Useful for distinguishing between live updates vs complete dataset changes.
-     */
-    dataKey?: string | number;
 
     xAxis?: Partial<AxisConfigProps> & XAxisProps;
     yAxis?: Partial<AxisConfigProps> & YAxisProps;
@@ -84,7 +78,6 @@ export const AreaChart = memo(
         showYAxis,
         showLines = false,
         lineType = 'solid',
-        dataKey,
         xAxis,
         yAxis,
         padding: userPadding,
@@ -173,7 +166,7 @@ export const AreaChart = memo(
       };
 
       return (
-        <Chart
+        <CartesianChart
           ref={ref}
           {...chartProps}
           enableScrubbing={enableScrubbing}
@@ -182,10 +175,8 @@ export const AreaChart = memo(
           xAxis={xAxisConfig}
           yAxis={yAxisConfig}
         >
-          {showXAxis && <XAxis dataKey={dataKey} position="end" {...xAxisVisualProps} />}
-          {showYAxis && (
-            <YAxis axisId={yAxisId} dataKey={dataKey} position="end" {...yAxisVisualProps} />
-          )}
+          {showXAxis && <XAxis position="end" {...xAxisVisualProps} />}
+          {showYAxis && <YAxis axisId={yAxisId} position="end" {...yAxisVisualProps} />}
           {series?.map(
             ({
               id,
@@ -237,7 +228,7 @@ export const AreaChart = memo(
               },
             )}
           {children}
-        </Chart>
+        </CartesianChart>
       );
     },
   ),

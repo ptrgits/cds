@@ -242,8 +242,8 @@ export const SparklineInteractive = memo(
 
     const [scrubberLabel, setScrubberLabel] = useState<ChartTextChildren | null>(null);
     const handleHighlightChange = useCallback(
-      (index: number | null) => {
-        if (index !== null && dataForPeriod[index]) {
+      (index: number | undefined) => {
+        if (index !== undefined && dataForPeriod[index]) {
           const point = dataForPeriod[index];
 
           if (!isScrubbing) {
@@ -415,12 +415,11 @@ export const SparklineInteractive = memo(
         )}
         <LineChart
           areaType={fillType}
-          dataKey={selectedPeriod}
           enableScrubbing={!disableScrubbing}
           fallback={fallback}
           fallbackType={fallbackType}
           height={sparklineInteractiveHeight}
-          onScrubberPosChange={handleHighlightChange}
+          onScrubberPositionChange={handleHighlightChange}
           padding={{ left: 0, right: 0, top: chartPaddingTop, bottom: 0 }}
           series={series}
           showArea={fill}
@@ -448,7 +447,7 @@ export const SparklineInteractive = memo(
             tickLabelFormatter={formatAxisDate}
           />
           {children}
-          <Scrubber scrubberLabel={scrubberLabel} seriesIds={[]} />
+          <Scrubber label={scrubberLabel} seriesIds={[]} />
         </LineChart>
         {showBottomPeriodSelector && (
           <Box
