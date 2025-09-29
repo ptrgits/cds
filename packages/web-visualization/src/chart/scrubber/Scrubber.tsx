@@ -134,9 +134,9 @@ export const Scrubber = memo(
         label,
         lineStroke,
         scrubberLabelProps,
-        HeadComponent,
-        HeadLabelComponent,
-        LineComponent,
+        HeadComponent = ScrubberHead,
+        HeadLabelComponent = ScrubberHeadLabel,
+        LineComponent = ReferenceLine,
         hideOverlay,
         overlayOffset = 2,
         testID,
@@ -574,11 +574,6 @@ export const Scrubber = memo(
       const defaultXScale = getXScale();
       if (!defaultXScale) return null;
 
-      // Use custom components if provided
-      const ScrubberLineComponent = LineComponent ?? ReferenceLine;
-      const ScrubberHeadComponent = HeadComponent ?? ScrubberHead;
-      const ScrubberHeadLabelComponent = HeadLabelComponent ?? ScrubberHeadLabel;
-
       const pixelX =
         dataX !== undefined && defaultXScale ? getPointOnScale(dataX, defaultXScale) : undefined;
 
@@ -612,7 +607,7 @@ export const Scrubber = memo(
               />
             )}
           {!hideLine && scrubberPosition !== undefined && dataX !== undefined && (
-            <ScrubberLineComponent
+            <LineComponent
               className={classNames?.line}
               dataX={dataX}
               label={label}
@@ -629,7 +624,7 @@ export const Scrubber = memo(
 
             return (
               <g key={scrubberHead.targetSeries.id} data-component="scrubber-head">
-                <ScrubberHeadComponent
+                <HeadComponent
                   // todo: fix this type cast, seems to be due to custom components
                   ref={createScrubberHeadRef(scrubberHead.targetSeries.id) as any}
                   className={classNames?.head}
@@ -648,7 +643,7 @@ export const Scrubber = memo(
                     const finalSide = adjustment?.side ?? labelPositioning.strategy;
 
                     return (
-                      <ScrubberHeadLabelComponent
+                      <HeadLabelComponent
                         background="var(--color-bg)"
                         bounds={drawingArea}
                         className={classNames?.headLabel}
@@ -674,7 +669,7 @@ export const Scrubber = memo(
                         {...scrubberHeadLabelProps}
                       >
                         {scrubberHead.label}
-                      </ScrubberHeadLabelComponent>
+                      </HeadLabelComponent>
                     );
                   })()}
               </g>

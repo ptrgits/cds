@@ -46,7 +46,6 @@ export type ScrubberHeadProps = SharedProps &
 
 /**
  * The ScrubberHead is a special instance of a Point used to mark the scrubber's position on a specific series.
- * It optionally labels the Point with an instance of ScrubberHeadLabel.
  */
 export const ScrubberHead = memo(
   forwardRef<ScrubberHeadRef, ScrubberHeadProps>(
