@@ -17,11 +17,84 @@ import { useCartesianChartContext } from '../ChartProvider';
 import { ChartText, type ChartTextProps } from '../text';
 import type { ChartTextChildren } from '../text/ChartText';
 
-// Create animated component once at module level for better performance
-const AnimatedCircle = Reanimated.createAnimatedComponent(Circle);
-
 export const singlePulseDuration = 1000; // 1 second
 export const pulseDuration = 2000; // 2 seconds
+
+const AnimatedCircle = Reanimated.createAnimatedComponent(Circle);
+
+export type PulseCircleRef = {
+  /**
+   * Triggers a single pulse animation.
+   */
+  pulse: () => void;
+};
+
+type PulseCircleProps = {
+  /**
+   * Whether to animate the point with a pulsing effect.
+   */
+  pulse: boolean;
+  /**
+   * Radius of the pulse ring.
+   */
+  pulseRadius: number;
+  /**
+   * The color of the pulse circle.
+   */
+  color: string;
+};
+
+/**
+ * Memoized animated pulse circle component.
+ * Handles all pulse animation logic internally.
+ */
+const PulseCircle = memo(
+  forwardRef<PulseCircleRef, PulseCircleProps>(({ pulse, pulseRadius, color }, ref) => {
+    const { animate } = useCartesianChartContext();
+    const pulseOpacity = useSharedValue(0);
+
+    const pulseAnimatedProps = useAnimatedProps(() => {
+      return {
+        opacity: pulseOpacity.value,
+      };
+    });
+
+    useImperativeHandle(ref, () => ({
+      pulse: () => {
+        pulseOpacity.value = 0.1;
+        pulseOpacity.value = withTiming(0, { duration: singlePulseDuration });
+      },
+    }));
+
+    const shouldPulse = animate && pulse;
+
+    useEffect(() => {
+      if (shouldPulse) {
+        pulseOpacity.value = withRepeat(
+          withSequence(
+            withTiming(0.1, { duration: pulseDuration / 2 }),
+            withTiming(0, { duration: pulseDuration / 2 }),
+          ),
+          -1, // infinite repeat
+          false, // don't reverse
+        );
+      } else {
+        cancelAnimation(pulseOpacity);
+        pulseOpacity.value = withTiming(0, { duration: 200 });
+      }
+    }, [shouldPulse, pulseOpacity]);
+
+    return (
+      <AnimatedCircle
+        animatedProps={pulseAnimatedProps}
+        cx={0}
+        cy={0}
+        fill={color}
+        r={pulseRadius}
+      />
+    );
+  }),
+);
 
 /**
  * Calculate text alignment props based on position preset.
@@ -99,7 +172,6 @@ export type PointLabelConfig = Pick<
   | 'fontSize'
   | 'fontWeight'
   | 'color'
-  | 'elevation'
   | 'padding'
   | 'background'
   | 'borderRadius'
@@ -198,7 +270,6 @@ export type PointProps = SharedProps &
     dataY: number;
     /**
      * Whether to animate the point with a pulsing effect.
-     * @default false
      */
     pulse?: boolean;
     /**
@@ -216,7 +287,7 @@ export const Point = memo(
         dataY,
         yAxisId,
         color,
-        pulse = false,
+        pulse,
         radius = 4,
         pulseRadius = 16,
         opacity,
@@ -237,11 +308,9 @@ export const Point = memo(
       const theme = useTheme();
       const effectiveStroke = stroke ?? theme.color.bg;
 
-      // Use Reanimated shared values for better performance
-      const pulseOpacity = useSharedValue(0);
-      const pulseScale = useSharedValue(1);
+      const pulseCircleRef = React.useRef<PulseCircleRef>(null);
 
-      const { getXScale, getYScale, animate: animationEnabled } = useCartesianChartContext();
+      const { getXScale, getYScale } = useCartesianChartContext();
       const { scrubberPosition: scrubberPosition } = useScrubberContext();
 
       const xScale = getXScale();
@@ -272,31 +341,9 @@ export const Point = memo(
         });
       }, [pixelCoordinates, xScale, yScale, dataX, dataY]);
 
-      // Animated props for pulse circle - runs entirely on UI thread
-      const pulseAnimatedProps = useAnimatedProps(() => {
-        return {
-          opacity: pulseOpacity.value,
-          r: radius * pulseScale.value,
-        };
-      });
-
       useImperativeHandle(ref, () => ({
         pulse: () => {
-          // Trigger a single pulse using Reanimated
-          pulseOpacity.value = withSequence(
-            withTiming(0.15, {
-              duration: singlePulseDuration / 2,
-              easing: Easing.inOut(Easing.ease),
-            }),
-            withTiming(0, { duration: singlePulseDuration / 2, easing: Easing.inOut(Easing.ease) }),
-          );
-          pulseScale.value = withSequence(
-            withTiming(pulseRadius / radius, {
-              duration: singlePulseDuration / 2,
-              easing: Easing.out(Easing.ease),
-            }),
-            withTiming(1, { duration: singlePulseDuration / 2, easing: Easing.in(Easing.ease) }),
-          );
+          pulseCircleRef.current?.pulse();
         },
       }));
 
@@ -305,41 +352,6 @@ export const Point = memo(
           onScrubberEnter({ x: pixelCoordinate.x, y: pixelCoordinate.y });
         }
       }, [isScrubberHighlighted, onScrubberEnter, pixelCoordinate.x, pixelCoordinate.y]);
-
-      // Set up pulse animation with Reanimated for smoother performance
-      const shouldPulse = animationEnabled && pulse;
-
-      useEffect(() => {
-        if (shouldPulse) {
-          // Start infinite pulse animation using Reanimated
-          pulseOpacity.value = withRepeat(
-            withSequence(
-              withTiming(0.15, { duration: pulseDuration / 2, easing: Easing.inOut(Easing.ease) }),
-              withTiming(0, { duration: pulseDuration / 2, easing: Easing.inOut(Easing.ease) }),
-            ),
-            -1, // infinite repeat
-            false, // don't reverse
-          );
-
-          pulseScale.value = withRepeat(
-            withSequence(
-              withTiming(pulseRadius / radius, {
-                duration: pulseDuration / 2,
-                easing: Easing.out(Easing.ease),
-              }),
-              withTiming(1, { duration: pulseDuration / 2, easing: Easing.in(Easing.ease) }),
-            ),
-            -1, // infinite repeat
-            false, // don't reverse
-          );
-        } else {
-          // Stop animations smoothly
-          cancelAnimation(pulseOpacity);
-          cancelAnimation(pulseScale);
-          pulseOpacity.value = withTiming(0, { duration: 200 });
-          pulseScale.value = withTiming(1, { duration: 200 });
-        }
-      }, [shouldPulse, pulseOpacity, pulseScale, pulseRadius, radius]);
 
       const LabelContent = useMemo(() => {
         // Custom render function takes precedence
@@ -377,19 +389,21 @@ export const Point = memo(
 
       return (
         <>
-          <G opacity={opacity} testID={testID}>
-            {shouldPulse && (
-              <AnimatedCircle
-                animatedProps={pulseAnimatedProps}
-                cx={pixelCoordinate.x}
-                cy={pixelCoordinate.y}
-                fill={effectiveColor}
-              />
-            )}
+          <G
+            opacity={opacity}
+            testID={testID}
+            transform={[{ translateX: pixelCoordinate.x }, { translateY: pixelCoordinate.y }]}
+          >
+            <PulseCircle
+              ref={pulseCircleRef}
+              color={effectiveColor}
+              pulse={!!pulse}
+              pulseRadius={pulseRadius}
+            />
             <Circle
               accessibilityLabel={accessibilityLabel}
-              cx={pixelCoordinate.x}
-              cy={pixelCoordinate.y}
+              cx={0}
+              cy={0}
               fill={effectiveColor}
               onPress={
                 onPress

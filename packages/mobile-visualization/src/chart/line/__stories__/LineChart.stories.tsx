@@ -993,7 +993,7 @@ const AssetPriceDotted = () => {
           },
         ]}
       >
-        <Scrubber />
+        <Scrubber idlePulse scrubberLabel={scrubberLabel} />
       </LineChart>
       <PeriodSelector
         TabComponent={BTCTab}
@@ -1219,6 +1219,11 @@ const AssetPriceMultipleDotted = () => {
             id: 'eth',
             data: sparklineTimePeriodDataValues.map((d) => d * 0.75),
             color: assets.eth.color,
+          },
+          {
+            id: 'xrp',
+            data: sparklineTimePeriodDataValues.map((d) => d * 0.5),
+            color: assets.xrp.color,
           },
         ]}
       >

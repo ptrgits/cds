@@ -33,7 +33,6 @@ export type ScrubberHeadProps = SharedProps &
   > & {
     /**
      * Applies the Point's pulse effect to the scrubber head while it is at rest.
-     * @default false
      */
     idlePulse?: boolean;
     // make Point's coordinates optional for ScrubberHead
@@ -59,7 +58,7 @@ export const ScrubberHead = memo(
         color,
         radius = 4,
         testID,
-        idlePulse = false,
+        idlePulse,
         opacity = 1,
         ...props
       },
@@ -241,8 +240,6 @@ export const ScrubberHead = memo(
         );
       }
 
-      // When idle - render with animation wrapper for smooth data updates
-      // Render at origin (0,0) and use transform to position
       return (
         <AnimatedG animatedProps={animatedProps} testID={testID}>
           <Circle cx={0} cy={0} fill={pointColor} opacity={0.15} r={innerRingRadius} />
