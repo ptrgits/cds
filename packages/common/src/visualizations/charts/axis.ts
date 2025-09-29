@@ -3,7 +3,13 @@ import type React from 'react';
 
 import type { Rect } from '../../types';
 
-import { getChartDomain, getChartRange, isValidBounds, type AxisBounds, type Series } from './chart';
+import {
+  type AxisBounds,
+  getChartDomain,
+  getChartRange,
+  isValidBounds,
+  type Series,
+} from './chart';
 import {
   type ChartAxisScaleType,
   type ChartScaleFunction,
@@ -168,6 +174,7 @@ export const getAxisConfig = (
     const axesLength = axes.length;
     // forces id to be defined on every input config when there are multiple axes
     if (axesLength > 1 && axes.some(({ id }) => id === undefined)) {
+      // todo: link to doc site (cds.coinbase.com/...)
       throw new Error('When defining multiple axes, each must have a unique id');
     }
 

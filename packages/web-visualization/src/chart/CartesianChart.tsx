@@ -220,9 +220,6 @@ export const CartesianChart = memo(
         return scales;
       }, [chartRect, yAxes]);
 
-      // todo: should these be hooks which call the context under the hood?
-      // such as import { useXAxis } from './CartesianChart'
-      // useXAxis calls CartesianChartContext under the hood
       const getXAxis = useCallback(() => xAxis, [xAxis]);
       const getYAxis = useCallback((id?: string) => yAxes.get(id ?? defaultAxisId), [yAxes]);
       const getXScale = useCallback(() => xScale, [xScale]);
