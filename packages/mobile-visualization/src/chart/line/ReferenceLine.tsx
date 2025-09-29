@@ -22,7 +22,6 @@ export type ReferenceLineLabelConfig = Pick<
   | 'fontSize'
   | 'fontWeight'
   | 'color'
-  | 'elevation'
   | 'padding'
   | 'background'
   | 'borderRadius'

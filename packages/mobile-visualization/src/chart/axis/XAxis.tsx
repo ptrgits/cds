@@ -187,7 +187,7 @@ export const XAxis = memo<XAxisProps>(
         return {
           x: tick.position,
           y: labelY,
-          label: formatTick(tick.tick),
+          label: String(formatTick(tick.tick)),
           chartTextProps: {
             className: classNames?.tickLabel,
             color: theme.color.fgMuted,

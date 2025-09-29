@@ -1,33 +1,18 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
-import {
-  ForeignObject,
-  // Defs,
-  G,
-  Text,
-  type TextProps,
-} from 'react-native-svg';
+import { G, Rect as SvgRect, Text, type TextProps } from 'react-native-svg';
 import type { ThemeVars } from '@coinbase/cds-common';
-import type { ElevationLevels, Rect, SharedProps } from '@coinbase/cds-common/types';
+import type { Rect, SharedProps } from '@coinbase/cds-common/types';
 import { type ChartPadding, getPadding } from '@coinbase/cds-common/visualizations/charts';
-import { useLayout } from '@coinbase/cds-mobile/hooks/useLayout';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
-import { Box } from '@coinbase/cds-mobile/layout';
 
 import { useCartesianChartContext } from '../ChartProvider';
 
-// Define the valid SVG children for the <text> element.
-type ValidChartTextChildElements =
-  | React.ReactElement<React.SVGProps<SVGTSpanElement>, 'tspan'>
-  | React.ReactElement<React.SVGProps<SVGTextPathElement>, 'textPath'>;
-
-export type ChartTextChildren =
-  | string
-  | number
-  | null
-  | undefined
-  | ValidChartTextChildElements
-  | ValidChartTextChildElements[];
+/**
+ * The supported content types for ChartText.
+ * Currently limited to simple text content
+ */
+export type ChartTextChildren = string | null | undefined;
 
 export type ChartTextProps = SharedProps &
   Pick<
@@ -53,10 +38,6 @@ export type ChartTextProps = SharedProps &
     background?: string;
     // override box responsive style
     /**
-     * The elevation for the background.
-     */
-    elevation?: ElevationLevels;
-    /**
      * The text content to display.
      */
     children: ChartTextChildren;
@@ -72,7 +53,6 @@ export type ChartTextProps = SharedProps &
     y: number;
     /**
      * When true, disables automatic repositioning to fit within bounds.
-     * @default false
      */
     disableRepositioning?: boolean;
     /**
@@ -98,7 +78,6 @@ export type ChartTextProps = SharedProps &
 type ChartTextVisibleProps = {
   children: ChartTextChildren;
   background: string;
-  elevation?: ElevationLevels;
   textAnchor: TextProps['textAnchor'];
   alignmentBaseline: TextProps['alignmentBaseline'];
   fontFamily: TextProps['fontFamily'];
@@ -116,7 +95,6 @@ const ChartTextVisible = memo<ChartTextVisibleProps>(
   ({
     children,
     background,
-    elevation = 0,
     textAnchor,
     alignmentBaseline,
     fontFamily,
@@ -131,17 +109,6 @@ const ChartTextVisible = memo<ChartTextVisibleProps>(
   }) => {
     const padding = useMemo(() => getPadding(paddingInput), [paddingInput]);
 
-    const elevationSpacing = useMemo(() => {
-      if (!elevation) return { top: 0, right: 0, bottom: 0, left: 0 };
-
-      const spacing =
-        elevation === 1
-          ? { top: 12, right: 12, bottom: 20, left: 12 } // shadowRadius on sides, shadowOffset.height + shadowRadius on bottom
-          : { top: 24, right: 24, bottom: 32, left: 24 }; // elevation 2 spacing
-
-      return spacing;
-    }, [elevation]);
-
     const rectHeight = useMemo(
       () => textDimensions.height + padding.top + padding.bottom,
       [textDimensions, padding],
@@ -154,39 +121,15 @@ const ChartTextVisible = memo<ChartTextVisibleProps>(
     return (
       <G>
         {background !== 'transparent' && (
-          <ForeignObject
-            height={
-              textDimensions.height +
-              padding.top +
-              padding.bottom +
-              elevationSpacing.top +
-              elevationSpacing.bottom
-            }
-            width={
-              textDimensions.width +
-              padding.left +
-              padding.right +
-              elevationSpacing.left +
-              elevationSpacing.right
-            }
-            x={textDimensions.x - padding.left - elevationSpacing.left}
-            y={textDimensions.y - padding.top - elevationSpacing.top}
-          >
-            <Box height="100%" style={{ position: 'relative' }} width="100%">
-              <Box
-                borderRadius={borderRadius}
-                elevation={1}
-                height={rectHeight}
-                style={{
-                  position: 'absolute',
-                  top: elevationSpacing.top,
-                  left: elevationSpacing.left,
-                  backgroundColor: background,
-                }}
-                width={rectWidth}
-              />
-            </Box>
-          </ForeignObject>
+          <SvgRect
+            fill={background}
+            height={rectHeight}
+            rx={borderRadius}
+            ry={borderRadius}
+            width={rectWidth}
+            x={textDimensions.x - padding.left}
+            y={textDimensions.y - padding.top}
+          />
         )}
         <Text
           alignmentBaseline={alignmentBaseline}
@@ -220,7 +163,6 @@ export const ChartText = memo<ChartTextProps>(
     fontFamily,
     fontSize = 12,
     fontWeight,
-    elevation,
     color,
     background = 'transparent',
     borderRadius,
@@ -348,7 +290,6 @@ export const ChartText = memo<ChartTextProps>(
               borderRadius={borderRadius}
               dx={dx}
               dy={dy}
-              elevation={elevation}
               fill={color ?? theme.color.fgMuted}
               fontFamily={fontFamily}
               fontSize={fontSize}

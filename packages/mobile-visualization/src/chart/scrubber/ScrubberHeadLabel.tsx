@@ -24,7 +24,6 @@ export const ScrubberHeadLabel = memo<ScrubberHeadLabelProps>(
     color,
     padding = 1.5,
     onDimensionsChange,
-    elevation = background !== undefined ? 1 : undefined,
     borderRadius = background !== undefined ? 200 : undefined,
     testID,
     dx = 0,
@@ -70,7 +69,6 @@ export const ScrubberHeadLabel = memo<ScrubberHeadLabelProps>(
         borderRadius={borderRadius}
         color={resolvedColor}
         dx={spacing}
-        elevation={elevation}
         onDimensionsChange={handleDimensionsChange}
         padding={padding}
         testID={testID}

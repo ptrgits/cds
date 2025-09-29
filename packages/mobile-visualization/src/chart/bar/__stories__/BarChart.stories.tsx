@@ -155,9 +155,6 @@ const MonthlyRewards = () => {
       stackMinSize={3}
       xAxis={{
         tickLabelFormatter: (index) => {
-          if (index == currentMonth) {
-            return <TSpan fontWeight="bold">{months[index]}</TSpan>;
-          }
           return months[index];
         },
         categoryPadding: 0.27,

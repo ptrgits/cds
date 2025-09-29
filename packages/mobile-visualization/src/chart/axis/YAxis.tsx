@@ -188,7 +188,7 @@ export const YAxis = memo<YAxisProps>(
         return {
           x: labelX,
           y: tick.position,
-          label: formatTick(tick.tick),
+          label: String(formatTick(tick.tick)),
           chartTextProps: {
             className: classNames?.tickLabel,
             color: theme.color.fgMuted,
