@@ -182,6 +182,11 @@ const sidebars: SidebarsConfig = {
               id: 'components/inputs/RadioGroup/radioGroup',
               label: 'RadioGroup',
             },
+            {
+              type: 'doc',
+              id: 'components/inputs/SelectAlpha/select-alpha',
+              label: 'Select (Alpha)',
+            },
             { type: 'doc', id: 'components/inputs/Select/select', label: 'Select' },
             {
               type: 'doc',
