@@ -10,10 +10,12 @@ import type {
 } from '@coinbase/cds-common/types';
 import { getAccessibleColor } from '@coinbase/cds-common/utils/getAccessibleColor';
 import { defaultChartInset } from '@coinbase/cds-common/visualizations/charts';
+import { chartFallbackNegative, chartFallbackPositive } from '@coinbase/cds-lottie-files';
 import { emptyArray, noop } from '@coinbase/cds-utils';
 import { cx, useTheme } from '@coinbase/cds-web';
+import { Lottie } from '@coinbase/cds-web/animation';
 import { useDimensions } from '@coinbase/cds-web/hooks/useDimensions';
-import { HStack } from '@coinbase/cds-web/layout';
+import { HStack, VStack } from '@coinbase/cds-web/layout';
 import { Box } from '@coinbase/cds-web/layout/Box';
 
 import { type ChartTextChildren, LineChart, type LineSeries, Scrubber, XAxis } from '../../chart';
@@ -26,6 +28,16 @@ export type SparklineInteractiveDefaultFallback = Pick<
   SparklineInteractiveBaseProps<string>,
   'fallbackType' | 'compact'
 >;
+
+/**
+ * Default fallback component that shows Lottie animations for loading states
+ */
+const DefaultFallback = memo(
+  ({ fallbackType = 'positive' }: { fallbackType?: 'positive' | 'negative' }) => {
+    const source = fallbackType === 'negative' ? chartFallbackNegative : chartFallbackPositive;
+    return <Lottie autoplay loop height="100%" source={source} width="100%" />;
+  },
+);
 
 const mobileLayoutBreakpoint = 650;
 const axisSize = 52;
@@ -85,6 +97,10 @@ export type SparklineInteractiveBaseProps<Period extends string> = {
    * If you use the default fallback then this specifies if the fallback line is decreasing or increasing
    */
   fallbackType?: 'positive' | 'negative';
+  /**
+   * Disables the fallback state of the chart.
+   */
+  disableFallback?: boolean;
   /**
    * Show the chart in compact height
    */
@@ -195,6 +211,7 @@ export const SparklineInteractive = memo(
     formatHoverPrice,
     headerNode,
     fallbackType = 'positive',
+    disableFallback = false,
     timePeriodGutter,
     periodSelectorPlacement = 'above',
     className,
@@ -377,6 +394,11 @@ export const SparklineInteractive = memo(
       };
     }, [periods, selectedPeriod]);
 
+    // Check if we have valid data
+    const hasData = useMemo(() => {
+      return dataForPeriod && dataForPeriod.length > 0;
+    }, [dataForPeriod]);
+
     const periodSelector = (
       <SparklineInteractivePeriodSelector
         activeTab={activeTab}
@@ -399,7 +421,12 @@ export const SparklineInteractive = memo(
     );
 
     return (
-      <div ref={containerRef} className={cx(className, classNames?.root)} style={rootStyles}>
+      <VStack
+        ref={containerRef}
+        className={cx(className, classNames?.root)}
+        position="relative"
+        style={rootStyles}
+      >
         {isMobileLayout && showHeaderPeriodSelector && (
           <Box paddingBottom={2} width="100%">
             {periodSelector}
@@ -413,41 +440,53 @@ export const SparklineInteractive = memo(
             )}
           </Box>
         )}
-        <LineChart
-          areaType={fillType}
-          enableScrubbing={!disableScrubbing}
-          fallback={fallback}
-          fallbackType={fallbackType}
-          height={sparklineInteractiveHeight}
-          inset={{ left: 0, right: 0, top: chartInsetTop, bottom: 0 }}
-          onScrubberPositionChange={handleHighlightChange}
-          series={series}
-          showArea={fill}
-          style={{
-            // used when user is navigating with keyboard
-            outlineColor: color,
-          }}
-          type={lineType}
-          width="100%"
-          xAxis={{
-            domainLimit: 'strict',
-          }}
-          yAxis={{
-            domain: yAxisBounds,
-            domainLimit: 'strict',
-          }}
-        >
-          <XAxis
-            height={axisSize}
+        <Box position="relative">
+          <LineChart
+            areaType={fillType}
+            enableScrubbing={!disableScrubbing}
+            height={sparklineInteractiveHeight}
+            inset={{ left: 0, right: 0, top: chartInsetTop, bottom: 0 }}
+            onScrubberPositionChange={handleHighlightChange}
+            series={series}
+            showArea={fill}
             style={{
-              opacity: isScrubbing || !showBottomPeriodSelector ? 1 : 0,
-              transition: 'opacity 0.2s ease-in-out',
+              // used when user is navigating with keyboard
+              outlineColor: color,
             }}
-            tickLabelFormatter={formatAxisDate}
-          />
-          {children}
-          <Scrubber label={scrubberLabel} seriesIds={[]} />
-        </LineChart>
+            type={lineType}
+            width="100%"
+            xAxis={{
+              domainLimit: 'strict',
+            }}
+            yAxis={{
+              domain: yAxisBounds,
+              domainLimit: 'strict',
+            }}
+          >
+            <XAxis
+              height={axisSize}
+              style={{
+                opacity: isScrubbing || !showBottomPeriodSelector ? 1 : 0,
+                transition: 'opacity 0.2s ease-in-out',
+              }}
+              tickLabelFormatter={formatAxisDate}
+            />
+            {children}
+            <Scrubber label={scrubberLabel} seriesIds={[]} />
+          </LineChart>
+          {!hasData && !disableFallback && (
+            <Box
+              alignItems="center"
+              height="100%"
+              justifyContent="center"
+              position="absolute"
+              top="0"
+              width="100%"
+            >
+              {fallback ?? <DefaultFallback fallbackType={fallbackType} />}
+            </Box>
+          )}
+        </Box>
         {showBottomPeriodSelector && (
           <Box
             position="absolute"
@@ -470,7 +509,7 @@ export const SparklineInteractive = memo(
             </HStack>
           </Box>
         )}
-      </div>
+      </VStack>
     );
   },
 );

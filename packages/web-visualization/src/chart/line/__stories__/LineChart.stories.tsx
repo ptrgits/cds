@@ -1248,7 +1248,7 @@ const GainLossChart = () => {
 
       const baselinePercentage = ((threshold - domain[0]) / (domain[1] - domain[0])) * 100;
 
-      const negativeColor = 'rgb(var(--gray15))';
+      const negativeColor = 'rgb(var(--gray20))';
       const positiveColor = 'var(--color-fgPositive)';
 
       return (
