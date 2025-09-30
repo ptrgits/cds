@@ -84,7 +84,7 @@ export const getAffectedRoutes = async (log = false) => {
 
   const MONOREPO_ROOT = process.env.PROJECT_CWD ?? process.env.NX_MONOREPO_ROOT;
   const tsconfigPath = path.resolve(MONOREPO_ROOT, 'tsconfig.base.json');
-  const tsconfig = (await import(tsconfigPath, { assert: { type: 'json' } })).default;
+  const tsconfig = (await import(tsconfigPath, { with: { type: 'json' } })).default;
   const tsconfigPaths = tsconfig.compilerOptions.paths;
 
   const workspaceDirectoryMap = getWorkspaceDirectoryMap(workspaceDependencies, tsconfigPaths);
