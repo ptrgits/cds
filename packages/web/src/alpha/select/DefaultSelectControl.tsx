@@ -161,6 +161,18 @@ const DefaultSelectControlComponent = memo(
         ],
       );
 
+      const labelNode = useMemo(
+        () =>
+          typeof label === 'string' && labelVariant === 'inside' ? (
+            <InputLabel color="fg" paddingBottom={0} paddingTop={1} paddingX={2}>
+              {label}
+            </InputLabel>
+          ) : (
+            label
+          ),
+        [label, labelVariant],
+      );
+
       const valueNode = useMemo(() => {
         if (hasValue && isMultiSelect) {
           const valuesToShow =
