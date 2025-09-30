@@ -67,7 +67,7 @@ export type AxisBaseProps = {
    */
   GridLineComponent?: LineComponent;
   /**
-   * Minimum gap between tick labels in pixels.
+   * Minimum gap between tick labels.
    * Labels will be hidden if they are closer than this gap.
    * @default 4
    */
@@ -95,7 +95,7 @@ export type AxisBaseProps = {
    */
   showTickMarks?: boolean;
   /**
-   * Size of the tick marks in pixels.
+   * Size of the tick marks.
    * @default 4
    */
   tickMarkSize?: number;
@@ -136,13 +136,13 @@ export type AxisBaseProps = {
    */
   tickLabelFormatter?: (value: any) => ChartTextChildren;
   /**
-   * Space between the axis tick mark and labels in pixels.
+   * Space between the axis tick mark and labels.
    * If tick marks are not shown, this is the gap between the axis and the chart.
    * @default 2 for x-axis, 8 for y-axis
    */
   tickMarkLabelGap?: number;
   /**
-   * Interval at which to show ticks in pixels.
+   * Interval at which to show ticks.
    * When provided, calculates tick count based on available space.
    * @note this property is overridden by the `requestedTickCount` and `ticks` properties.
    * @default 32 (for x-axis)

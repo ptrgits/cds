@@ -10,9 +10,7 @@ import { useCartesianChartContext } from '../ChartProvider';
 
 import type { BarStackComponentProps } from './BarStack';
 
-export type DefaultBarStackBaseProps = BarStackComponentProps;
-
-export type DefaultBarStackProps = DefaultBarStackBaseProps;
+export type DefaultBarStackProps = BarStackComponentProps;
 
 /**
  * Default stack component that renders children in a group with animated clip path.

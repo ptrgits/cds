@@ -16,9 +16,7 @@ import { useCartesianChartContext } from '../ChartProvider';
 
 import type { BarComponentProps } from './Bar';
 
-export type DefaultBarBaseProps = BarComponentProps;
-
-export type DefaultBarProps = DefaultBarBaseProps;
+export type DefaultBarProps = BarComponentProps;
 
 /**
  * Default bar component that renders a solid bar with animation.
@@ -46,7 +44,10 @@ export const DefaultBar = memo<DefaultBarProps>(
     const animationProgress = useSharedValue(0);
 
     const targetPath = useMemo(() => {
-      return d || getBarPath(x, y, width, height, borderRadius, roundTop, roundBottom);
+      return (
+        d ||
+        getBarPath(x, y, width, height, borderRadius ?? 0, roundTop ?? true, roundBottom ?? true)
+      );
     }, [d, x, y, width, height, borderRadius, roundTop, roundBottom]);
 
     const previousPath = usePreviousValue(targetPath);
@@ -54,7 +55,15 @@ export const DefaultBar = memo<DefaultBarProps>(
     const baselinePath = useMemo(() => {
       const minHeight = 1;
       const initialY = originY ? originY - minHeight : y + height - minHeight;
-      return getBarPath(x, initialY, width, minHeight, borderRadius, roundTop, roundBottom);
+      return getBarPath(
+        x,
+        initialY,
+        width,
+        minHeight,
+        borderRadius ?? 0,
+        roundTop ?? true,
+        roundBottom ?? true,
+      );
     }, [x, originY, y, height, width, borderRadius, roundTop, roundBottom]);
 
     const fromPath = useMemo(() => {

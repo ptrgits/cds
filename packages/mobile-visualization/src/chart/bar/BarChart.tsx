@@ -26,13 +26,17 @@ export type BarChartProps = Omit<CartesianChartProps, 'xAxis' | 'yAxis' | 'serie
   Pick<
     BarPlotProps,
     | 'barPadding'
+    | 'BarComponent'
+    | 'fillOpacity'
+    | 'stroke'
+    | 'strokeWidth'
+    | 'borderRadius'
     | 'BarStackComponent'
     | 'roundBaseline'
     | 'stackGap'
     | 'barMinSize'
     | 'stackMinSize'
-  > &
-  Pick<BarProps, 'BarComponent' | 'fillOpacity' | 'stroke' | 'strokeWidth' | 'borderRadius'> & {
+  > & {
     /**
      * Configuration objects that define how to visualize the data.
      * Each series supports Bar component props for individual customization.

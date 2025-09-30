@@ -24,29 +24,25 @@ export type BarComponentProps = {
   /**
    * Border radius of the bar.
    */
-  borderRadius: number;
+  borderRadius?: number;
   /**
    * Whether to round the top of the bar.
-   * @todo: make this optional
    */
-  roundTop: boolean;
+  roundTop?: boolean;
   /**
    * Whether to round the bottom of the bar.
-   * @todo: make this optional
    */
-  roundBottom: boolean;
+  roundBottom?: boolean;
   /**
    * Y coordinate of the baseline/origin.
-   * @todo: make this optional
    */
-  originY: number;
+  originY?: number;
   /**
-   * The x-axis data value for this bar
-   * @todo: pull this from x axis types
+   * The x-axis data value for this bar.
    */
   dataX?: number | string;
   /**
-   * The y-axis data value for this bar
+   * The y-axis data value for this bar.
    */
   dataY?: number | [number, number] | null;
   /**
@@ -73,64 +69,16 @@ export type BarComponentProps = {
 
 export type BarComponent = React.FC<BarComponentProps>;
 
-export type BarProps = {
+export type BarProps = Omit<BarComponentProps, 'd'> & {
   /**
-   * X coordinate of the bar (left edge).
+   * Border radius for the bar.
+   * @default 4
    */
-  x: number;
-  /**
-   * Y coordinate of the bar (top edge).
-   */
-  y: number;
-  /**
-   * Width of the bar.
-   */
-  width: number;
-  /**
-   * Height of the bar.
-   */
-  height: number;
-  /**
-   * Y coordinate of the baseline/origin.
-   */
-  originY?: number;
-  /**
-   * The x-axis data value for this bar.
-   */
-  dataX?: number | string;
-  /**
-   * The y-axis data value for this bar.
-   */
-  dataY?: number | [number, number] | null;
+  borderRadius?: BarComponentProps['borderRadius'];
   /**
    * Component to render the bar.
    */
   BarComponent?: BarComponent;
-  /**
-   * The color of the bar.
-   * @default theme.color.fgPrimary
-   */
-  fill?: string;
-  /**
-   * Opacity of the bar.
-   * @default 1
-   */
-  fillOpacity?: number;
-  /**
-   * Stroke color for the bar outline.
-   */
-  stroke?: string;
-  /**
-   * Stroke width for the bar outline.
-   */
-  strokeWidth?: number;
-  /**
-   * Border radius for the bar in pixels.
-   * @default 4
-   */
-  borderRadius?: number;
-  roundTop?: boolean;
-  roundBottom?: boolean;
 };
 
 /**
@@ -183,7 +131,7 @@ export const Bar = memo<BarProps>(
     // Always use the BarComponent for rendering
     return (
       <BarComponent
-        borderRadius={borderRadiusPixels}
+        borderRadius={borderRadius}
         d={barPath}
         dataX={dataX}
         dataY={dataY}

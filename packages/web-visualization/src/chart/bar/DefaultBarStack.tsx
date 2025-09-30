@@ -7,9 +7,7 @@ import { useCartesianChartContext } from '../ChartProvider';
 
 import type { BarStackComponentProps } from './BarStack';
 
-export type DefaultBarStackBaseProps = BarStackComponentProps;
-
-export type DefaultBarStackProps = DefaultBarStackBaseProps & {
+export type DefaultBarStackProps = BarStackComponentProps & {
   /**
    * Custom class name for the stack group.
    */

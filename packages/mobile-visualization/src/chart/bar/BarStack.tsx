@@ -4,7 +4,7 @@ import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
 import { useCartesianChartContext } from '../ChartProvider';
 
-import { Bar, type BarComponent, type BarProps } from './Bar';
+import { Bar, type BarComponent, type BarComponentProps, type BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
 import { DefaultBarStack } from './DefaultBarStack';
 
@@ -54,8 +54,10 @@ export type BarStackComponentProps = {
 
 export type BarStackComponent = React.FC<BarStackComponentProps>;
 
-// todo: simplify props by reusing from other types
-export type BarStackProps = {
+export type BarStackProps = Pick<
+  BarProps,
+  'BarComponent' | 'fillOpacity' | 'stroke' | 'strokeWidth' | 'borderRadius'
+> & {
   /**
    * Array of series configurations that belong to this stack.
    */
@@ -86,26 +88,6 @@ export type BarStackProps = {
    */
   yAxisId?: string;
   /**
-   * Default component to render individual bars.
-   */
-  BarComponent?: BarComponent;
-  /**
-   * Default opacity of the bar.
-   */
-  fillOpacity?: number;
-  /**
-   * Default stroke color for the bar outline.
-   */
-  stroke?: string;
-  /**
-   * Default stroke width for the bar outline.
-   */
-  strokeWidth?: number;
-  /**
-   * Default border radius in pixels.
-   */
-  borderRadius?: BarProps['borderRadius'];
-  /**
    * Custom component to render the stack container.
    * Can be used to add clip paths, outlines, or other custom styling.
    * @default DefaultBarStack
@@ -116,18 +98,15 @@ export type BarStackProps = {
    */
   roundBaseline?: boolean;
   /**
-   * Gap between bars in the stack in pixels.
-   * @default 0
+   * Gap between bars in the stack.
    */
   stackGap?: number;
   /**
-   * Minimum size for individual bars in the stack in pixels.
-   * @default 0
+   * Minimum size for individual bars in the stack.
    */
   barMinSize?: number;
   /**
-   * Minimum size for the entire stack in pixels.
-   * @default 0
+   * Minimum size for the entire stack.
    */
   stackMinSize?: number;
 };
@@ -656,10 +635,11 @@ export const BarStack = memo<BarStackProps>(
       theme.color.fgPrimary,
     ]);
 
-    // Use the same baseline for yOrigin (animations)
-    const yOrigin = baseline;
-
-    const dataX = xAxis?.data?.[categoryIndex] ?? categoryIndex;
+    const xData =
+      xAxis?.data && Array.isArray(xAxis.data) && typeof xAxis.data[0] === 'number'
+        ? (xAxis.data as number[])
+        : undefined;
+    const dataX = xData ? xData[categoryIndex] : categoryIndex;
 
     const barElements = bars.map((bar, index) => (
       <Bar
@@ -671,7 +651,7 @@ export const BarStack = memo<BarStackProps>(
         fill={bar.fill}
         fillOpacity={bar.fillOpacity ?? defaultFillOpacity}
         height={bar.height}
-        originY={yOrigin}
+        originY={baseline}
         roundBottom={bar.roundBottom}
         roundTop={bar.roundTop}
         stroke={bar.stroke ?? defaultStroke}
@@ -695,7 +675,7 @@ export const BarStack = memo<BarStackProps>(
         width={stackRect.width}
         x={stackRect.x}
         y={stackRect.y}
-        yOrigin={yOrigin}
+        yOrigin={baseline}
       >
         {barElements}
       </BarStackComponent>

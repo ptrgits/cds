@@ -1,4 +1,6 @@
 import React, { memo, useMemo } from 'react';
+import type { Rect } from '@coinbase/cds-common';
+import type { ChartScaleFunction } from '@coinbase/cds-common/visualizations/charts';
 
 import { useCartesianChartContext } from '../ChartProvider';
 
@@ -32,7 +34,7 @@ export type BarStackComponentProps = {
    */
   categoryIndex: number;
   /**
-   * Border radius for the bar in pixels.
+   * Border radius for the bar.
    * @default 4
    */
   borderRadius?: number;
@@ -52,8 +54,10 @@ export type BarStackComponentProps = {
 
 export type BarStackComponent = React.FC<BarStackComponentProps>;
 
-// todo: simplify props by reusing from other types
-export type BarStackProps = {
+export type BarStackProps = Pick<
+  BarProps,
+  'BarComponent' | 'fillOpacity' | 'stroke' | 'strokeWidth' | 'borderRadius'
+> & {
   /**
    * Array of series configurations that belong to this stack.
    */
@@ -73,36 +77,16 @@ export type BarStackProps = {
   /**
    * Y scale function.
    */
-  yScale: any; // TODO: proper d3-scale type
+  yScale: ChartScaleFunction;
   /**
    * Chart rect for bounds.
    */
-  rect: { x: number; y: number; width: number; height: number };
+  rect: Rect;
   /**
    * Y axis ID to use.
    * If not provided, will use the yAxisId from the first series.
    */
   yAxisId?: string;
-  /**
-   * Default component to render individual bars.
-   */
-  BarComponent?: BarComponent;
-  /**
-   * Default opacity of the bar.
-   */
-  fillOpacity?: number;
-  /**
-   * Default stroke color for the bar outline.
-   */
-  stroke?: string;
-  /**
-   * Default stroke width for the bar outline.
-   */
-  strokeWidth?: number;
-  /**
-   * Default border radius in pixels.
-   */
-  borderRadius?: BarProps['borderRadius'];
   /**
    * Custom component to render the stack container.
    * Can be used to add clip paths, outlines, or other custom styling.
@@ -114,18 +98,15 @@ export type BarStackProps = {
    */
   roundBaseline?: boolean;
   /**
-   * Gap between bars in the stack in pixels.
-   * @default 0
+   * Gap between bars in the stack.
    */
   stackGap?: number;
   /**
-   * Minimum size for individual bars in the stack in pixels.
-   * @default 0
+   * Minimum size for individual bars in the stack.
    */
   barMinSize?: number;
   /**
-   * Minimum size for the entire stack in pixels.
-   * @default 0
+   * Minimum size for the entire stack.
    */
   stackMinSize?: number;
 };
@@ -355,7 +336,7 @@ export const BarStack = memo<BarStackProps>(
             let newBottom = bottom;
             let newTop = top;
 
-            const scaleUnit = Math.abs(yScale(1) - yScale(0));
+            const scaleUnit = Math.abs((yScale(1) ?? 0) - (yScale(0) ?? 0));
 
             if (bottom === 0) {
               // Expand away from baseline (upward for positive)
@@ -514,7 +495,7 @@ export const BarStack = memo<BarStackProps>(
           let newBottom = bottom;
           let newTop = top;
 
-          const scaleUnit = Math.abs(yScale(1) - yScale(0));
+          const scaleUnit = Math.abs((yScale(1) ?? 0) - (yScale(0) ?? 0));
 
           if (bottom === 0) {
             // Expand away from baseline (upward for positive)
@@ -651,10 +632,11 @@ export const BarStack = memo<BarStackProps>(
       yScale,
     ]);
 
-    // Use the same baseline for yOrigin (animations)
-    const yOrigin = baseline;
-
-    const dataX = xAxis?.data?.[categoryIndex] ?? categoryIndex;
+    const xData =
+      xAxis?.data && Array.isArray(xAxis.data) && typeof xAxis.data[0] === 'number'
+        ? (xAxis.data as number[])
+        : undefined;
+    const dataX = xData ? xData[categoryIndex] : categoryIndex;
 
     const barElements = bars.map((bar, index) => (
       <Bar
@@ -666,7 +648,7 @@ export const BarStack = memo<BarStackProps>(
         fill={bar.fill}
         fillOpacity={bar.fillOpacity ?? defaultFillOpacity}
         height={bar.height}
-        originY={yOrigin}
+        originY={baseline}
         roundBottom={bar.roundBottom}
         roundTop={bar.roundTop}
         stroke={bar.stroke ?? defaultStroke}
@@ -682,7 +664,7 @@ export const BarStack = memo<BarStackProps>(
 
     return (
       <BarStackComponent
-        borderRadius={borderRadius}
+        borderRadius={borderRadius ?? 4}
         categoryIndex={categoryIndex}
         height={stackRect.height}
         roundBottom={stackRoundBottom}
@@ -690,7 +672,7 @@ export const BarStack = memo<BarStackProps>(
         width={stackRect.width}
         x={stackRect.x}
         y={stackRect.y}
-        yOrigin={yOrigin}
+        yOrigin={baseline}
       >
         {barElements}
       </BarStackComponent>

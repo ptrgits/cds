@@ -6,9 +6,7 @@ import { useCartesianChartContext } from '../ChartProvider';
 
 import type { BarComponentProps } from './Bar';
 
-export type DefaultBarBaseProps = BarComponentProps;
-
-export type DefaultBarProps = DefaultBarBaseProps & {
+export type DefaultBarProps = BarComponentProps & {
   /**
    * Custom class name for the bar.
    */
@@ -26,7 +24,7 @@ export const DefaultBar = memo<DefaultBarProps>(
   ({
     x,
     width,
-    borderRadius,
+    borderRadius = 4,
     roundTop,
     roundBottom,
     originY,
@@ -42,8 +40,8 @@ export const DefaultBar = memo<DefaultBarProps>(
       if (!animate) return undefined;
       // Need a minimum height to allow for animation
       const minHeight = 1;
-      const initialY = originY - minHeight;
-      return getBarPath(x, initialY, width, minHeight, borderRadius, roundTop, roundBottom);
+      const initialY = (originY ?? 0) - minHeight;
+      return getBarPath(x, initialY, width, minHeight, borderRadius, !!roundTop, !!roundBottom);
     }, [animate, x, originY, width, borderRadius, roundTop, roundBottom]);
 
     if (animate && initialPath) {
