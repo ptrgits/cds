@@ -197,10 +197,10 @@ export const ScrubberHead = memo(
           } else if (animate) {
             // Idle state with data update - animate to new position (matching Path animation timing)
             animatedX.value = withTiming(targetPosition.x, {
-              duration: 300,
+              duration: 200,
             });
             animatedY.value = withTiming(targetPosition.y, {
-              duration: 300,
+              duration: 200,
             });
           } else {
             // Idle but no animation - snap to position

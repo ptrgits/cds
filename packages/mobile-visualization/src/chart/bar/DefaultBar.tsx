@@ -30,7 +30,6 @@ export const DefaultBar = memo<DefaultBarProps>(
     borderRadius,
     roundTop,
     roundBottom,
-    originY,
     d,
     fill,
     fillOpacity = 1,
@@ -52,24 +51,10 @@ export const DefaultBar = memo<DefaultBarProps>(
 
     const previousPath = usePreviousValue(targetPath);
 
-    const baselinePath = useMemo(() => {
-      const minHeight = 1;
-      const initialY = originY ? originY - minHeight : y + height - minHeight;
-      return getBarPath(
-        x,
-        initialY,
-        width,
-        minHeight,
-        borderRadius ?? 0,
-        roundTop ?? true,
-        roundBottom ?? true,
-      );
-    }, [x, originY, y, height, width, borderRadius, roundTop, roundBottom]);
-
     const fromPath = useMemo(() => {
       if (!animate) return targetPath;
-      return previousPath || baselinePath;
-    }, [animate, previousPath, baselinePath, targetPath]);
+      return previousPath || targetPath;
+    }, [animate, previousPath, targetPath]);
 
     const pathInterpolator = useMemo(
       () => interpolate.interpolatePath(fromPath, targetPath),
@@ -110,9 +95,9 @@ export const DefaultBar = memo<DefaultBarProps>(
 
       animationProgress.value = 0;
       animationProgress.value = withTiming(1, {
-        duration: 300,
+        duration: 200,
       });
-    }, [animate, animationProgress, targetPath, baselinePath]);
+    }, [animate, animationProgress, targetPath]);
 
     return (
       <Path

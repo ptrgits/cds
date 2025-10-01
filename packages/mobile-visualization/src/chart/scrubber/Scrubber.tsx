@@ -15,7 +15,6 @@ import Reanimated, {
   useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
-  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 import { G, Line, Rect, type RectProps } from 'react-native-svg';
@@ -128,12 +127,9 @@ const FadeInGroup = memo(
 
     useEffect(() => {
       if (animate) {
-        opacity.value = withDelay(
-          850,
-          withTiming(1, {
-            duration: 150,
-          }),
-        );
+        opacity.value = withTiming(1, {
+          duration: 300,
+        });
       } else {
         opacity.value = 1;
       }

@@ -14,8 +14,8 @@ export const axisTickLabelsInitialAnimationVariants = {
   animate: {
     opacity: 1,
     transition: {
-      duration: 0.15,
-      delay: 0.85, // Initial animation: wait 850ms then fade in over 150ms
+      duration: 0,
+      delay: 0, // Initial animation: fade in over 300ms
     },
   },
   exit: {

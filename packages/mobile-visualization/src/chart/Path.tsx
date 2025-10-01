@@ -33,7 +33,7 @@ const AnimatedSvgRect = memo(
     totalOffset: number;
     rectProps: RectProps;
   }) => {
-    const animatedWidth = useSharedValue(0);
+    const animatedWidth = useSharedValue(width + totalOffset);
 
     const animatedProps = useAnimatedProps(() => {
       return {
@@ -166,7 +166,7 @@ export const Path = memo<PathProps>(
 
       animationProgress.value = 0;
       animationProgress.value = withTiming(1, {
-        duration: 300,
+        duration: 200,
       });
     }, [animate, animationProgress, targetPath, pathInterpolator]);
 
