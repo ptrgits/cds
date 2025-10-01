@@ -681,7 +681,7 @@ const PriceChart = () => {
         enableScrubbing
         showArea
         height={372}
-        inset={{ left: 0, right: 24, bottom: 24, top: 24 }}
+        inset={{ left: 0, right: 24, bottom: 24, top: 56 }}
         onScrubberPositionChange={onScrubberPositionChange}
         overflow="visible"
         series={[
@@ -1620,18 +1620,80 @@ const AssetPriceDotted = memo(() => {
     );
   }, [scrubIndex, sparklineTimePeriodDataValues, formatDate, sparklineTimePeriodDataTimestamps]);
 
-  const accessibilityLabel: string | undefined = useMemo(() => {
-    if (scrubIndex === undefined) return;
-    const price = new Intl.NumberFormat('en-US', {
+  // Chart overview accessibility label
+  const chartOverviewLabel = useMemo(() => {
+    if (sparklineTimePeriodData.length === 0) return '';
+
+    const firstDate = sparklineTimePeriodData[0].date;
+    const lastDate = sparklineTimePeriodData[sparklineTimePeriodData.length - 1].date;
+    const currentYear = new Date().getFullYear();
+    const shouldIncludeTime = timePeriod.id === 'hour' || timePeriod.id === 'day';
+
+    const dateRangeOptions: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: 'numeric',
+      year: firstDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+      ...(shouldIncludeTime && {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }),
+    };
+
+    const startDateStr = shouldIncludeTime
+      ? firstDate.toLocaleString('en-US', dateRangeOptions)
+      : firstDate.toLocaleDateString('en-US', dateRangeOptions);
+    const endDateStr = shouldIncludeTime
+      ? lastDate.toLocaleString('en-US', {
+          ...dateRangeOptions,
+          year: lastDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+        })
+      : lastDate.toLocaleDateString('en-US', {
+          ...dateRangeOptions,
+          year: lastDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+        });
+
+    return `Price chart for Bitcoin, ${startDateStr} to ${endDateStr}. Use left and right arrow keys to navigate.`;
+  }, [sparklineTimePeriodData, timePeriod.id]);
+
+  // Current data point accessibility label
+  const currentDataPointLabel = useMemo(() => {
+    if (
+      scrubIndex === undefined ||
+      scrubIndex < 0 ||
+      scrubIndex >= sparklineTimePeriodDataValues.length
+    )
+      return '';
+
+    const date = sparklineTimePeriodDataTimestamps[scrubIndex];
+    const price = sparklineTimePeriodDataValues[scrubIndex];
+    const currentYear = new Date().getFullYear();
+    const shouldIncludeTime = timePeriod.id === 'hour' || timePeriod.id === 'day';
+
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: 'numeric',
+      year: date.getFullYear() !== currentYear ? 'numeric' : undefined,
+      ...(shouldIncludeTime && {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }),
+    };
+
+    const dateStr = shouldIncludeTime
+      ? date.toLocaleString('en-US', dateOptions)
+      : date.toLocaleDateString('en-US', dateOptions);
+    const formattedPrice = `$${price.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(sparklineTimePeriodDataValues[scrubIndex]);
-    const date = formatDate(sparklineTimePeriodDataTimestamps[scrubIndex]);
-    return `${price} USD ${date}`;
-  }, [scrubIndex, sparklineTimePeriodDataValues, formatDate, sparklineTimePeriodDataTimestamps]);
+    })}`;
+
+    return `${dateStr}, Price ${formattedPrice}`;
+  }, [scrubIndex, sparklineTimePeriodDataValues, sparklineTimePeriodDataTimestamps, timePeriod.id]);
 
   return (
-    <VStack gap={2}>
+    <VStack aria-label={chartOverviewLabel} aria-live="polite" gap={2}>
       <SectionHeader
         balance={
           <RollingNumber
@@ -1651,8 +1713,8 @@ const AssetPriceDotted = memo(() => {
       <LineChart
         enableScrubbing
         showArea
-        accessibilityLabel={accessibilityLabel}
         areaType="dotted"
+        aria-label={currentDataPointLabel}
         aria-live="polite"
         height={300}
         onScrubberPositionChange={setScrubIndex}
@@ -1672,6 +1734,7 @@ const AssetPriceDotted = memo(() => {
         TabComponent={BTCTab}
         TabsActiveIndicatorComponent={BTCActiveIndicator}
         activeTab={timePeriod}
+        aria-label="Select time period for chart"
         onChange={onPeriodChange}
         tabs={tabs}
       />

@@ -609,7 +609,7 @@ export const Scrubber = memo(
               className={classNames?.line}
               dataX={dataX}
               label={label}
-              labelProps={labelProps}
+              labelProps={{ dy: -drawingArea.y / 2, verticalAlignment: 'middle', ...labelProps }}
               stroke={lineStroke}
               style={styles?.line}
             />

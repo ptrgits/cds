@@ -25,7 +25,7 @@ export const ScrubberBeaconLabel = memo<ScrubberBeaconLabelProps>(
     inset = 1,
     onDimensionsChange,
     elevation = background !== undefined ? 1 : undefined,
-    borderRadius = background !== undefined ? 200 : undefined,
+    borderRadius = background !== undefined ? 4 : undefined,
     testID,
     dx = 0,
     ...chartTextProps
@@ -63,14 +63,14 @@ export const ScrubberBeaconLabel = memo<ScrubberBeaconLabelProps>(
         background={background}
         borderRadius={borderRadius}
         color={color}
-        dominantBaseline="central"
         dx={spacing}
         elevation={elevation}
         font="label1"
+        horizontalAlignment={side === 'right' ? 'left' : 'right'}
         inset={inset}
         onDimensionsChange={handleDimensionsChange}
         testID={testID}
-        textAnchor={side === 'right' ? 'start' : 'end'}
+        verticalAlignment="middle"
         {...chartTextProps}
       />
     );

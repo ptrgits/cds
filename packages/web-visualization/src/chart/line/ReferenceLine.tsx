@@ -150,7 +150,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     // Merge default props with user provided props, including text-specific styles and classNames
     const finalLabelProps: ReferenceLineLabelProps = useMemo(
       () => ({
-        borderRadius: 200,
+        borderRadius: 4,
         color: 'var(--color-fgMuted)',
         elevation: 0,
         inset: { top: 8, bottom: 8, left: 12, right: 12 },

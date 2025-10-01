@@ -100,7 +100,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     // Merge default props with user provided props
     const finalLabelProps: ReferenceLineLabelProps = useMemo(
       () => ({
-        borderRadius: 200,
+        borderRadius: 8,
         color: theme.color.fgMuted,
         inset: { top: 8, bottom: 8, left: 12, right: 12 },
         // Set default alignment based on orientation

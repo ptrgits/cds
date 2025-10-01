@@ -294,6 +294,7 @@ export const ChartText = memo<ChartTextProps>(
 
     return (
       <Box
+        aria-hidden="true"
         as="g"
         className={cx(className, classNames?.root)}
         opacity={opacity}

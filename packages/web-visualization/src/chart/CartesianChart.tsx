@@ -339,9 +339,11 @@ export const CartesianChart = memo(
               }
             }
           }}
+          aria-live="polite"
           as="svg"
           className={cx(enableScrubbing && focusStylesCss, className)}
           height={height}
+          role="figure"
           style={style}
           tabIndex={enableScrubbing ? 0 : undefined}
           width={width}
