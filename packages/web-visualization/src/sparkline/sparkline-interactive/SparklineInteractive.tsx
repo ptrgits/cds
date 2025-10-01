@@ -142,6 +142,10 @@ export type SparklineInteractiveBaseProps<Period extends string> = {
   periodSelectorPlacement?: Extract<Placement, 'above' | 'below'>;
   /** Scales the sparkline to show more or less variance. Use a number less than 1 for less variance and a number greater than 1 for more variance. If you use a number greater than 1 it may clip the boundaries of the sparkline. */
   yAxisScalingFactor?: number;
+  /**
+   * Shows the scrubber beacon
+   */
+  showScrubberBeacon?: boolean;
 };
 
 export type SparklineInteractiveProps<Period extends string> =
@@ -220,6 +224,7 @@ export const SparklineInteractive = memo(
     styles,
     headerTestID,
     children,
+    showScrubberBeacon,
   }: SparklineInteractiveProps<Period>) => {
     const theme = useTheme();
     const [isScrubbing, setIsScrubbing] = useState(false);
@@ -332,8 +337,9 @@ export const SparklineInteractive = memo(
     const series = useMemo((): LineSeries[] => {
       // If we have custom y-axis bounds (from scaling), pass tuple data
       // so the area extends to the scaled minimum, not just the data minimum
-      const seriesData =
-        yAxisBounds && fill ? values.map((v) => [yAxisBounds.min, v] as [number, number]) : values;
+      const seriesData = yAxisBounds
+        ? values.map((v) => [yAxisBounds.min, v] as [number, number])
+        : values;
 
       return [
         {
@@ -343,7 +349,7 @@ export const SparklineInteractive = memo(
           areaBaseline: yAxisBounds?.min,
         },
       ];
-    }, [values, color, yAxisBounds, fill]);
+    }, [values, color, yAxisBounds]);
 
     const formatAxisDate = useCallback(
       (index: number) => {
@@ -440,13 +446,14 @@ export const SparklineInteractive = memo(
             )}
           </Box>
         )}
-        <Box position="relative">
+        <Box position="relative" width="100%">
           <LineChart
             areaType={fillType}
             enableScrubbing={!disableScrubbing}
             height={sparklineInteractiveHeight}
-            inset={{ left: 0, right: 0, top: chartInsetTop, bottom: 0 }}
+            inset={{ left: 2, right: 2, top: chartInsetTop, bottom: 0 }}
             onScrubberPositionChange={handleHighlightChange}
+            overflow="visible"
             series={series}
             showArea={fill}
             style={{
@@ -472,7 +479,7 @@ export const SparklineInteractive = memo(
               tickLabelFormatter={formatAxisDate}
             />
             {children}
-            <Scrubber label={scrubberLabel} seriesIds={[]} />
+            <Scrubber label={scrubberLabel} seriesIds={showScrubberBeacon ? ['main'] : []} />
           </LineChart>
           {!hasData && !disableFallback && (
             <Box

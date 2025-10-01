@@ -125,6 +125,10 @@ export type SparklineInteractiveBaseProps<Period extends string> = {
    */
   lineType?: 'solid' | 'dotted' | 'gradient';
   children?: React.ReactNode;
+  /**
+   * Shows the scrubber beacon
+   */
+  showScrubberBeacon?: boolean;
 };
 
 export type SparklineInteractiveProps<Period extends string> =
@@ -233,6 +237,7 @@ const SparklineInteractiveComponent = <Period extends string>({
   children,
   compact,
   gutter = 3,
+  showScrubberBeacon,
 }: SparklineInteractiveProps<Period>) => {
   const renderCount = useRef(-1);
   renderCount.current++;
@@ -254,16 +259,14 @@ const SparklineInteractiveComponent = <Period extends string>({
     }).start();
   }, [isScrubbing, periodSelectorOpacity]);
 
-  const lineVerticalColor = useMemo(() => {
-    const lineColor =
-      color !== 'auto'
-        ? color
-        : getAccessibleColor({
-            background: theme.color.bg,
-            foreground: 'auto',
-            usage: 'graphic',
-          });
-    return lineColor;
+  const sparklineColor = useMemo(() => {
+    return color !== 'auto'
+      ? color
+      : getAccessibleColor({
+          background: theme.color.bg,
+          foreground: 'auto',
+          usage: 'graphic',
+        });
   }, [color, theme.color.bg]);
 
   const dataForPeriod = useMemo(() => {
@@ -394,20 +397,21 @@ const SparklineInteractiveComponent = <Period extends string>({
   const series = useMemo((): LineSeries[] => {
     // If we have custom y-axis bounds (from scaling), pass tuple data
     // so the area extends to the scaled minimum, not just the data minimum
-    const seriesData =
-      yAxisBounds && fill ? values.map((v) => [yAxisBounds.min, v] as [number, number]) : values;
+    const seriesData = yAxisBounds
+      ? values.map((v) => [yAxisBounds.min, v] as [number, number])
+      : values;
 
     return [
       {
         id: 'main',
         data: seriesData,
-        color,
+        color: sparklineColor,
         areaBaseline: yAxisBounds?.min,
       },
     ];
-  }, [values, color, yAxisBounds, fill]);
+  }, [values, sparklineColor, yAxisBounds]);
 
-  console.log(
+  /*console.log(
     'render count',
     renderCount.current,
     'time period',
@@ -416,7 +420,8 @@ const SparklineInteractiveComponent = <Period extends string>({
     dataForPeriod.length,
     dataForPeriod.slice(0, 10),
     series,
-  );
+  );*/
+  console.log('loading sparkline');
 
   const formatPriceAtIndex = useCallback(
     (index: number) => {
@@ -424,6 +429,19 @@ const SparklineInteractiveComponent = <Period extends string>({
       return formatMinMaxLabel(dataForPeriod[index].value);
     },
     [dataForPeriod, formatMinMaxLabel],
+  );
+
+  const onScrubberPositionChange = useCallback(
+    (position: number | undefined) => {
+      if (position !== undefined) {
+        if (!isScrubbing) {
+          handleScrubStart();
+        }
+      } else if (isScrubbing) {
+        handleScrubEnd();
+      }
+    },
+    [isScrubbing, handleScrubStart, handleScrubEnd],
   );
 
   return (
@@ -436,15 +454,7 @@ const SparklineInteractiveComponent = <Period extends string>({
           enableScrubbing={!disableScrubbing}
           height={height}
           inset={{ left: 2, right: 2, top: 18, bottom: 0 }}
-          onScrubberPositionChange={(position) => {
-            if (position !== undefined) {
-              if (!isScrubbing) {
-                handleScrubStart();
-              }
-            } else if (isScrubbing) {
-              handleScrubEnd();
-            }
-          }}
+          onScrubberPositionChange={onScrubberPositionChange}
           series={series}
           showArea={fill}
           type={lineType}
@@ -482,9 +492,9 @@ const SparklineInteractiveComponent = <Period extends string>({
           {children}
           <Scrubber
             label={formatHoverDateForPeriod}
-            lineStroke={lineVerticalColor}
+            lineStroke={sparklineColor}
             scrubberLabelProps={{ inset: 0, background: '#ff00001a' }}
-            seriesIds={[]}
+            seriesIds={showScrubberBeacon ? ['main'] : []}
           />
         </LineChart>
         {!hasData && (

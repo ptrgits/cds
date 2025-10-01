@@ -1,8 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import type { ChartDataPoint, ChartScrubParams } from '@coinbase/cds-common';
-import {
-  sparklineInteractiveData,
-} from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
+import { sparklineInteractiveData } from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
 import { Box, VStack } from '@coinbase/cds-web/layout';
 import { css } from '@linaria/core';
 
@@ -665,6 +663,25 @@ export const WithCustomStyles = () => {
 };
 
 WithCustomStyles.parameters = {
+  percy: { enableJavaScript: true },
+  a11y: {
+    config: {
+      rules: [{ id: 'color-contrast', enabled: false }],
+    },
+  },
+};
+
+export const WithScrubberBeacon = () => (
+  <React.StrictMode>
+    <SparklineInteractiveWrapper
+      showScrubberBeacon
+      data={sparklineInteractiveData}
+      strokeColor={strokeColor}
+    />
+  </React.StrictMode>
+);
+WithScrubberBeacon.bind({});
+WithScrubberBeacon.parameters = {
   percy: { enableJavaScript: true },
   a11y: {
     config: {

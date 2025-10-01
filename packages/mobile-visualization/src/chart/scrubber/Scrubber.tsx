@@ -5,14 +5,20 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
 } from 'react';
+import { Animated } from 'react-native';
 import Reanimated, {
+  runOnJS,
+  type SharedValue,
   useAnimatedProps,
+  useAnimatedReaction,
+  useDerivedValue,
   useSharedValue,
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { G, Line, Rect } from 'react-native-svg';
+import { G, Line, Rect, type RectProps } from 'react-native-svg';
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import {
@@ -24,11 +30,87 @@ import { useTheme } from '@coinbase/cds-mobile';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { ReferenceLine, type ReferenceLineProps } from '../line';
+import { ChartText } from '../text/ChartText';
 
 import { ScrubberHead, type ScrubberHeadProps, type ScrubberHeadRef } from './ScrubberHead';
 
 const AnimatedG = Reanimated.createAnimatedComponent(G);
-const AnimatedRect = Reanimated.createAnimatedComponent(Rect);
+const AnimatedLine = Reanimated.createAnimatedComponent(Line);
+const AnimatedRectComponent = Reanimated.createAnimatedComponent(Rect);
+const RNAnimatedRect = Animated.createAnimatedComponent(Rect);
+const RNAnimatedLine = Animated.createAnimatedComponent(Line);
+
+const AnimatedRect = memo(
+  forwardRef<Rect, RectProps>((props, ref) => {
+    console.log('[AnimatedRect] Render:', props);
+    return <Rect ref={ref} {...props} />;
+  }),
+);
+
+/**
+ * Optimized overlay component that obscures future data.
+ * Uses setNativeProps pattern (like Path.tsx) for maximum performance without React re-renders.
+ */
+const ScrubberOverlay = memo(
+  ({
+    pixelX,
+    drawingArea,
+    overlayOffset,
+  }: {
+    pixelX: number;
+    drawingArea: any;
+    overlayOffset: number;
+  }) => {
+    const theme = useTheme();
+    const rectRef = useRef<Rect>(null);
+
+    // Shared values for animated updates
+    const animatedX = useSharedValue(pixelX);
+    const animatedWidth = useSharedValue(
+      drawingArea.x + drawingArea.width - pixelX + overlayOffset,
+    );
+
+    // Callback to update native props (called from worklet)
+    const updateOverlay = useCallback((x: number, width: number) => {
+      console.log('[ScrubberOverlay] setNativeProps:', { x, width });
+      rectRef.current?.setNativeProps({
+        x,
+        width,
+      });
+    }, []);
+
+    // Watch shared values and update via setNativeProps (no React re-render!)
+    useAnimatedReaction(
+      () => ({ x: animatedX.value, width: animatedWidth.value }),
+      (current) => {
+        'worklet';
+        runOnJS(updateOverlay)(current.x, current.width);
+      },
+      [updateOverlay],
+    );
+
+    // Update shared values when pixelX changes
+    useEffect(() => {
+      console.log('[ScrubberOverlay] Effect - updating shared values:', { pixelX });
+      animatedX.value = pixelX;
+      animatedWidth.value = drawingArea.x + drawingArea.width - pixelX + overlayOffset;
+    }, [pixelX, drawingArea.x, drawingArea.width, overlayOffset, animatedX, animatedWidth]);
+
+    console.log('[ScrubberOverlay] Render (should be rare):', { pixelX });
+
+    return (
+      <AnimatedRect
+        ref={rectRef}
+        fill={theme.color.bg}
+        height={drawingArea.height + overlayOffset * 2}
+        opacity={0.8}
+        width={0}
+        x={0}
+        y={drawingArea.y - overlayOffset}
+      />
+    );
+  },
+);
 
 type FadeInGroupProps = {
   children: React.ReactNode;
@@ -149,35 +231,10 @@ export const Scrubber = memo(
       const theme = useTheme();
       const scrubberHeadRefs = useRefMap<ScrubberHeadRef>();
 
-      // Animated values for scrubber line and overlay positions
-      const scrubberLineX = useSharedValue(0);
-      const overlayX = useSharedValue(0);
-      const overlayWidth = useSharedValue(0);
-
       const { scrubberPosition: scrubberPosition } = useScrubberContext();
       const { getXScale, getYScale, getSeriesData, getXAxis, series, drawingArea } =
         useCartesianChartContext();
       const getStackedSeriesData = getSeriesData; // getSeriesData now returns stacked data
-
-      // Animated props for fade-in effect
-
-      // Animated props for scrubber line - memoized for performance
-      const scrubberLineAnimatedProps = useAnimatedProps(
-        () => ({
-          x1: scrubberLineX.value,
-          x2: scrubberLineX.value,
-        }),
-        [],
-      );
-
-      // Animated props for overlay rect - memoized for performance
-      const overlayAnimatedProps = useAnimatedProps(
-        () => ({
-          x: overlayX.value,
-          width: overlayWidth.value,
-        }),
-        [],
-      );
 
       // Expose imperative handle with pulse method
       useImperativeHandle(ref, () => ({
@@ -188,6 +245,10 @@ export const Scrubber = memo(
           });
         },
       }));
+
+      // React Native Animated values for overlay
+      const overlayAnimatedX = useRef(new Animated.Value(0)).current;
+      const overlayAnimatedWidth = useRef(new Animated.Value(0)).current;
 
       const { dataX, dataIndex } = useMemo(() => {
         const xScale = getXScale() as ChartScaleFunction;
@@ -220,7 +281,7 @@ export const Scrubber = memo(
 
         if (!xScale || dataX === undefined || dataIndex === undefined) return [];
 
-        return (
+        const positions =
           series
             ?.filter((s) => {
               if (seriesIds === undefined) return true;
@@ -258,8 +319,22 @@ export const Scrubber = memo(
                 };
               }
             })
-            .filter((head: any) => head !== undefined) ?? []
-        );
+            .filter((head: any) => head !== undefined) ?? [];
+
+        console.log('[Scrubber] headPositions calculated:', {
+          dataIndex,
+          dataX,
+          count: positions.length,
+          positions: positions.map((p) => ({
+            seriesId: p?.targetSeries.id,
+            dataX: p?.x,
+            dataY: p?.y,
+            pixelX: p?.pixelX,
+            pixelY: p?.pixelY,
+          })),
+        });
+
+        return positions;
       }, [
         getXScale,
         dataX,
@@ -289,6 +364,26 @@ export const Scrubber = memo(
 
       const pixelX = dataX !== undefined && defaultXScale ? defaultXScale(dataX) : undefined;
 
+      // Memoize overlay calculations and update Animated values
+      useMemo(() => {
+        const rightEdge = drawingArea.x + drawingArea.width + overlayOffset;
+        if (pixelX === undefined) {
+          overlayAnimatedX.setValue(rightEdge);
+          overlayAnimatedWidth.setValue(0);
+        } else {
+          const newWidth = Math.max(0, rightEdge - pixelX);
+          overlayAnimatedX.setValue(pixelX);
+          overlayAnimatedWidth.setValue(newWidth);
+        }
+      }, [
+        pixelX,
+        drawingArea.x,
+        drawingArea.width,
+        overlayOffset,
+        overlayAnimatedX,
+        overlayAnimatedWidth,
+      ]);
+
       const scrubberLabel: ReferenceLineProps['label'] = useMemo(() => {
         if (typeof label === 'function') {
           if (dataIndex === undefined) return undefined;
@@ -297,24 +392,15 @@ export const Scrubber = memo(
         return label;
       }, [label, dataIndex]);
 
-      // Update scrubber line and overlay positions using animated values
-      // Use immediate updates for buttery smooth performance
-      useEffect(() => {
-        if (pixelX !== undefined) {
-          // Immediate updates for responsive scrubbing - no animation delays
-          scrubberLineX.value = pixelX;
-          overlayX.value = pixelX;
-          overlayWidth.value = drawingArea.x + drawingArea.width - pixelX + overlayOffset;
-        }
-      }, [
+      console.log('[Scrubber] Main render:', {
+        scrubberPosition,
+        dataIndex,
+        dataX,
         pixelX,
-        drawingArea.x,
-        drawingArea.width,
-        overlayOffset,
-        scrubberLineX,
-        overlayX,
-        overlayWidth,
-      ]);
+        headPositionsCount: headPositions.length,
+        hideOverlay,
+        hideLine,
+      });
 
       if (!defaultXScale || !defaultYScale) return null;
 
@@ -324,29 +410,43 @@ export const Scrubber = memo(
           {!hideOverlay &&
             dataX !== undefined &&
             scrubberPosition !== undefined &&
-            pixelX !== undefined && ( // <5 frames when dragging, however we are seeing issues with width not being correct
-              <AnimatedRect
-                animatedProps={overlayAnimatedProps}
-                fill={theme.color.bg}
-                height={drawingArea.height + overlayOffset * 2}
-                opacity={0.8}
-                y={drawingArea.y - overlayOffset}
-              />
+            pixelX !== undefined && (
+              <G>
+                {/* Vertical line */}
+                <RNAnimatedLine
+                  stroke={theme.color.fgMuted}
+                  strokeWidth={1}
+                  x1={overlayAnimatedX}
+                  x2={overlayAnimatedX}
+                  y1={drawingArea.y - overlayOffset}
+                  y2={drawingArea.y + drawingArea.height + overlayOffset}
+                />
+                {/* Overlay rect that obscures future data */}
+                <RNAnimatedRect
+                  fill={theme.color.bg}
+                  height={drawingArea.height + overlayOffset * 2}
+                  opacity={0.8}
+                  width={overlayAnimatedWidth}
+                  x={overlayAnimatedX}
+                  y={drawingArea.y - overlayOffset}
+                />
+              </G>
             )}
           {!hideLine &&
             scrubberPosition !== undefined &&
-            dataX !== undefined && ( // 10 frames when dragging, problem comes down to the location of things and all that...
-              <LineComponent //
-                dataX={dataX}
-                label={scrubberLabel}
-                labelConfig={scrubberLabelProps}
-                labelPosition="top"
-                stroke={lineStroke}
-              />
+            dataX !== undefined &&
+            scrubberLabel &&
+            pixelX !== undefined && (
+              <ChartText
+                textAnchor="middle"
+                x={pixelX}
+                y={drawingArea.y - overlayOffset - 4}
+                {...scrubberLabelProps}
+              >
+                {scrubberLabel}
+              </ChartText>
             )}
           {headPositions.map((scrubberHead: any) => {
-            // 10 frames each when dragging, ~2 frames each when pulsing
-            // also inefficient due to measurement of coords multiple times, one for the outer ring and the other for pulse
             if (!scrubberHead) return null;
             return (
               <HeadComponent
@@ -356,6 +456,9 @@ export const Scrubber = memo(
                 dataX={scrubberHead.x}
                 dataY={scrubberHead.y}
                 idlePulse={idlePulse}
+                // OPTIMIZATION: Pass pre-calculated pixel coordinates
+                pixelX={scrubberHead.pixelX}
+                pixelY={scrubberHead.pixelY}
                 seriesId={scrubberHead.targetSeries.id}
                 testID={testID ? `${testID}-${scrubberHead.targetSeries.id}-dot` : undefined}
               />

@@ -30,6 +30,7 @@ export type ScrubberHeadProps = SharedProps &
     | 'dataX'
     | 'dataY'
     | 'hoverEffect'
+    | 'pixelCoordinates'
   > & {
     /**
      * Applies the Point's pulse effect to the scrubber head while it is at rest.
@@ -38,6 +39,11 @@ export type ScrubberHeadProps = SharedProps &
     // make Point's coordinates optional for ScrubberHead
     dataX?: PointProps['dataX'];
     dataY?: PointProps['dataY'];
+    /**
+     * Pre-calculated pixel coordinates. When provided, skips data->pixel conversion for better performance.
+     */
+    pixelX?: number;
+    pixelY?: number;
     /**
      * Filter to only show dot for specific series (used for hover-based positioning).
      */
@@ -54,6 +60,8 @@ export const ScrubberHead = memo(
         seriesId,
         dataX: directX,
         dataY: directY,
+        pixelX: directPixelX,
+        pixelY: directPixelY,
         color,
         radius = 4,
         testID,
@@ -77,28 +85,25 @@ export const ScrubberHead = memo(
       const isIdleState = scrubberPosition === undefined;
 
       // Animation values
-      const animatedX = useSharedValue(0);
-      const animatedY = useSharedValue(0);
+      const animatedX = useSharedValue(directPixelX ?? 0);
+      const animatedY = useSharedValue(directPixelY ?? 0);
       const previousPositionRef = useRef<{ x: number; y: number } | undefined>(undefined);
       const [isInitialized, setIsInitialized] = useState(false);
       const wasScrubbing = useRef(false);
 
-      // Calculate data coordinates
+      // Calculate data coordinates - skip if pixel coords provided
       const { dataX, dataY } = useMemo(() => {
+        // If pixel coordinates are provided directly, we still need data coords for Point component
+        // but we can skip the lookup if directX/directY are provided
+        if (directX !== undefined && directY !== undefined) {
+          return { dataX: directX, dataY: directY };
+        }
+
         let x: number | undefined;
         let y: number | undefined;
 
         if (xScale && yScale) {
           if (
-            directX !== undefined &&
-            directY !== undefined &&
-            !isNaN(directY) &&
-            !isNaN(directX)
-          ) {
-            // Use direct coordinates if provided
-            x = directX;
-            y = directY;
-          } else if (
             sourceData &&
             scrubberPosition != null &&
             scrubberPosition >= 0 &&
@@ -122,9 +127,20 @@ export const ScrubberHead = memo(
         return { dataX: x, dataY: y };
       }, [directX, directY, sourceData, scrubberPosition, xScale, yScale]);
 
-      // Calculate target pixel coordinates
-      const targetPosition = useMemo(
-        () =>
+      // Calculate target pixel coordinates - use provided pixels if available
+      const targetPosition = useMemo(() => {
+        // If pixel coordinates provided directly, use them (OPTIMIZATION)
+        if (directPixelX !== undefined && directPixelY !== undefined) {
+          console.log('[ScrubberHead] Using pre-calculated pixels (OPTIMIZED):', {
+            seriesId,
+            pixelX: directPixelX,
+            pixelY: directPixelY,
+          });
+          return { x: directPixelX, y: directPixelY };
+        }
+
+        // Otherwise calculate from data coordinates
+        const calculated =
           dataX !== undefined && dataY !== undefined && xScale && yScale
             ? projectPoint({
                 x: dataX,
@@ -132,9 +148,10 @@ export const ScrubberHead = memo(
                 xScale,
                 yScale,
               })
-            : undefined,
-        [dataX, dataY, xScale, yScale],
-      );
+            : undefined;
+
+        return calculated;
+      }, [directPixelX, directPixelY, dataX, dataY, xScale, yScale, seriesId]);
 
       // Animated props for the G element
       const animatedProps = useAnimatedProps(() => {

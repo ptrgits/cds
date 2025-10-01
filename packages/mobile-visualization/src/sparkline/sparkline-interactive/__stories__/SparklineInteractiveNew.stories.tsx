@@ -251,10 +251,14 @@ const SparklineInteractiveScreen = () => {
           <TextTitle3 paddingX={3} paddingY={3}>
             Default
           </TextTitle3>
-          <SparklineInteractiveBuild data={sparklineInteractiveData} strokeColor={strokeColor} />
+          <SparklineInteractiveBuild
+            showScrubberBeacon
+            data={sparklineInteractiveData}
+            strokeColor={strokeColor}
+          />
         </Box>
       </Example>
-      <Example padding={0}>
+      {/*<Example padding={0}>
         <Box>
           <TextTitle3 paddingX={3} paddingY={3}>
             Compact
@@ -489,7 +493,7 @@ const SparklineInteractiveScreen = () => {
             }}
           />
         </Box>
-      </Example>
+      </Example>*/}
     </ExampleScreen>
   );
 };
