@@ -508,8 +508,8 @@ const SparklineInteractiveComponent = <Period extends string>({
           {children}
           <Scrubber
             label={formatHoverDateForPeriod}
+            labelProps={{ dy: -9, alignmentBaseline: 'middle' }}
             lineStroke={sparklineColor}
-            scrubberLabelProps={{ dy: -9, alignmentBaseline: 'middle' }}
             seriesIds={[]}
           />
         </LineChart>

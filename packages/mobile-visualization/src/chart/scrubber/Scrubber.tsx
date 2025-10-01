@@ -10,10 +10,8 @@ import React, {
 import { Animated } from 'react-native';
 import Reanimated, {
   runOnJS,
-  type SharedValue,
   useAnimatedProps,
   useAnimatedReaction,
-  useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -34,8 +32,6 @@ import { ChartText } from '../text/ChartText';
 import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 
 const AnimatedG = Reanimated.createAnimatedComponent(G);
-const AnimatedLine = Reanimated.createAnimatedComponent(Line);
-const AnimatedRectComponent = Reanimated.createAnimatedComponent(Rect);
 const RNAnimatedRect = Animated.createAnimatedComponent(Rect);
 const RNAnimatedLine = Animated.createAnimatedComponent(Line);
 
@@ -43,67 +39,6 @@ const AnimatedRect = memo(
   forwardRef<Rect, RectProps>((props, ref) => {
     return <Rect ref={ref} {...props} />;
   }),
-);
-
-/**
- * Optimized overlay component that obscures future data.
- * Uses setNativeProps pattern (like Path.tsx) for maximum performance without React re-renders.
- */
-const ScrubberOverlay = memo(
-  ({
-    pixelX,
-    drawingArea,
-    overlayOffset,
-  }: {
-    pixelX: number;
-    drawingArea: any;
-    overlayOffset: number;
-  }) => {
-    const theme = useTheme();
-    const rectRef = useRef<Rect>(null);
-
-    // Shared values for animated updates
-    const animatedX = useSharedValue(pixelX);
-    const animatedWidth = useSharedValue(
-      drawingArea.x + drawingArea.width - pixelX + overlayOffset,
-    );
-
-    // Callback to update native props (called from worklet)
-    const updateOverlay = useCallback((x: number, width: number) => {
-      rectRef.current?.setNativeProps({
-        x,
-        width,
-      });
-    }, []);
-
-    // Watch shared values and update via setNativeProps (no React re-render!)
-    useAnimatedReaction(
-      () => ({ x: animatedX.value, width: animatedWidth.value }),
-      (current) => {
-        'worklet';
-        runOnJS(updateOverlay)(current.x, current.width);
-      },
-      [updateOverlay],
-    );
-
-    // Update shared values when pixelX changes
-    useEffect(() => {
-      animatedX.value = pixelX;
-      animatedWidth.value = drawingArea.x + drawingArea.width - pixelX + overlayOffset;
-    }, [pixelX, drawingArea.x, drawingArea.width, overlayOffset, animatedX, animatedWidth]);
-
-    return (
-      <AnimatedRect
-        ref={rectRef}
-        fill={theme.color.bg}
-        height={drawingArea.height + overlayOffset * 2}
-        opacity={0.8}
-        width={0}
-        x={0}
-        y={drawingArea.y - overlayOffset}
-      />
-    );
-  },
 );
 
 type FadeInGroupProps = {
@@ -137,8 +72,6 @@ const FadeInGroup = memo(
     );
   }),
 );
-
-// charts screen goes to about 15 when loading in, ~35 when not animating in
 
 /**
  * Configuration for scrubber functionality across chart components.
@@ -178,22 +111,12 @@ export type ScrubberProps = SharedProps &
     /**
      * Props passed to the scrubber line's label.
      */
-    scrubberLabelProps?: Partial<ReferenceLineProps['labelConfig']>;
+    labelProps?: Partial<ReferenceLineProps['labelConfig']>;
 
     /**
      * Stroke color for the scrubber line.
      */
     lineStroke?: ReferenceLineProps['stroke'];
-
-    /**
-     * Custom component for the scrubber beacon.
-     */
-    BeaconComponent?: React.ComponentType<ScrubberBeaconProps>;
-
-    /**
-     * Custom component for the scrubber line.
-     */
-    LineComponent?: React.ComponentType<ReferenceLineProps>;
   };
 
 export type ScrubberRef = ScrubberBeaconRef;
@@ -209,9 +132,7 @@ export const Scrubber = memo(
         hideLine,
         label,
         lineStroke,
-        scrubberLabelProps,
-        BeaconComponent = ScrubberBeacon,
-        LineComponent = ReferenceLine,
+        labelProps,
         hideOverlay,
         overlayOffset = 2,
         testID,
@@ -423,7 +344,7 @@ export const Scrubber = memo(
                 textAnchor="middle"
                 x={pixelX}
                 y={drawingArea.y - overlayOffset - 4}
-                {...scrubberLabelProps}
+                {...labelProps}
               >
                 {scrubberLabel}
               </ChartText>
@@ -431,7 +352,7 @@ export const Scrubber = memo(
           {beaconPositions.map((scrubberBeacon: any) => {
             if (!scrubberBeacon) return null;
             return (
-              <BeaconComponent
+              <ScrubberBeacon
                 key={scrubberBeacon.targetSeries.id}
                 ref={createScrubberBeaconRef(scrubberBeacon.targetSeries.id)}
                 color={scrubberBeacon.targetSeries?.color}

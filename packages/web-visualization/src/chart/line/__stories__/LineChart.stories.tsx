@@ -321,10 +321,10 @@ const BTCPriceChart = () => {
           <Scrubber
             idlePulse
             label={displayDate}
-            lineStroke="black"
-            scrubberLabelProps={{
+            labelProps={{
               color: 'black',
             }}
+            lineStroke="black"
             styles={{
               beacon: {
                 stroke: btcAccentColor,
@@ -723,7 +723,7 @@ const PriceChart = () => {
         ]}
         yAxis={{ domainLimit: 'strict' }}
       >
-        <Scrubber label={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
+        <Scrubber label={scrubberLabel} labelProps={{ elevation: 1 }} />
       </LineChart>
       <Box paddingX={{ phone: 2, tablet: 4, desktop: 4 }}>
         <PeriodSelector
@@ -881,7 +881,7 @@ function ForecastAssetPrice() {
         tickInterval: 16,
       }}
     >
-      <Scrubber label={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
+      <Scrubber label={scrubberLabel} labelProps={{ elevation: 1 }} />
     </LineChart>
   );
 }
@@ -1068,7 +1068,7 @@ const LiveAssetPrice = () => {
         },
       ]}
     >
-      <Scrubber ref={scrubberRef} scrubberLabelProps={{ elevation: 1 }} />
+      <Scrubber ref={scrubberRef} labelProps={{ elevation: 1 }} />
     </LineChart>
   );
 };
@@ -1667,7 +1667,7 @@ const AssetPriceDotted = memo(() => {
         ]}
         style={{ outlineColor: assets.btc.color }}
       >
-        <Scrubber idlePulse label={scrubberLabel} scrubberLabelProps={{ elevation: 1 }} />
+        <Scrubber idlePulse label={scrubberLabel} labelProps={{ elevation: 1 }} />
       </LineChart>
       <PeriodSelector
         TabComponent={BTCTab}

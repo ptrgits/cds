@@ -1496,11 +1496,6 @@ const BTCPriceChart = () => {
     [],
   );
 
-  const BeaconComponent = useCallback(
-    (props: any) => <ScrubberBeacon {...props} stroke={btcAccentColor} />,
-    [btcAccentColor],
-  );
-
   return (
     <Box
       borderRadius={300}
@@ -1535,12 +1530,11 @@ const BTCPriceChart = () => {
           <Line showArea AreaComponent={AreaComponent} seriesId="price" strokeWidth={3} />
           <Scrubber
             idlePulse
-            BeaconComponent={BeaconComponent}
             label={displayDate}
-            lineStroke="black"
-            scrubberLabelProps={{
+            labelProps={{
               color: 'black',
             }}
+            lineStroke="black"
           />
         </CartesianChart>
         <Box padding={2}>

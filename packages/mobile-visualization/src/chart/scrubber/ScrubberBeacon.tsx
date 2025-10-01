@@ -129,7 +129,7 @@ export const ScrubberBeacon = memo(
 
       // Calculate target pixel coordinates - use provided pixels if available
       const targetPosition = useMemo(() => {
-        // If pixel coordinates provided directly, use them (OPTIMIZATION)
+        // If pixel coordinates provided directly, use them
         if (directPixelX !== undefined && directPixelY !== undefined) {
           return { x: directPixelX, y: directPixelY };
         }
@@ -146,7 +146,7 @@ export const ScrubberBeacon = memo(
             : undefined;
 
         return calculated;
-      }, [directPixelX, directPixelY, dataX, dataY, xScale, yScale, seriesId]);
+      }, [directPixelX, directPixelY, dataX, dataY, xScale, yScale]);
 
       // Animated props for the G element
       const animatedProps = useAnimatedProps(() => {

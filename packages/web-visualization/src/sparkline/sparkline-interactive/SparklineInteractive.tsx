@@ -476,7 +476,7 @@ export const SparklineInteractive = memo(
             {children}
             <Scrubber
               label={scrubberLabel}
-              scrubberLabelProps={{ dy: -chartInsetTop / 2, dominantBaseline: 'middle' }}
+              labelProps={{ dy: -chartInsetTop / 2, dominantBaseline: 'middle' }}
               seriesIds={[]}
             />
           </LineChart>

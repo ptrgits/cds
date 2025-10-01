@@ -251,11 +251,7 @@ const SparklineInteractiveScreen = () => {
           <TextTitle3 paddingX={3} paddingY={3}>
             Default
           </TextTitle3>
-          <SparklineInteractiveBuild
-            showScrubberBeacon
-            data={sparklineInteractiveData}
-            strokeColor={strokeColor}
-          />
+          <SparklineInteractiveBuild data={sparklineInteractiveData} strokeColor={strokeColor} />
         </Box>
       </Example>
       <Example padding={0}>
