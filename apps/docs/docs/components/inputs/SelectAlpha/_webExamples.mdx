@@ -1,144 +1,642 @@
-## Single Select
+## Basic Usage
 
-Basic single selection with predefined options.
+Select provides a flexible dropdown component for choosing one or multiple values from a list of options. It supports full customization, accessibility features, and various visual states.
+
+### Single Select
+
+Basic single selection with predefined options. This is the default mode.
 
 ```jsx live
 function SingleSelectExample() {
-  const [value, setValue] = useState('1');
+  const [value, setValue] = useState('');
 
   const options = [
-    { value: '1', label: 'Option 1' },
-    { value: '2', label: 'Option 2' },
-    { value: '3', label: 'Option 3' },
-    { value: '4', label: 'Option 4' },
+    { value: 'btc', label: 'Bitcoin' },
+    { value: 'eth', label: 'Ethereum' },
+    { value: 'usdc', label: 'USD Coin' },
+    { value: 'sol', label: 'Solana' },
   ];
 
   return (
-    <SelectAlpha
-      label="Choose an option"
-      value={value}
-      onChange={setValue}
-      options={options}
-      placeholder="Select an option"
-    />
+    <VStack gap={3}>
+      <SelectAlpha
+        label="Choose cryptocurrency"
+        value={value}
+        onChange={setValue}
+        options={options}
+        placeholder="Select an asset"
+        helperText="Select your preferred cryptocurrency"
+      />
+      {value && (
+        <Text font="body" color="fgMuted">
+          You selected: {options.find((opt) => opt.value === value)?.label}
+        </Text>
+      )}
+    </VStack>
   );
 }
 ```
 
-## Multi Select
+### Multi Select
 
-Multi-selection mode allows users to select multiple options from the list.
+Multi-selection mode allows users to select multiple options from the list. Use the `useMultiSelect` hook for convenient multi-select state management.
 
 ```jsx live
 function MultiSelectExample() {
   const { value, onChange } = useMultiSelect({
-    initialValue: ['1', '3', '7', '8', '9', '10'],
+    initialValue: ['design', 'development'],
   });
 
   const options = [
-    { value: '1', label: 'Option 1' },
-    { value: '2', label: 'Option 2' },
-    { value: '3', label: 'Option 3' },
-    { value: '4', label: 'Option 4' },
-    { value: '5', label: 'Option 5' },
-    { value: '6', label: 'Option 6' },
-    { value: '7', label: 'Option 7' },
-    { value: '8', label: 'Option 8' },
-    { value: '9', label: 'Option 9' },
-    { value: '10', label: 'Option 10' },
+    { value: 'design', label: 'Design' },
+    { value: 'development', label: 'Development' },
+    { value: 'marketing', label: 'Marketing' },
+    { value: 'product', label: 'Product Management' },
+    { value: 'data', label: 'Data Science' },
+    { value: 'security', label: 'Security' },
   ];
 
   return (
-    <SelectAlpha
-      type="multi"
-      label="Choose multiple options"
-      value={value}
-      onChange={onChange}
-      options={options}
-      placeholder="Select options"
-      selectAllLabel="Select all options"
-      clearAllLabel="Clear all selections"
-      maxSelectedOptionsToShow={4}
-    />
+    <VStack gap={3}>
+      <SelectAlpha
+        type="multi"
+        label="Select team skills"
+        value={value}
+        onChange={onChange}
+        options={options}
+        placeholder="Choose skills"
+        selectAllLabel="Select all skills"
+        clearAllLabel="Clear selection"
+        maxSelectedOptionsToShow={3}
+        helperText={`${value.length} skills selected`}
+      />
+    </VStack>
   );
 }
 ```
 
-## Accessibility Props
+## States & Variants
 
-The Select component supports comprehensive accessibility features including custom labels and roles.
-
-```jsx live
-function AccessibilityExample() {
-  const [value, setValue] = useState('2');
-
-  const options = [
-    { value: '1', label: 'High Priority' },
-    { value: '2', label: 'Medium Priority' },
-    { value: '3', label: 'Low Priority' },
-  ];
-
-  return (
-    <SelectAlpha
-      label="Task Priority"
-      value={value}
-      onChange={setValue}
-      options={options}
-      accessibilityLabel="Select task priority level"
-      accessibilityRoles={{
-        dropdown: 'listbox',
-        option: 'option',
-      }}
-      placeholder="Choose priority level"
-      helperText="Select the appropriate priority for this task"
-    />
-  );
-}
-```
-
-## Variant Props
-
-The Select component supports different visual variants for various states and contexts.
+The Select component supports different visual states to communicate status and guide user interaction.
 
 ```jsx live
-function VariantExample() {
-  const [positiveValue, setPositiveValue] = useState('success');
+function StatesExample() {
+  const [defaultValue, setDefaultValue] = useState('');
+  const [positiveValue, setPositiveValue] = useState('active');
   const [negativeValue, setNegativeValue] = useState('');
+  const [disabledValue] = useState('disabled');
 
-  const positiveOptions = [
-    { value: 'success', label: 'Success' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'approved', label: 'Approved' },
+  const statusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'inactive', label: 'Inactive' },
   ];
 
-  const negativeOptions = [
+  const errorOptions = [
     { value: 'error', label: 'Error' },
     { value: 'failed', label: 'Failed' },
-    { value: 'rejected', label: 'Rejected' },
+    { value: 'timeout', label: 'Timeout' },
   ];
 
   return (
     <VStack gap={4}>
       <SelectAlpha
-        label="Positive Status"
-        value={positiveValue}
-        onChange={setPositiveValue}
-        options={positiveOptions}
-        variant="positive"
-        helperText="This shows a positive state"
-        placeholder="Select positive status"
+        label="Default State"
+        value={defaultValue}
+        onChange={setDefaultValue}
+        options={statusOptions}
+        placeholder="Select status"
+        helperText="Standard select appearance"
       />
 
       <SelectAlpha
-        label="Negative Status"
+        label="Positive State"
+        value={positiveValue}
+        onChange={setPositiveValue}
+        options={statusOptions}
+        variant="positive"
+        helperText="Indicates a successful or positive state"
+        placeholder="Select status"
+      />
+
+      <SelectAlpha
+        label="Negative State"
         value={negativeValue}
         onChange={setNegativeValue}
-        options={negativeOptions}
+        options={errorOptions}
         variant="negative"
-        helperText="This shows an error state"
-        placeholder="Select negative status"
+        helperText="Indicates an error or attention required"
+        placeholder="Select error type"
+      />
+
+      <SelectAlpha
+        label="Disabled State"
+        value={disabledValue}
+        onChange={() => {}}
+        options={statusOptions}
+        disabled
+        helperText="Cannot be interacted with"
+        placeholder="Select status"
       />
     </VStack>
+  );
+}
+```
+
+## Compact Mode
+
+Use the `compact` prop for a smaller select component that fits well in dense interfaces or inline forms.
+
+```jsx live
+function CompactExample() {
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('date');
+
+  const filterOptions = [
+    { value: 'all', label: 'All Items' },
+    { value: 'active', label: 'Active Only' },
+    { value: 'archived', label: 'Archived' },
+  ];
+
+  const sortOptions = [
+    { value: 'date', label: 'Date' },
+    { value: 'name', label: 'Name' },
+    { value: 'size', label: 'Size' },
+  ];
+
+  return (
+    <HStack gap={2} alignItems="center">
+      <Text font="body">Filter:</Text>
+      <SelectAlpha
+        compact
+        value={filter}
+        onChange={setFilter}
+        options={filterOptions}
+        placeholder="Filter"
+      />
+      <Text font="body">Sort by:</Text>
+      <SelectAlpha
+        compact
+        value={sort}
+        onChange={setSort}
+        options={sortOptions}
+        placeholder="Sort"
+      />
+    </HStack>
+  );
+}
+```
+
+## With Icons and Media
+
+Enhance options with icons or other media elements for better visual distinction.
+
+```jsx live
+function MediaExample() {
+  const [value, setValue] = useState('');
+
+  const options = [
+    {
+      value: 'email',
+      label: 'Email',
+      media: <Icon name="mail" size="m" />,
+    },
+    {
+      value: 'sms',
+      label: 'SMS',
+      media: <Icon name="message" size="m" />,
+    },
+    {
+      value: 'push',
+      label: 'Push Notification',
+      media: <Icon name="bell" size="m" />,
+    },
+    {
+      value: 'webhook',
+      label: 'Webhook',
+      media: <Icon name="link" size="m" />,
+    },
+  ];
+
+  return (
+    <SelectAlpha
+      label="Notification Method"
+      value={value}
+      onChange={setValue}
+      options={options}
+      placeholder="Select notification method"
+      startNode={<Icon name="bell" size="m" />}
+      helperText="Choose how you want to receive notifications"
+    />
+  );
+}
+```
+
+## Controlled Open State
+
+Control the dropdown's open state programmatically for advanced interactions.
+
+```jsx live
+function ControlledOpenExample() {
+  const [value, setValue] = useState('');
+  const [open, setOpen] = useState(false);
+  const [autoOpen, setAutoOpen] = useState(false);
+
+  const options = [
+    { value: 'auto', label: 'Automatic' },
+    { value: 'manual', label: 'Manual' },
+    { value: 'scheduled', label: 'Scheduled' },
+  ];
+
+  useEffect(() => {
+    if (autoOpen) {
+      const timer = setInterval(() => {
+        setOpen((prev) => !prev);
+      }, 2000);
+      return () => clearInterval(timer);
+    }
+  }, [autoOpen]);
+
+  return (
+    <VStack gap={3}>
+      <SelectAlpha
+        label="Deployment Mode"
+        value={value}
+        onChange={setValue}
+        options={options}
+        placeholder="Select mode"
+        open={open}
+        setOpen={setOpen}
+      />
+      <HStack gap={2}>
+        <Button variant="secondary" onClick={() => setOpen(!open)}>
+          {open ? 'Close' : 'Open'} Dropdown
+        </Button>
+        <Button variant="secondary" onClick={() => setAutoOpen(!autoOpen)}>
+          {autoOpen ? 'Stop' : 'Start'} Auto Toggle
+        </Button>
+      </HStack>
+    </VStack>
+  );
+}
+```
+
+## Style Customization
+
+Customize the appearance of different parts of the Select component using the `styles` prop.
+
+```jsx live
+function StyleCustomizationExample() {
+  const [value, setValue] = useState('');
+
+  const options = [
+    { value: 'primary', label: 'Primary Theme' },
+    { value: 'dark', label: 'Dark Theme' },
+    { value: 'light', label: 'Light Theme' },
+    { value: 'custom', label: 'Custom Theme' },
+  ];
+
+  return (
+    <VStack gap={4}>
+      <SelectAlpha
+        label="Select Theme"
+        value={value}
+        onChange={setValue}
+        options={options}
+        placeholder="Choose a theme"
+        styles={{
+          root: {
+            maxWidth: 300,
+          },
+          control: {
+            borderRadius: 'var(--borderRadius-300)',
+            backgroundColor: 'var(--color-bgSecondaryWash)',
+          },
+          dropdown: {
+            borderRadius: 'var(--borderRadius-300)',
+            boxShadow: 'var(--shadow-200)',
+          },
+          option: {
+            padding: 'var(--space-3)',
+            margin: 'var(--space-1)',
+            borderRadius: 'var(--borderRadius-200)',
+          },
+          optionBlendStyles: {
+            hovered: {
+              backgroundColor: 'var(--color-bgAccentWash)',
+            },
+            pressed: {
+              backgroundColor: 'var(--color-bgAccentWashPressed)',
+            },
+          },
+        }}
+      />
+    </VStack>
+  );
+}
+```
+
+## Custom Components
+
+Replace default components with your own for complete control over rendering.
+
+### Custom Option Component
+
+```jsx live
+function CustomOptionExample() {
+  const CustomOption = ({ option, selected, onSelect }) => (
+    <Pressable
+      onClick={() => onSelect(option.value)}
+      style={{
+        padding: 'var(--space-3)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: selected ? 'var(--color-bgAccentWash)' : 'transparent',
+        borderRadius: 'var(--borderRadius-200)',
+        cursor: 'pointer',
+      }}
+    >
+      <VStack gap={0.5}>
+        <Text font="body" fontWeight="medium">
+          {option.label}
+        </Text>
+        {option.description && (
+          <Text font="caption" color="fgMuted">
+            {option.description}
+          </Text>
+        )}
+      </VStack>
+      {selected && <Icon name="check" size="s" color="fgPositive" />}
+    </Pressable>
+  );
+
+  const [value, setValue] = useState('');
+
+  const options = [
+    {
+      value: 'basic',
+      label: 'Basic Plan',
+      description: '$9/month - Essential features',
+    },
+    {
+      value: 'pro',
+      label: 'Pro Plan',
+      description: '$29/month - Advanced features',
+    },
+    {
+      value: 'enterprise',
+      label: 'Enterprise',
+      description: 'Custom pricing - Full access',
+    },
+  ];
+
+  return (
+    <SelectAlpha
+      label="Select Plan"
+      value={value}
+      onChange={setValue}
+      options={options}
+      placeholder="Choose a plan"
+      SelectOptionComponent={CustomOption}
+    />
+  );
+}
+```
+
+### Custom Control Component
+
+```jsx live
+function CustomControlExample() {
+  const CustomControl = forwardRef(({ value, options, open, setOpen, placeholder }, ref) => {
+    const selectedOption = options.find((opt) => opt.value === value);
+
+    return (
+      <Pressable
+        ref={ref}
+        onClick={() => setOpen(!open)}
+        style={{
+          padding: 'var(--space-3)',
+          border: '2px solid var(--color-bgLine)',
+          borderRadius: 'var(--borderRadius-300)',
+          backgroundColor: 'var(--color-bgPrimary)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-2)',
+        }}
+      >
+        <Icon
+          name={selectedOption ? 'check' : 'search'}
+          size="m"
+          color={selectedOption ? 'fgPositive' : 'fgMuted'}
+        />
+        <Text font="body" color={selectedOption ? 'fgPrimary' : 'fgMuted'}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </Text>
+        <Icon
+          name={open ? 'chevronUp' : 'chevronDown'}
+          size="s"
+          color="fgMuted"
+          style={{ marginLeft: 'auto' }}
+        />
+      </Pressable>
+    );
+  });
+
+  const [value, setValue] = useState('');
+
+  const options = [
+    { value: 'low', label: 'Low Priority' },
+    { value: 'medium', label: 'Medium Priority' },
+    { value: 'high', label: 'High Priority' },
+    { value: 'urgent', label: 'Urgent' },
+  ];
+
+  return (
+    <VStack gap={3}>
+      <Text font="label1">Custom Control Component</Text>
+      <SelectAlpha
+        value={value}
+        onChange={setValue}
+        options={options}
+        placeholder="Set priority level"
+        SelectControlComponent={CustomControl}
+      />
+    </VStack>
+  );
+}
+```
+
+## Empty State Customization
+
+Provide a custom component to display when no options are available.
+
+```jsx live
+function EmptyStateExample() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [value, setValue] = useState('');
+
+  const allOptions = [
+    { value: 'react', label: 'React' },
+    { value: 'vue', label: 'Vue' },
+    { value: 'angular', label: 'Angular' },
+    { value: 'svelte', label: 'Svelte' },
+  ];
+
+  const filteredOptions = allOptions.filter((opt) =>
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const CustomEmptyState = (
+    <VStack gap={2} alignItems="center" padding={4}>
+      <Icon name="search" size="l" color="fgMuted" />
+      <Text font="body" color="fgMuted" textAlign="center">
+        No frameworks found matching "{searchTerm}"
+      </Text>
+      <Button variant="secondary" size="small" onClick={() => setSearchTerm('')}>
+        Clear search
+      </Button>
+    </VStack>
+  );
+
+  return (
+    <VStack gap={3}>
+      <TextInput
+        label="Search frameworks"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Type to filter..."
+      />
+      <SelectAlpha
+        label="Select Framework"
+        value={value}
+        onChange={setValue}
+        options={filteredOptions}
+        placeholder="Choose a framework"
+        SelectEmptyOptionsComponent={CustomEmptyState}
+        emptyOptionsLabel="No matching frameworks"
+      />
+    </VStack>
+  );
+}
+```
+
+## Accessibility
+
+The Select component includes comprehensive accessibility support with customizable ARIA attributes.
+
+```jsx live
+function AccessibilityExample() {
+  const [value, setValue] = useState('');
+
+  const options = [
+    { value: 'screen-reader', label: 'Screen Reader' },
+    { value: 'keyboard', label: 'Keyboard Navigation' },
+    { value: 'voice', label: 'Voice Control' },
+    { value: 'switch', label: 'Switch Control' },
+  ];
+
+  return (
+    <SelectAlpha
+      label="Assistive Technology"
+      value={value}
+      onChange={setValue}
+      options={options}
+      placeholder="Select technology"
+      accessibilityLabel="Choose your preferred assistive technology"
+      accessibilityRoles={{
+        dropdown: 'listbox',
+        option: 'option',
+      }}
+      helperText="Select the assistive technology you use"
+    />
+  );
+}
+```
+
+::::tip Keyboard Navigation
+The Select component supports full keyboard navigation:
+
+- **Enter/Space**: Open dropdown and select options
+- **Arrow Up/Down**: Navigate through options
+- **Escape**: Close dropdown
+- **Tab**: Move focus to next element
+  ::::
+
+## Common Patterns
+
+### Country/Region Selector
+
+```jsx live
+function CountrySelector() {
+  const [country, setCountry] = useState('us');
+
+  const countries = [
+    { value: 'us', label: 'United States', media: '🇺🇸' },
+    { value: 'ca', label: 'Canada', media: '🇨🇦' },
+    { value: 'uk', label: 'United Kingdom', media: '🇬🇧' },
+    { value: 'de', label: 'Germany', media: '🇩🇪' },
+    { value: 'fr', label: 'France', media: '🇫🇷' },
+    { value: 'jp', label: 'Japan', media: '🇯🇵' },
+    { value: 'au', label: 'Australia', media: '🇦🇺' },
+  ];
+
+  return (
+    <SelectAlpha
+      label="Country/Region"
+      value={country}
+      onChange={setCountry}
+      options={countries}
+      placeholder="Select your country"
+      helperText="This determines your local regulations and currency"
+    />
+  );
+}
+```
+
+### Time Zone Selector with Details
+
+```jsx live
+function TimeZoneSelector() {
+  const [timezone, setTimezone] = useState('');
+
+  const timezones = [
+    {
+      value: 'pst',
+      label: 'Pacific Time',
+      detail: 'PST (UTC-8)',
+      accessory: '🌉',
+    },
+    {
+      value: 'mst',
+      label: 'Mountain Time',
+      detail: 'MST (UTC-7)',
+      accessory: '🏔️',
+    },
+    {
+      value: 'cst',
+      label: 'Central Time',
+      detail: 'CST (UTC-6)',
+      accessory: '🌾',
+    },
+    {
+      value: 'est',
+      label: 'Eastern Time',
+      detail: 'EST (UTC-5)',
+      accessory: '🗽',
+    },
+  ];
+
+  return (
+    <SelectAlpha
+      label="Time Zone"
+      value={timezone}
+      onChange={setTimezone}
+      options={timezones}
+      placeholder="Select time zone"
+      helperText="Used for scheduling and notifications"
+    />
   );
 }
 ```

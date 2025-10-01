@@ -1,138 +1,626 @@
-## Single Select
+## Basic Usage
 
-Basic single selection with predefined options for mobile interfaces.
+Select provides a flexible dropdown component optimized for mobile touch interactions. It supports single and multi-selection modes, full customization, and comprehensive accessibility features.
+
+### Single Select
+
+Basic single selection with predefined options. This is the default mode, optimized for touch interfaces.
 
 ```jsx
 function SingleSelectExample() {
-  const [value, setValue] = useState('1');
+  const [value, setValue] = useState('');
 
   const options = [
-    { value: '1', label: 'Option 1' },
-    { value: '2', label: 'Option 2' },
-    { value: '3', label: 'Option 3' },
-    { value: '4', label: 'Option 4' },
+    { value: 'btc', label: 'Bitcoin' },
+    { value: 'eth', label: 'Ethereum' },
+    { value: 'usdc', label: 'USD Coin' },
+    { value: 'sol', label: 'Solana' },
   ];
 
   return (
-    <Select
-      label="Choose an option"
-      value={value}
-      onChange={setValue}
-      options={options}
-      placeholder="Select an option"
-    />
+    <VStack gap={3}>
+      <Select
+        label="Choose cryptocurrency"
+        value={value}
+        onChange={setValue}
+        options={options}
+        placeholder="Select an asset"
+        helperText="Select your preferred cryptocurrency"
+      />
+      {value && (
+        <Text font="body" color="fgMuted">
+          You selected: {options.find((opt) => opt.value === value)?.label}
+        </Text>
+      )}
+    </VStack>
   );
 }
 ```
 
-## Multi Select
+### Multi Select
 
-Multi-selection mode allows users to select multiple options from the list with touch-friendly controls.
+Multi-selection mode with touch-friendly controls. Use the `useMultiSelect` hook for convenient state management.
 
 ```jsx
 function MultiSelectExample() {
   const { value, onChange } = useMultiSelect({
-    initialValue: ['1', '3'],
+    initialValue: ['design', 'development'],
   });
 
   const options = [
-    { value: '1', label: 'Option 1' },
-    { value: '2', label: 'Option 2' },
-    { value: '3', label: 'Option 3' },
-    { value: '4', label: 'Option 4' },
-    { value: '5', label: 'Option 5' },
+    { value: 'design', label: 'Design' },
+    { value: 'development', label: 'Development' },
+    { value: 'marketing', label: 'Marketing' },
+    { value: 'product', label: 'Product Management' },
+    { value: 'data', label: 'Data Science' },
+    { value: 'security', label: 'Security' },
   ];
 
   return (
-    <Select
-      type="multi"
-      label="Choose multiple options"
-      value={value}
-      onChange={onChange}
-      options={options}
-      placeholder="Select options"
-      selectAllLabel="Select all options"
-      clearAllLabel="Clear all selections"
-    />
+    <VStack gap={3}>
+      <Select
+        type="multi"
+        label="Select team skills"
+        value={value}
+        onChange={onChange}
+        options={options}
+        placeholder="Choose skills"
+        selectAllLabel="Select all skills"
+        clearAllLabel="Clear selection"
+        maxSelectedOptionsToShow={3}
+        helperText={`${value.length} skills selected`}
+      />
+    </VStack>
   );
 }
 ```
 
-## Accessibility Props
+## States & Variants
 
-The mobile Select component supports comprehensive accessibility features including custom labels, hints, and roles.
-
-```jsx
-function AccessibilityExample() {
-  const [value, setValue] = useState('2');
-
-  const options = [
-    { value: '1', label: 'High Priority' },
-    { value: '2', label: 'Medium Priority' },
-    { value: '3', label: 'Low Priority' },
-  ];
-
-  return (
-    <Select
-      label="Task Priority"
-      value={value}
-      onChange={setValue}
-      options={options}
-      accessibilityLabel="Select task priority level"
-      accessibilityHint="Choose the appropriate priority for this task"
-      accessibilityRoles={{
-        option: 'button',
-      }}
-      placeholder="Choose priority level"
-      helperText="Select the appropriate priority for this task"
-    />
-  );
-}
-```
-
-## Variant Props
-
-The mobile Select component supports different visual variants for various states and contexts.
+The Select component supports different visual states to communicate status and guide user interaction on mobile devices.
 
 ```jsx
-function VariantExample() {
-  const [positiveValue, setPositiveValue] = useState('success');
+function StatesExample() {
+  const [defaultValue, setDefaultValue] = useState('');
+  const [positiveValue, setPositiveValue] = useState('active');
   const [negativeValue, setNegativeValue] = useState('');
+  const [disabledValue] = useState('disabled');
 
-  const positiveOptions = [
-    { value: 'success', label: 'Success' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'approved', label: 'Approved' },
+  const statusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'inactive', label: 'Inactive' },
   ];
 
-  const negativeOptions = [
+  const errorOptions = [
     { value: 'error', label: 'Error' },
     { value: 'failed', label: 'Failed' },
-    { value: 'rejected', label: 'Rejected' },
+    { value: 'timeout', label: 'Timeout' },
   ];
 
   return (
     <VStack gap={4}>
       <Select
-        label="Positive Status"
-        value={positiveValue}
-        onChange={setPositiveValue}
-        options={positiveOptions}
-        variant="positive"
-        helperText="This shows a positive state"
-        placeholder="Select positive status"
+        label="Default State"
+        value={defaultValue}
+        onChange={setDefaultValue}
+        options={statusOptions}
+        placeholder="Select status"
+        helperText="Standard select appearance"
       />
 
       <Select
-        label="Negative Status"
+        label="Positive State"
+        value={positiveValue}
+        onChange={setPositiveValue}
+        options={statusOptions}
+        variant="positive"
+        helperText="Indicates a successful or positive state"
+        placeholder="Select status"
+      />
+
+      <Select
+        label="Negative State"
         value={negativeValue}
         onChange={setNegativeValue}
-        options={negativeOptions}
+        options={errorOptions}
         variant="negative"
-        helperText="This shows an error state"
-        placeholder="Select negative status"
+        helperText="Indicates an error or attention required"
+        placeholder="Select error type"
+      />
+
+      <Select
+        label="Disabled State"
+        value={disabledValue}
+        onChange={() => {}}
+        options={statusOptions}
+        disabled
+        helperText="Cannot be interacted with"
+        placeholder="Select status"
       />
     </VStack>
+  );
+}
+```
+
+## Compact Mode
+
+Use the `compact` prop for a smaller select component that works well in dense mobile interfaces.
+
+```jsx
+function CompactExample() {
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('date');
+
+  const filterOptions = [
+    { value: 'all', label: 'All Items' },
+    { value: 'active', label: 'Active Only' },
+    { value: 'archived', label: 'Archived' },
+  ];
+
+  const sortOptions = [
+    { value: 'date', label: 'Date' },
+    { value: 'name', label: 'Name' },
+    { value: 'size', label: 'Size' },
+  ];
+
+  return (
+    <HStack gap={2} alignItems="center">
+      <Text font="body">Filter:</Text>
+      <Select
+        compact
+        value={filter}
+        onChange={setFilter}
+        options={filterOptions}
+        placeholder="Filter"
+      />
+      <Text font="body">Sort:</Text>
+      <Select compact value={sort} onChange={setSort} options={sortOptions} placeholder="Sort" />
+    </HStack>
+  );
+}
+```
+
+## With Icons and Media
+
+Enhance options with icons or other media elements for better visual distinction on mobile screens.
+
+```jsx
+function MediaExample() {
+  const [value, setValue] = useState('');
+
+  const options = [
+    {
+      value: 'email',
+      label: 'Email',
+      media: <Icon name="mail" size="m" />,
+    },
+    {
+      value: 'sms',
+      label: 'SMS',
+      media: <Icon name="message" size="m" />,
+    },
+    {
+      value: 'push',
+      label: 'Push Notification',
+      media: <Icon name="bell" size="m" />,
+    },
+    {
+      value: 'in-app',
+      label: 'In-App Message',
+      media: <Icon name="mobile" size="m" />,
+    },
+  ];
+
+  return (
+    <Select
+      label="Notification Method"
+      value={value}
+      onChange={setValue}
+      options={options}
+      placeholder="Select notification method"
+      startNode={<Icon name="bell" size="m" />}
+      helperText="Choose how you want to receive notifications"
+    />
+  );
+}
+```
+
+## Controlled Open State
+
+Control the dropdown's open state programmatically for advanced mobile interactions.
+
+```jsx
+function ControlledOpenExample() {
+  const [value, setValue] = useState('');
+  const [open, setOpen] = useState(false);
+
+  const options = [
+    { value: 'auto', label: 'Automatic' },
+    { value: 'manual', label: 'Manual' },
+    { value: 'scheduled', label: 'Scheduled' },
+  ];
+
+  return (
+    <VStack gap={3}>
+      <Select
+        label="Deployment Mode"
+        value={value}
+        onChange={setValue}
+        options={options}
+        placeholder="Select mode"
+        open={open}
+        setOpen={setOpen}
+      />
+      <Button variant="secondary" onClick={() => setOpen(!open)}>
+        {open ? 'Close' : 'Open'} Dropdown
+      </Button>
+    </VStack>
+  );
+}
+```
+
+## Style Customization
+
+Customize the appearance of different parts of the Select component using the `styles` prop with React Native StyleSheet.
+
+```jsx
+function StyleCustomizationExample() {
+  const [value, setValue] = useState('');
+
+  const options = [
+    { value: 'primary', label: 'Primary Theme' },
+    { value: 'dark', label: 'Dark Theme' },
+    { value: 'light', label: 'Light Theme' },
+    { value: 'custom', label: 'Custom Theme' },
+  ];
+
+  return (
+    <Select
+      label="Select Theme"
+      value={value}
+      onChange={setValue}
+      options={options}
+      placeholder="Choose a theme"
+      styles={{
+        control: {
+          borderRadius: 16,
+          backgroundColor: '#f5f5f5',
+          borderWidth: 2,
+          borderColor: '#e0e0e0',
+        },
+        dropdown: {
+          borderRadius: 16,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        },
+        option: {
+          paddingVertical: 16,
+          paddingHorizontal: 20,
+          marginVertical: 4,
+          marginHorizontal: 8,
+          borderRadius: 12,
+        },
+        optionBlendStyles: {
+          pressed: {
+            backgroundColor: '#e0e0e0',
+          },
+        },
+      }}
+    />
+  );
+}
+```
+
+## Custom Components
+
+Replace default components with your own for complete control over rendering in React Native.
+
+### Custom Option Component
+
+```jsx
+function CustomOptionExample() {
+  const CustomOption = ({ option, selected, onSelect }) => (
+    <Pressable
+      onPress={() => onSelect(option.value)}
+      style={{
+        padding: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: selected ? '#f0f4ff' : 'transparent',
+        borderRadius: 12,
+      }}
+    >
+      <VStack gap={0.5}>
+        <Text font="body" fontWeight="medium">
+          {option.label}
+        </Text>
+        {option.description && (
+          <Text font="caption" color="fgMuted">
+            {option.description}
+          </Text>
+        )}
+      </VStack>
+      {selected && <Icon name="check" size="s" color="fgPositive" />}
+    </Pressable>
+  );
+
+  const [value, setValue] = useState('');
+
+  const options = [
+    {
+      value: 'basic',
+      label: 'Basic Plan',
+      description: '$9/month - Essential features',
+    },
+    {
+      value: 'pro',
+      label: 'Pro Plan',
+      description: '$29/month - Advanced features',
+    },
+    {
+      value: 'enterprise',
+      label: 'Enterprise',
+      description: 'Custom pricing - Full access',
+    },
+  ];
+
+  return (
+    <Select
+      label="Select Plan"
+      value={value}
+      onChange={setValue}
+      options={options}
+      placeholder="Choose a plan"
+      SelectOptionComponent={CustomOption}
+    />
+  );
+}
+```
+
+### Custom Control Component
+
+```jsx
+function CustomControlExample() {
+  const CustomControl = forwardRef(({ value, options, open, setOpen, placeholder }, ref) => {
+    const selectedOption = options.find((opt) => opt.value === value);
+
+    return (
+      <Pressable
+        ref={ref}
+        onPress={() => setOpen(!open)}
+        style={{
+          padding: 16,
+          borderWidth: 2,
+          borderColor: '#e0e0e0',
+          borderRadius: 16,
+          backgroundColor: '#ffffff',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <Icon
+          name={selectedOption ? 'check' : 'search'}
+          size="m"
+          color={selectedOption ? 'fgPositive' : 'fgMuted'}
+        />
+        <Text font="body" color={selectedOption ? 'fgPrimary' : 'fgMuted'}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </Text>
+        <Icon
+          name={open ? 'chevronUp' : 'chevronDown'}
+          size="s"
+          color="fgMuted"
+          style={{ marginLeft: 'auto' }}
+        />
+      </Pressable>
+    );
+  });
+
+  const [value, setValue] = useState('');
+
+  const options = [
+    { value: 'low', label: 'Low Priority' },
+    { value: 'medium', label: 'Medium Priority' },
+    { value: 'high', label: 'High Priority' },
+    { value: 'urgent', label: 'Urgent' },
+  ];
+
+  return (
+    <VStack gap={3}>
+      <Text font="label1">Custom Control Component</Text>
+      <Select
+        value={value}
+        onChange={setValue}
+        options={options}
+        placeholder="Set priority level"
+        SelectControlComponent={CustomControl}
+      />
+    </VStack>
+  );
+}
+```
+
+## Empty State Customization
+
+Provide a custom component to display when no options are available.
+
+```jsx
+function EmptyStateExample() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [value, setValue] = useState('');
+
+  const allOptions = [
+    { value: 'react-native', label: 'React Native' },
+    { value: 'flutter', label: 'Flutter' },
+    { value: 'swift', label: 'Swift' },
+    { value: 'kotlin', label: 'Kotlin' },
+  ];
+
+  const filteredOptions = allOptions.filter((opt) =>
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const CustomEmptyState = (
+    <VStack gap={2} alignItems="center" padding={4}>
+      <Icon name="search" size="l" color="fgMuted" />
+      <Text font="body" color="fgMuted" textAlign="center">
+        No frameworks found matching "{searchTerm}"
+      </Text>
+      <Button variant="secondary" size="small" onPress={() => setSearchTerm('')}>
+        Clear search
+      </Button>
+    </VStack>
+  );
+
+  return (
+    <VStack gap={3}>
+      <Input
+        label="Search frameworks"
+        value={searchTerm}
+        onChangeText={setSearchTerm}
+        placeholder="Type to filter..."
+      />
+      <Select
+        label="Select Framework"
+        value={value}
+        onChange={setValue}
+        options={filteredOptions}
+        placeholder="Choose a framework"
+        SelectEmptyOptionsComponent={CustomEmptyState}
+        emptyOptionsLabel="No matching frameworks"
+      />
+    </VStack>
+  );
+}
+```
+
+## Accessibility
+
+The mobile Select component includes comprehensive accessibility support optimized for screen readers and assistive technologies.
+
+```jsx
+function AccessibilityExample() {
+  const [value, setValue] = useState('');
+
+  const options = [
+    { value: 'voiceover', label: 'VoiceOver' },
+    { value: 'talkback', label: 'TalkBack' },
+    { value: 'switch-control', label: 'Switch Control' },
+    { value: 'voice-access', label: 'Voice Access' },
+  ];
+
+  return (
+    <Select
+      label="Assistive Technology"
+      value={value}
+      onChange={setValue}
+      options={options}
+      placeholder="Select technology"
+      accessibilityLabel="Choose your preferred assistive technology"
+      accessibilityHint="Double tap to open the options list"
+      accessibilityRoles={{
+        option: 'button',
+      }}
+      helperText="Select the assistive technology you use"
+    />
+  );
+}
+```
+
+::::tip Gesture Support
+The mobile Select component supports:
+
+- **Tap**: Open dropdown and select options
+- **Swipe**: Scroll through long option lists
+- **Outside tap**: Close dropdown (unless disabled)
+- **Hardware back**: Close dropdown on Android
+  ::::
+
+## Common Patterns
+
+### Country/Region Selector
+
+```jsx
+function CountrySelector() {
+  const [country, setCountry] = useState('us');
+
+  const countries = [
+    { value: 'us', label: 'United States', media: '🇺🇸' },
+    { value: 'ca', label: 'Canada', media: '🇨🇦' },
+    { value: 'uk', label: 'United Kingdom', media: '🇬🇧' },
+    { value: 'de', label: 'Germany', media: '🇩🇪' },
+    { value: 'fr', label: 'France', media: '🇫🇷' },
+    { value: 'jp', label: 'Japan', media: '🇯🇵' },
+    { value: 'au', label: 'Australia', media: '🇦🇺' },
+  ];
+
+  return (
+    <Select
+      label="Country/Region"
+      value={country}
+      onChange={setCountry}
+      options={countries}
+      placeholder="Select your country"
+      helperText="This determines your local regulations and currency"
+    />
+  );
+}
+```
+
+### Language Selector with Native Names
+
+```jsx
+function LanguageSelector() {
+  const [language, setLanguage] = useState('en');
+
+  const languages = [
+    {
+      value: 'en',
+      label: 'English',
+      detail: 'English',
+      accessory: <Text font="caption">EN</Text>,
+    },
+    {
+      value: 'es',
+      label: 'Spanish',
+      detail: 'Español',
+      accessory: <Text font="caption">ES</Text>,
+    },
+    {
+      value: 'fr',
+      label: 'French',
+      detail: 'Français',
+      accessory: <Text font="caption">FR</Text>,
+    },
+    {
+      value: 'de',
+      label: 'German',
+      detail: 'Deutsch',
+      accessory: <Text font="caption">DE</Text>,
+    },
+    {
+      value: 'ja',
+      label: 'Japanese',
+      detail: '日本語',
+      accessory: <Text font="caption">JA</Text>,
+    },
+  ];
+
+  return (
+    <Select
+      label="Language"
+      value={language}
+      onChange={setLanguage}
+      options={languages}
+      placeholder="Select language"
+      helperText="Choose your preferred language"
+    />
   );
 }
 ```
