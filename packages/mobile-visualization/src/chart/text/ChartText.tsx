@@ -288,7 +288,7 @@ export const ChartText = memo<ChartTextProps>(
           });
         }
       }
-    }, [measurementRef]);
+    }, [measurementRef, children]);
 
     return (
       <G opacity={isDimensionsReady ? opacity : 0}>
