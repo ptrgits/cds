@@ -192,16 +192,15 @@ const DraggableReferenceLine = memo(
         <ReferenceLine
           dataY={amount}
           label={dollarLabel}
-          labelConfig={{
+          labelProps={{
             background: color,
             borderRadius: 100,
             color: 'white',
             dx: -8,
             font: 'label1',
             inset: { top: 5, bottom: 5, left: 10, right: 10 },
-            textAnchor: 'end',
+            horizontalAlignment: 'right',
           }}
-          labelPosition="right"
         />
         <g
           onMouseDown={handleMouseDown}
@@ -229,10 +228,10 @@ const DraggableReferenceLine = memo(
           <ChartText
             disableRepositioning
             color={color}
-            dominantBaseline="middle"
+            verticalAlignment="middle"
             font="label1"
             onDimensionsChange={(dimensions) => setTextDimensions(dimensions)}
-            textAnchor="start"
+            horizontalAlignment="left"
             x={drawingArea.x + padding + dragIconSize + iconGap + trendArrowIconSize}
             y={yPixel + 1}
           >
@@ -277,7 +276,7 @@ const PriceTargetChart = () => {
         LineComponent={SolidLine}
         dataY={priceData[priceData.length - 1]}
         label={formatPrice(priceData[priceData.length - 1])}
-        labelConfig={{ dx: 16, textAnchor: 'start', inset: 0 }}
+        labelProps={{ dx: 16, horizontalAlignment: 'left', inset: 0 }}
       />
       <DraggableReferenceLine
         baselineAmount={priceData[priceData.length - 1]}
@@ -307,7 +306,7 @@ export const All = () => {
           <ReferenceLine
             dataY={50}
             label="$50"
-            labelConfig={{ dx: 16, textAnchor: 'start', inset: 0 }}
+            labelProps={{ dx: 16, horizontalAlignment: 'left', inset: 0 }}
           />
         </LineChart>
       </Example>
@@ -327,10 +326,10 @@ export const All = () => {
           <ReferenceLine
             dataY={75}
             label="$75"
-            labelConfig={{
+            labelProps={{
               dx: -16,
               borderRadius: 400,
-              textAnchor: 'end',
+              horizontalAlignment: 'right',
               color: 'white',
               background: 'var(--color-bgPositive)',
             }}
@@ -352,31 +351,29 @@ export const All = () => {
           <ReferenceLine
             dataY={25}
             label="Liquidation"
-            labelConfig={{
+            labelProps={{
               dx: 4,
               borderRadius: 100,
               inset: { top: 4, bottom: 4, left: 8, right: 8 },
-              textAnchor: 'start',
+              horizontalAlignment: 'left',
               color: 'rgb(var(--yellow70))',
               background: 'var(--color-accentSubtleYellow)',
               font: 'label1',
             }}
-            labelPosition="left"
             stroke="var(--color-bgWarning)"
           />
           <ReferenceLine
             dataY={25}
             label="$25"
-            labelConfig={{
+            labelProps={{
               dx: -4,
               borderRadius: 100,
               inset: { top: 2, bottom: 2, left: 4, right: 4 },
-              textAnchor: 'end',
+              horizontalAlignment: 'right',
               color: 'rgb(var(--yellow70))',
               background: 'var(--color-bg)',
               font: 'label1',
             }}
-            labelPosition="right"
             stroke="transparent"
           />
         </LineChart>

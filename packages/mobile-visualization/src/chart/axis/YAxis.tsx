@@ -202,9 +202,9 @@ export const YAxis = memo<YAxisProps>(
           chartTextProps: {
             className: classNames?.tickLabel,
             color: theme.color.fgMuted,
-            dominantBaseline: 'central',
+            verticalAlignment: 'middle',
             style: styles?.tickLabel,
-            textAnchor: position === 'left' ? 'end' : 'start',
+            horizontalAlignment: position === 'left' ? 'right' : 'left',
           },
         };
       });

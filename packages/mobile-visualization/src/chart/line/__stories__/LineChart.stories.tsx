@@ -190,13 +190,13 @@ export const BasicLineChartWithPoints = () => {
       <ReferenceLine
         dataX={2}
         label="testing 123"
-        labelConfig={{
+        labelProps={{
           color: '#10b981',
           inset: 0,
+          verticalAlignment: 'middle',
         }}
-        labelPosition="center"
       />
-      <ReferenceLine dataY={60} label="testing 123" labelPosition="left" />
+      <ReferenceLine dataY={60} label="testing 123" labelProps={{ horizontalAlignment: 'left' }} />
       <Point color="orange" dataX={5} dataY={50} radius={5} />
     </LineChart>
   );
@@ -516,11 +516,10 @@ export const ColorShiftChart = () => {
         <ReferenceLine
           dataY={startPrice}
           label={`$${startPrice}`}
-          labelConfig={{
-            textAnchor: 'start',
+          labelProps={{
+            horizontalAlignment: 'left',
             inset: 0,
           }}
-          labelPosition="right"
           stroke={chartActiveColor}
         />
       </LineChart>

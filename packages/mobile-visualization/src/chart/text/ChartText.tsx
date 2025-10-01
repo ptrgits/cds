@@ -13,11 +13,18 @@ import { useCartesianChartContext } from '../ChartProvider';
  */
 export type ChartTextChildren = string | null | undefined;
 
+/**
+ * Horizontal alignment options for chart text.
+ */
+export type TextHorizontalAlignment = 'left' | 'center' | 'right';
+
+/**
+ * Vertical alignment options for chart text.
+ */
+export type TextVerticalAlignment = 'top' | 'middle' | 'bottom';
+
 export type ChartTextProps = SharedProps &
-  Pick<
-    TextProps,
-    'textAnchor' | 'alignmentBaseline' | 'dx' | 'dy' | 'fontSize' | 'fontWeight' | 'opacity'
-  > & {
+  Pick<TextProps, 'dx' | 'dy' | 'fontSize' | 'fontWeight' | 'opacity'> & {
     /**
      * The text color.
      * @default theme.color.fgMuted
@@ -44,6 +51,16 @@ export type ChartTextProps = SharedProps &
      */
     y: number;
     /**
+     * Horizontal alignment of the text.
+     * @default 'center'
+     */
+    horizontalAlignment?: TextHorizontalAlignment;
+    /**
+     * Vertical alignment of the text.
+     * @default 'middle'
+     */
+    verticalAlignment?: TextVerticalAlignment;
+    /**
      * When true, disables automatic repositioning to fit within bounds.
      */
     disableRepositioning?: boolean;
@@ -69,6 +86,38 @@ export type ChartTextProps = SharedProps &
      */
     borderRadius?: number;
   };
+
+/**
+ * Maps horizontal alignment to SVG textAnchor.
+ * This abstraction allows us to provide a consistent alignment API across web and mobile platforms,
+ * hiding the platform-specific SVG property differences.
+ */
+const getTextAnchor = (alignment: TextHorizontalAlignment): TextProps['textAnchor'] => {
+  switch (alignment) {
+    case 'left':
+      return 'start';
+    case 'center':
+      return 'middle';
+    case 'right':
+      return 'end';
+  }
+};
+
+/**
+ * Maps vertical alignment to SVG alignmentBaseline.
+ * This abstraction allows us to provide a consistent alignment API across web and mobile platforms,
+ * hiding the platform-specific SVG property differences.
+ */
+const getAlignmentBaseline = (alignment: TextVerticalAlignment): TextProps['alignmentBaseline'] => {
+  switch (alignment) {
+    case 'top':
+      return 'ideographic';
+    case 'middle':
+      return 'central';
+    case 'bottom':
+      return 'hanging';
+  }
+};
 
 type ChartTextVisibleProps = {
   children: ChartTextChildren;
@@ -146,8 +195,8 @@ export const ChartText = memo<ChartTextProps>(
     children,
     x,
     y,
-    textAnchor = 'middle',
-    alignmentBaseline = 'central',
+    horizontalAlignment = 'center',
+    verticalAlignment = 'middle',
     dx,
     dy,
     disableRepositioning = false,
@@ -164,6 +213,12 @@ export const ChartText = memo<ChartTextProps>(
   }) => {
     const measurementRef = useRef<Text>(null);
     const { width: chartWidth, height: chartHeight } = useCartesianChartContext();
+
+    const textAnchor = useMemo(() => getTextAnchor(horizontalAlignment), [horizontalAlignment]);
+    const alignmentBaseline = useMemo(
+      () => getAlignmentBaseline(verticalAlignment),
+      [verticalAlignment],
+    );
 
     const fullChartBounds = useMemo(
       () => ({ x: 0, y: 0, width: chartWidth, height: chartHeight }),

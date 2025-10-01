@@ -111,7 +111,7 @@ export type ScrubberProps = SharedProps &
     /**
      * Props passed to the scrubber line's label.
      */
-    labelProps?: Partial<ReferenceLineProps['labelConfig']>;
+    labelProps?: Partial<ReferenceLineProps['labelProps']>;
 
     /**
      * Stroke color for the scrubber line.
@@ -341,7 +341,7 @@ export const Scrubber = memo(
             scrubberLabel &&
             pixelX !== undefined && (
               <ChartText
-                textAnchor="middle"
+                horizontalAlignment="center"
                 x={pixelX}
                 y={drawingArea.y - overlayOffset - 4}
                 {...labelProps}

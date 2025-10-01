@@ -129,15 +129,14 @@ const DraggablePriceTarget = () => {
           <ReferenceLine
             dataY={amount}
             label={dollarLabel}
-            labelConfig={{
+            labelProps={{
               background: color,
               borderRadius: 100,
               color: 'white',
               dx: -8,
               inset: { top: 5, bottom: 5, left: 10, right: 10 },
-              textAnchor: 'end',
+              horizontalAlignment: 'right',
             }}
-            labelPosition="right"
           />
           <G
             onMouseDown={handleMouseDown}
@@ -164,10 +163,10 @@ const DraggablePriceTarget = () => {
             />
             <ChartText
               disableRepositioning
-              alignmentBaseline="middle"
               color={color}
+              horizontalAlignment="left"
               onDimensionsChange={(dimensions) => setTextDimensions(dimensions)}
-              textAnchor="start"
+              verticalAlignment="middle"
               x={drawingArea.x + padding + dragIconSize + iconGap + trendArrowIconSize}
               y={yPixel + 1}
             >
@@ -212,7 +211,7 @@ const DraggablePriceTarget = () => {
           LineComponent={SolidLine}
           dataY={priceData[priceData.length - 1]}
           label={formatPrice(priceData[priceData.length - 1])}
-          labelConfig={{ dx: 16, textAnchor: 'start', inset: 0 }}
+          labelProps={{ dx: 16, horizontalAlignment: 'left', inset: 0 }}
         />
         <DraggableReferenceLine
           baselineAmount={priceData[priceData.length - 1]}
@@ -245,12 +244,12 @@ const ReferenceLineStories = () => {
           <ReferenceLine
             dataX={4}
             label="Vertical Reference Line"
-            labelConfig={{ textAnchor: 'start', dx: 4, inset: 0 }}
+            labelProps={{ horizontalAlignment: 'left', dx: 4, inset: 0 }}
           />
           <ReferenceLine
             dataY={70}
             label="Horizontal Reference Line"
-            labelConfig={{ alignmentBaseline: 'text-bottom', dy: -4, inset: 0 }}
+            labelProps={{ verticalAlignment: 'bottom', dy: -4, inset: 0 }}
           />
         </LineChart>
       </Example>
@@ -269,15 +268,14 @@ const ReferenceLineStories = () => {
           <ReferenceLine
             dataY={25}
             label="Liquidation"
-            labelConfig={{
+            labelProps={{
               dx: 4,
               borderRadius: 100,
               inset: { top: 4, bottom: 4, left: 8, right: 8 },
-              textAnchor: 'start',
+              horizontalAlignment: 'left',
               color: `rgb(${theme.spectrum.yellow70})`,
               background: theme.color.accentSubtleYellow,
             }}
-            labelPosition="left"
             stroke={theme.color.bgWarning}
           />
         </LineChart>

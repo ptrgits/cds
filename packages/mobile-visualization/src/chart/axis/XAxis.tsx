@@ -198,9 +198,9 @@ export const XAxis = memo<XAxisProps>(
           chartTextProps: {
             className: classNames?.tickLabel,
             color: theme.color.fgMuted,
-            dominantBaseline: 'central',
+            verticalAlignment: 'middle',
             style: styles?.tickLabel,
-            textAnchor: 'middle',
+            horizontalAlignment: 'center',
           },
         };
       });

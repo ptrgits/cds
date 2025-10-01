@@ -61,7 +61,7 @@ export type ScrubberProps = SharedProps &
     /**
      * Props passed to the scrubber line's label.
      */
-    labelProps?: ReferenceLineProps['labelConfig'];
+    labelProps?: ReferenceLineProps['labelProps'];
 
     /**
      * Props passed to each scrubber beacon's label.
@@ -609,8 +609,7 @@ export const Scrubber = memo(
               className={classNames?.line}
               dataX={dataX}
               label={label}
-              labelConfig={labelProps}
-              labelPosition="top"
+              labelProps={labelProps}
               stroke={lineStroke}
               style={styles?.line}
             />

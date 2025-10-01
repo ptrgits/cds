@@ -311,7 +311,13 @@ export const InteractiveChartText = () => {
           <ChartText
             borderRadius={200}
             color="var(--color-fgPrimary)"
-            dominantBaseline={dominantBaseline}
+            verticalAlignment={
+              dominantBaseline === 'hanging'
+                ? 'top'
+                : dominantBaseline === 'alphabetic'
+                  ? 'bottom'
+                  : 'middle'
+            }
             dx={offsetX}
             dy={offsetY}
             elevation={1}
@@ -323,7 +329,9 @@ export const InteractiveChartText = () => {
               backgroundRect: hideWithDisplayNone ? { display: 'none' } : undefined,
             }}
             testID="test-text"
-            textAnchor={textAnchor}
+            horizontalAlignment={
+              textAnchor === 'start' ? 'left' : textAnchor === 'end' ? 'right' : 'center'
+            }
             x={textX}
             y={textY}
           >
@@ -488,8 +496,8 @@ export const InteractiveSmartChartTextGroup = () => {
           y: height - 20,
           label,
           chartTextProps: {
-            textAnchor: 'middle' as const,
-            dominantBaseline: 'hanging' as const,
+            horizontalAlignment: 'center' as const,
+            verticalAlignment: 'top' as const,
             color: 'var(--color-fgPrimary)',
             font: 'caption' as const,
             onDimensionsChange: (rect) => {

@@ -491,16 +491,15 @@ const ColorShiftChart = () => {
           <ReferenceLine
             dataY={startPrice}
             label={`$${startPrice}`}
-            labelConfig={{
+            labelProps={{
               elevation: 1,
               color: 'var(--color-fgInverse)',
-              textAnchor: 'start',
+              horizontalAlignment: 'left',
               background:
                 currentPrice - startPrice > 0
                   ? 'var(--color-bgPositive)'
                   : 'var(--color-bgNegative)',
             }}
-            labelPosition="right"
             stroke={
               currentPrice - startPrice > 0 ? 'var(--color-bgPositive)' : 'var(--color-bgNegative)'
             }

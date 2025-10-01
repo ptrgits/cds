@@ -16,7 +16,7 @@ export type ScrubberBeaconProps = SharedProps &
     | 'onClick'
     | 'onScrubberEnter'
     | 'label'
-    | 'labelConfig'
+    | 'labelProps'
     | 'renderLabel'
     | 'dataX'
     | 'dataY'

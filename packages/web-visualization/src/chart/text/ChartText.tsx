@@ -21,9 +21,18 @@ export type ChartTextChildren =
   | ValidChartTextChildElements
   | ValidChartTextChildElements[];
 
+/**
+ * Horizontal alignment options for chart text.
+ */
+export type TextHorizontalAlignment = 'left' | 'center' | 'right';
+
+/**
+ * Vertical alignment options for chart text.
+ */
+export type TextVerticalAlignment = 'top' | 'middle' | 'bottom';
+
 export type ChartTextProps = SharedProps &
-  Pick<BoxProps<'g'>, 'font' | 'fontFamily' | 'fontSize' | 'fontWeight' | 'opacity'> &
-  Pick<React.SVGProps<SVGTextElement>, 'textAnchor' | 'dominantBaseline'> & {
+  Pick<BoxProps<'g'>, 'font' | 'fontFamily' | 'fontSize' | 'fontWeight' | 'opacity'> & {
     /**
      * The text color.
      * @default 'var(--color-fgMuted)'
@@ -61,6 +70,16 @@ export type ChartTextProps = SharedProps &
      * @note Text will be automatically positioned to fit within bounds unless `disableRepositioning` is true.
      */
     y: number;
+    /**
+     * Horizontal alignment of the text.
+     * @default 'center'
+     */
+    horizontalAlignment?: TextHorizontalAlignment;
+    /**
+     * Vertical alignment of the text.
+     * @default 'middle'
+     */
+    verticalAlignment?: TextVerticalAlignment;
     /**
      * When true, disables automatic repositioning to fit within bounds.
      * @default false
@@ -101,13 +120,45 @@ export type ChartTextProps = SharedProps &
     borderRadius?: number;
   };
 
+/**
+ * Get text anchor based on horizontal alignment.
+ */
+const getTextAnchor = (
+  alignment: TextHorizontalAlignment,
+): React.SVGProps<SVGTextElement>['textAnchor'] => {
+  switch (alignment) {
+    case 'left':
+      return 'start';
+    case 'center':
+      return 'middle';
+    case 'right':
+      return 'end';
+  }
+};
+
+/**
+ * Get dominant baseline based on vertical alignment.
+ */
+const getDominantBaseline = (
+  alignment: TextVerticalAlignment,
+): React.SVGProps<SVGTextElement>['dominantBaseline'] => {
+  switch (alignment) {
+    case 'top':
+      return 'ideographic';
+    case 'middle':
+      return 'central';
+    case 'bottom':
+      return 'hanging';
+  }
+};
+
 export const ChartText = memo<ChartTextProps>(
   ({
     children,
     x,
     y,
-    textAnchor = 'middle',
-    dominantBaseline = 'central',
+    horizontalAlignment = 'center',
+    verticalAlignment = 'middle',
     dx,
     dy,
     disableRepositioning = false,
@@ -219,6 +270,12 @@ export const ChartText = memo<ChartTextProps>(
         };
       }
     }, []);
+
+    const textAnchor = useMemo(() => getTextAnchor(horizontalAlignment), [horizontalAlignment]);
+    const dominantBaseline = useMemo(
+      () => getDominantBaseline(verticalAlignment),
+      [verticalAlignment],
+    );
 
     useEffect(() => {
       if (textRef.current) {
