@@ -1,6 +1,41 @@
 ## Basic Example
 
-Line charts display data points connected by straight line segments, ideal for showing trends over time.
+```jsx
+function BasicExample() {
+  const [scrubIndex, setScrubIndex] = useState(undefined);
+  const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
+
+  const accessibilityLabel = useMemo(() => {
+    if (scrubIndex === undefined) return undefined;
+    return `Value: ${data[scrubIndex]} at index ${scrubIndex}`;
+  }, [scrubIndex, data]);
+
+  return (
+    <LineChart
+      enableScrubbing
+      onScrubberPositionChange={setScrubIndex}
+      height={250}
+      series={[
+        {
+          id: 'prices',
+          data: data,
+        },
+      ]}
+      curve="monotone"
+      showYAxis
+      showArea
+      yAxis={{
+        showGrid: true,
+      }}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Scrubber />
+    </LineChart>
+  );
+}
+```
+
+## Simple
 
 ```jsx
 <LineChart
@@ -8,314 +43,405 @@ Line charts display data points connected by straight line segments, ideal for s
   series={[
     {
       id: 'prices',
-      data: [10, 25, 20, 35, 30, 45, 40, 50, 48, 55],
-    },
-  ]}
-/>
-```
-
-## Multiple Lines
-
-Display multiple data series for comparison.
-
-```jsx
-<LineChart
-  height={250}
-  series={[
-    {
-      id: 'revenue',
-      data: [30, 45, 40, 55, 50, 65, 60, 70],
-      stroke: 'rgb(59, 130, 246)',
-    },
-    {
-      id: 'costs',
-      data: [20, 30, 28, 35, 33, 40, 38, 45],
-      stroke: 'rgb(239, 68, 68)',
-    },
-    {
-      id: 'profit',
-      data: [10, 15, 12, 20, 17, 25, 22, 25],
-      stroke: 'rgb(34, 197, 94)',
-    },
-  ]}
-  showYAxis
-  yAxis={{
-    showGrid: true,
-  }}
-/>
-```
-
-## Curved Lines
-
-Apply different curve types for smoother line transitions.
-
-```jsx
-<LineChart
-  height={250}
-  curve="monotone"
-  series={[
-    {
-      id: 'smooth',
-      data: [10, 22, 18, 35, 30, 45, 38, 50, 46, 58],
-    },
-  ]}
-  showYAxis
-  yAxis={{
-    showGrid: true,
-  }}
-/>
-```
-
-## With Points
-
-Show data points along the line for emphasis.
-
-```jsx
-<LineChart
-  height={250}
-  series={[
-    {
-      id: 'with-points',
-      data: [15, 28, 22, 38, 35, 48, 42, 55, 50, 62],
-    },
-  ]}
-  renderPoints={() => true}
-  showYAxis
-  yAxis={{
-    showGrid: true,
-  }}
-/>
-```
-
-## Area Fill
-
-Add area fill beneath the line for visual impact.
-
-```jsx
-<LineChart
-  height={250}
-  showArea
-  series={[
-    {
-      id: 'filled',
-      data: [20, 35, 30, 45, 40, 55, 50, 65, 60, 70],
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
     },
   ]}
   curve="monotone"
-  showYAxis
-  yAxis={{
-    showGrid: true,
-  }}
 />
 ```
 
-## Interactive with Scrubber
+## Multiple Series
 
-Enable scrubbing for detailed value inspection.
-
-```jsx
-<LineChart
-  enableScrubbing
-  height={250}
-  series={[
-    {
-      id: 'portfolio',
-      data: [1000, 1200, 1150, 1400, 1380, 1500, 1450, 1600, 1750, 1700, 1850, 2000],
-    },
-  ]}
-  curve="monotone"
-  showYAxis
-  showArea
-  yAxis={{
-    showGrid: true,
-    formatValue: (value) => `$${value.toLocaleString()}`,
-  }}
-  renderPoints={() => true}
->
-  <Scrubber />
-</LineChart>
-```
-
-## Different Line Styles
-
-Customize line appearance with different styles.
+You can add multiple series to a line chart.
 
 ```jsx
-<LineChart
-  height={250}
-  series={[
-    {
-      id: 'solid',
-      data: [30, 45, 40, 55, 50, 60],
-      type: 'solid',
-      stroke: 'rgb(59, 130, 246)',
-    },
-    {
-      id: 'dotted',
-      data: [20, 35, 30, 45, 40, 50],
-      type: 'dotted',
-      stroke: 'rgb(239, 68, 68)',
-    },
-    {
-      id: 'gradient',
-      data: [25, 40, 35, 50, 45, 55],
-      type: 'gradient',
-      stroke: 'rgb(168, 85, 247)',
-    },
-  ]}
-  showYAxis
-  yAxis={{
-    showGrid: true,
-  }}
-/>
-```
+function MultipleSeriesChart() {
+  const [scrubIndex, setScrubIndex] = useState(undefined);
 
-## Conditional Points
+  const pageViews = [2400, 1398, 9800, 3908, 4800, 3800, 4300];
+  const uniqueVisitors = [4000, 3000, 2000, 2780, 1890, 2390, 3490];
+  const pages = ['Page A', 'Page B', 'Page C', 'Page D', 'Page E', 'Page F', 'Page G'];
 
-Show points conditionally based on data characteristics.
+  const accessibilityLabel = useMemo(() => {
+    if (scrubIndex === undefined) return undefined;
+    return `${pages[scrubIndex]}: Page Views ${pageViews[scrubIndex].toLocaleString()}, Unique Visitors ${uniqueVisitors[scrubIndex].toLocaleString()}`;
+  }, [scrubIndex, pages, pageViews, uniqueVisitors]);
 
-```jsx
-function ConditionalPointsChart() {
-  const data = [20, 35, 15, 45, 40, 55, 30, 65, 60, 70];
-  const maxValue = Math.max(...data);
-  const minValue = Math.min(...data);
-  
   return (
     <LineChart
-      height={250}
+      enableScrubbing
+      onScrubberPositionChange={setScrubIndex}
+      height={400}
       series={[
         {
-          id: 'conditional',
-          data: data,
+          id: 'pageViews',
+          data: pageViews,
+          label: 'Page Views',
+          color: 'var(--color-accentBoldBlue)',
+          curve: 'natural',
         },
-      ]}
-      curve="monotone"
-      renderPoints={(datum) => {
-        // Show points only for min and max values
-        return datum.value === maxValue || datum.value === minValue;
-      }}
-      showYAxis
-      yAxis={{
-        showGrid: true,
-      }}
-    />
-  );
-}
-```
-
-## Time Series
-
-Display time series data with proper formatting.
-
-```jsx
-function TimeSeriesLineChart() {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-  const data = [45, 52, 48, 61, 58, 65, 70, 68];
-  
-  return (
-    <LineChart
-      height={250}
-      series={[
         {
-          id: 'monthly-sales',
-          data: data,
+          id: 'uniqueVisitors',
+          data: uniqueVisitors,
+          label: 'Unique Visitors',
+          color: 'var(--color-accentBoldGreen)',
+          curve: 'natural',
         },
       ]}
-      curve="monotone"
-      showYAxis
       showXAxis
-      yAxis={{
-        showGrid: true,
-        formatValue: (v) => `${v}k`,
-      }}
       xAxis={{
-        data: months,
+        data: pages,
+        ticks: true,
       }}
-      showArea
-    />
+      inset={{ left: 12 }}
+      showYAxis
+      yAxis={{
+        domain: {
+          min: 0,
+        },
+        showGrid: true,
+        tickLabelFormatter: (value) => value.toLocaleString(),
+      }}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Scrubber />
+    </LineChart>
   );
 }
 ```
 
-## Negative Values
+## Points
 
-Handle negative values for displaying profit/loss or temperature data.
-
-```jsx
-<LineChart
-  height={250}
-  series={[
-    {
-      id: 'temperature',
-      data: [5, 2, -3, -1, 4, 8, 6, 3, -2, 1],
-    },
-  ]}
-  curve="monotone"
-  showYAxis
-  showXAxis
-  yAxis={{
-    showGrid: true,
-    formatValue: (v) => `${v}°C`,
-  }}
-  renderPoints={() => true}
-/>
-```
-
-## Multiple Series with Different Curves
-
-Combine different curve types in a single chart.
+You can use the `renderPoints` prop to dynamically show points on a line.
 
 ```jsx
-<LineChart
-  height={250}
-  series={[
-    {
-      id: 'actual',
-      data: [30, 38, 35, 42, 40, 48, 45, 52],
-      curve: 'linear',
-      stroke: 'rgb(59, 130, 246)',
-      strokeWidth: 2,
-    },
-    {
-      id: 'forecast',
-      data: [30, 35, 37, 40, 42, 45, 47, 50],
-      curve: 'monotone',
-      stroke: 'rgb(239, 68, 68)',
-      strokeWidth: 1,
-      opacity: 0.6,
-    },
-  ]}
-  showYAxis
-  showXAxis
-  yAxis={{
-    showGrid: true,
-  }}
-/>
-```
+function PointsChart() {
+  const keyMarketShiftIndices = [4, 6, 7, 9, 10];
+  const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-## Animated Entry
-
-Add smooth entry animations to your line charts.
-
-```jsx
-function AnimatedLineChart() {
   return (
-    <LineChart
+    <CartesianChart
       height={250}
-      animate
       series={[
         {
-          id: 'animated',
-          data: [25, 40, 35, 50, 45, 60, 55, 70],
+          id: 'prices',
+          data: data,
         },
       ]}
-      curve="monotone"
-      showYAxis
-      showArea
-      yAxis={{
-        showGrid: true,
-      }}
-      renderPoints={() => true}
-    />
+    >
+      <Area seriesId="prices" curve="monotone" fill="rgb(var(--blue5))" />
+      <Line
+        seriesId="prices"
+        renderPoints={({ dataX, dataY, ...props }) =>
+          keyMarketShiftIndices.includes(dataX)
+            ? {
+                ...props,
+                strokeWidth: 2,
+                stroke: 'var(--color-bg)',
+                radius: 5,
+                onPress: () =>
+                  Alert.alert(
+                    'Key Market Shift',
+                    `You have clicked a key market shift at position ${dataX + 1} with value ${dataY}!`,
+                  ),
+                accessibilityLabel: `Key market shift point at position ${dataX + 1}, value ${dataY}. Click to view details.`,
+              }
+            : false
+        }
+        curve="monotone"
+      />
+    </CartesianChart>
   );
 }
+```
+
+## Empty State
+
+This example shows how to use an empty state for a line chart.
+
+```jsx
+<LineChart
+  series={[
+    {
+      id: 'line',
+      color: 'rgb(var(--gray50))',
+      data: [1, 1],
+      showArea: true,
+    },
+  ]}
+  yAxis={{ domain: { min: -1, max: 3 } }}
+  height={300}
+/>
+```
+
+## Line Styles
+
+```jsx
+<LineChart
+  height={400}
+  series={[
+    {
+      id: 'top',
+      data: [15, 28, 32, 44, 46, 36, 40, 45, 48, 38],
+    },
+    {
+      id: 'upperMiddle',
+      data: [12, 23, 21, 29, 34, 28, 31, 38, 42, 35],
+      color: '#ef4444',
+      type: 'dotted',
+    },
+    {
+      id: 'lowerMiddle',
+      data: [8, 15, 14, 25, 20, 18, 22, 28, 24, 30],
+      color: '#f59e0b',
+      curve: 'natural',
+      LineComponent: (props) => (
+        <GradientLine {...props} endColor="#F7931A" startColor="#E3D74D" strokeWidth={4} />
+      ),
+    },
+    {
+      id: 'bottom',
+      data: [4, 8, 11, 15, 16, 14, 16, 10, 12, 14],
+      color: '#800080',
+      curve: 'step',
+      AreaComponent: DottedArea,
+      showArea: true,
+    },
+  ]}
+/>
+```
+
+## Data Format
+
+You can adjust the y values for a series of data by setting the `data` prop on the xAxis.
+
+```jsx
+function DataFormatChart() {
+  const [scrubIndex, setScrubIndex] = useState(undefined);
+
+  const yData = [2, 5.5, 2, 8.5, 1.5, 5];
+  const xData = [1, 2, 3, 5, 8, 10];
+
+  const accessibilityLabel = useMemo(() => {
+    if (scrubIndex === undefined) return undefined;
+    return `X: ${xData[scrubIndex]}, Y: ${yData[scrubIndex]} at point ${scrubIndex + 1}`;
+  }, [scrubIndex, xData, yData]);
+
+  return (
+    <LineChart
+      enableScrubbing
+      onScrubberPositionChange={setScrubIndex}
+      series={[
+        {
+          id: 'line',
+          data: yData,
+        },
+      ]}
+      height={300}
+      showArea
+      renderPoints={() => true}
+      curve="natural"
+      showXAxis
+      xAxis={{ data: xData, showLine: true, showTickMarks: true, showGrid: true }}
+      showYAxis
+      yAxis={{
+        domain: { min: 0 },
+        position: 'start',
+        showLine: true,
+        showTickMarks: true,
+        showGrid: true,
+      }}
+      inset={16}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Scrubber hideOverlay />
+    </LineChart>
+  );
+}
+```
+
+## Gain/Loss
+
+You can use the y-axis scale and a linearGradient to create a gain/loss chart.
+
+```jsx
+function GainLossChart() {
+  const [highlightedItem, setHighlightedItem] = useState(undefined);
+  const gradientId = useId();
+
+  const data = [-40, -28, -21, -5, 48, -5, -28, 2, -29, -46, 16, -30, -29, 8];
+
+  const priceFormatter = useCallback(
+    (value) =>
+      new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+      }).format(value),
+    [],
+  );
+
+  const accessibilityLabel = useMemo(() => {
+    if (highlightedItem === undefined) return undefined;
+    const value = data[highlightedItem];
+    const formattedValue = priceFormatter(value);
+    return `${formattedValue} at ${highlightedItem + 1}`;
+  }, [highlightedItem, data]);
+
+  const ChartDefs = ({ threshold = 0 }) => {
+    const { getYScale } = useCartesianChartContext();
+    const yScale = getYScale();
+
+    if (yScale) {
+      const domain = yScale.domain();
+      const range = yScale.range();
+
+      const baselinePercentage = ((threshold - domain[0]) / (domain[1] - domain[0])) * 100;
+
+      const negativeColor = 'rgb(var(--gray20))';
+      const positiveColor = 'var(--color-fgPositive)';
+
+      return (
+        <defs>
+          <linearGradient
+            gradientUnits="userSpaceOnUse"
+            id={`${gradientId}-solid`}
+            x1="0%"
+            x2="0%"
+            y1={range[0]}
+            y2={range[1]}
+          >
+            <stop offset="0%" stopColor={negativeColor} />
+            <stop offset={`${baselinePercentage}%`} stopColor={negativeColor} />
+            <stop offset={`${baselinePercentage}%`} stopColor={positiveColor} />
+            <stop offset="100%" stopColor={positiveColor} />
+          </linearGradient>
+          <linearGradient
+            gradientUnits="userSpaceOnUse"
+            id={`${gradientId}-gradient`}
+            x1="0%"
+            x2="0%"
+            y1={range[0]}
+            y2={range[1]}
+          >
+            <stop offset="0%" stopColor={negativeColor} stopOpacity={0.3} />
+            <stop offset={`${baselinePercentage}%`} stopColor={negativeColor} stopOpacity={0} />
+            <stop offset={`${baselinePercentage}%`} stopColor={positiveColor} stopOpacity={0} />
+            <stop offset="100%" stopColor={positiveColor} stopOpacity={0.3} />
+          </linearGradient>
+        </defs>
+      );
+    }
+
+    return null;
+  };
+
+  const solidColor = `url(#${gradientId}-solid)`;
+
+  return (
+    <CartesianChart
+      enableScrubbing
+      height={250}
+      series={[
+        {
+          id: 'prices',
+          data: data,
+          color: solidColor,
+        },
+      ]}
+      inset={{ top: 12, bottom: 12, left: 16, right: 0 }}
+      onHighlightChange={(dataIndex) => setHighlightedItem(dataIndex)}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <ChartDefs />
+      <YAxis requestedTickCount={2} showGrid tickLabelFormatter={priceFormatter} />
+      <Area seriesId="prices" curve="monotone" fill={`url(#${gradientId}-gradient)`} />
+      <Line strokeWidth={3} curve="monotone" seriesId="prices" stroke={solidColor} />
+      <Scrubber hideOverlay />
+    </CartesianChart>
+  );
+}
+```
+
+## Live Data
+
+```jsx
+function LiveAssetPrice() {
+  const scrubberRef = useRef(null);
+  const [scrubIndex, setScrubIndex] = useState(undefined);
+
+  const initialData = useMemo(() => {
+    return sparklineInteractiveData.hour.map((d) => d.value);
+  }, []);
+
+  const [priceData, setPriceData] = useState(initialData);
+
+  const lastDataPointTimeRef = useRef(Date.now());
+  const updateCountRef = useRef(0);
+
+  const intervalSeconds = 3600 / initialData.length;
+
+  const maxPercentChange = Math.abs(initialData[initialData.length - 1] - initialData[0]) * 0.05;
+
+  useEffect(() => {
+    const priceUpdateInterval = setInterval(
+      () => {
+        setPriceData((currentData) => {
+          const newData = [...currentData];
+          const lastPrice = newData[newData.length - 1];
+
+          const priceChange = (Math.random() - 0.5) * maxPercentChange;
+          const newPrice = Math.round((lastPrice + priceChange) * 100) / 100;
+
+          const currentTime = Date.now();
+          const timeSinceLastPoint = (currentTime - lastDataPointTimeRef.current) / 1000;
+
+          if (timeSinceLastPoint >= intervalSeconds) {
+            lastDataPointTimeRef.current = currentTime;
+            newData.shift();
+            newData.push(newPrice);
+            updateCountRef.current = 0;
+          } else {
+            newData[newData.length - 1] = newPrice;
+            updateCountRef.current++;
+          }
+
+          return newData;
+        });
+
+        scrubberRef.current?.pulse();
+      },
+      2000 + Math.random() * 1000,
+    );
+
+    return () => clearInterval(priceUpdateInterval);
+  }, [intervalSeconds, maxPercentChange]);
+
+  const accessibilityLabel = useMemo(() => {
+    if (scrubIndex === undefined)
+      return `Bitcoin Price: $${priceData[priceData.length - 1].toFixed(2)}`;
+    const price = priceData[scrubIndex];
+    return `Bitcoin Price: $${price.toFixed(2)} at position ${scrubIndex + 1}`;
+  }, [scrubIndex, priceData]);
+
+  return (
+    <LineChart
+      enableScrubbing
+      onScrubberPositionChange={setScrubIndex}
+      showArea
+      height={300}
+      series={[
+        {
+          id: 'btc',
+          data: priceData,
+          color: assets.btc.color,
+        },
+      ]}
+      inset={{ right: 64 }}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Scrubber ref={scrubberRef} scrubberLabelProps={{ elevation: 1 }} />
+    </LineChart>
+  );
+}
+```

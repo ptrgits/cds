@@ -4,7 +4,7 @@ import type { Rect } from '@coinbase/cds-common/types';
 import { useCartesianChartContext } from '../ChartProvider';
 import { ChartText, type ChartTextProps } from '../text';
 
-export type ScrubberHeadLabelProps = ChartTextProps & {
+export type ScrubberBeaconLabelProps = ChartTextProps & {
   /**
    * Preferred side for label placement.
    * @default 'auto' - automatically chooses based on available space
@@ -13,10 +13,10 @@ export type ScrubberHeadLabelProps = ChartTextProps & {
 };
 
 /**
- * The ScrubberHeadLabel is a special instance of ChartText used to label a series' scrubber head (i.e. a point on the series pinned to the scrubber position).
+ * The ScrubberBeaconLabel is a special instance of ChartText used to label a series' scrubber beacon (i.e. a point on the series pinned to the scrubber position).
  * It contains logic to automatically change the ChartText's textAnchor based on it's proximity to the chart's bounds.
  */
-export const ScrubberHeadLabel = memo<ScrubberHeadLabelProps>(
+export const ScrubberBeaconLabel = memo<ScrubberBeaconLabelProps>(
   ({
     preferredSide = 'auto',
     background = 'white',

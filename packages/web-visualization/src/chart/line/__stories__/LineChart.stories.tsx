@@ -326,7 +326,7 @@ const BTCPriceChart = () => {
               color: 'black',
             }}
             styles={{
-              head: {
+              beacon: {
                 stroke: btcAccentColor,
               },
               overlay: {
@@ -886,7 +886,7 @@ function ForecastAssetPrice() {
   );
 }
 
-const BitcoinChartWithScrubberHead = () => {
+const BitcoinChartWithScrubberBeacon = () => {
   const prices = [...btcCandles].reverse().map((candle) => parseFloat(candle.close));
   const latestPrice = prices[prices.length - 1];
 
@@ -961,7 +961,7 @@ const BitcoinChartWithScrubberHead = () => {
           ]}
           width="100%"
         >
-          <Scrubber idlePulse styles={{ head: { stroke: 'white' } }} />
+          <Scrubber idlePulse styles={{ beacon: { stroke: 'white' } }} />
         </LineChart>
       </div>
     </VStack>
@@ -1830,8 +1830,8 @@ export const All = () => {
       <Example title="BTC Price Chart">
         <BTCPriceChart />
       </Example>
-      <Example title="Bitcoin Chart With Scrubber Head">
-        <BitcoinChartWithScrubberHead />
+      <Example title="Bitcoin Chart With Scrubber Beacon">
+        <BitcoinChartWithScrubberBeacon />
       </Example>
     </VStack>
   );

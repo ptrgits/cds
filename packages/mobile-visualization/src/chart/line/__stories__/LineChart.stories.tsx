@@ -1,4 +1,4 @@
-import { forwardRef, memo, useCallback, useId, useMemo, useState } from 'react';
+import { forwardRef, memo, useCallback, useId, useMemo, useRef, useState } from 'react';
 import type { View } from 'react-native';
 import { Defs, LinearGradient, Stop, TSpan } from 'react-native-svg';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
@@ -9,6 +9,7 @@ import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
 import type { TabValue } from '@coinbase/cds-common/tabs/useTabs';
 import type { ChartAxisScaleType } from '@coinbase/cds-common/visualizations/charts/scale';
 import { useTheme } from '@coinbase/cds-mobile';
+import { Button } from '@coinbase/cds-mobile/buttons';
 import { Example, ExampleScreen } from '@coinbase/cds-mobile/examples/ExampleScreen';
 import { Box, HStack, VStack } from '@coinbase/cds-mobile/layout';
 import { RemoteImage } from '@coinbase/cds-mobile/media';
@@ -28,7 +29,7 @@ import { CartesianChart } from '../../CartesianChart';
 import { useCartesianChartContext } from '../../ChartProvider';
 import { PeriodSelector, PeriodSelectorActiveIndicator } from '../../PeriodSelector';
 import { Point } from '../../point';
-import { Scrubber } from '../../scrubber';
+import { Scrubber, type ScrubberRef } from '../../scrubber';
 import type { ChartTextChildren } from '../../text';
 import { GradientLine, Line, LineChart, ReferenceLine } from '..';
 
@@ -1322,7 +1323,7 @@ const GainLossChart = () => {
   );
 };
 
-const BitcoinChartWithScrubberHead = () => {
+const BitcoinChartWithScrubberBeacon = () => {
   const theme = useTheme();
   const prices = [...btcCandles].reverse().map((candle) => parseFloat(candle.close));
   const latestPrice = prices[prices.length - 1];
@@ -1384,6 +1385,54 @@ const BitcoinChartWithScrubberHead = () => {
         </LineChart>
       </VStack>
     </Box>
+  );
+};
+
+const ScrubberWithImperativeHandle = () => {
+  const theme = useTheme();
+  const scrubberRef = useRef<ScrubberRef>(null);
+
+  return (
+    <VStack gap={2}>
+      <LineChart
+        enableScrubbing
+        showYAxis
+        height={defaultChartHeight}
+        series={[
+          {
+            id: 'priceA',
+            data: [2400, 1398, 9800, 3908, 4800, 3800, 4300],
+            label: 'Page Views',
+            color: theme.color.accentBoldBlue,
+            curve: 'natural',
+          },
+          {
+            id: 'priceB',
+            data: [2000, 2491, 4501, 6049, 5019, 4930, 5910],
+            label: 'Unique Visitors G',
+            color: theme.color.accentBoldGreen,
+            curve: 'natural',
+          },
+          {
+            id: 'priceC',
+            data: [1000, 4910, 2300, 5910, 3940, 2940, 1940],
+            label: 'Unique Visitors P',
+            color: theme.color.accentBoldPurple,
+            curve: 'natural',
+          },
+        ]}
+        yAxis={{
+          domain: {
+            min: 0,
+          },
+          showGrid: true,
+          tickLabelFormatter: (value) => value.toLocaleString(),
+        }}
+      >
+        <Scrubber ref={scrubberRef} />
+      </LineChart>
+      <Button onPress={() => scrubberRef.current?.pulse()}>Pulse Beacons</Button>
+    </VStack>
   );
 };
 
@@ -1528,8 +1577,11 @@ const LineChartStories = () => {
           <Scrubber />
         </LineChart>
       </Example>
-      <Example title="Bitcoin Chart with Scrubber Head">
-        <BitcoinChartWithScrubberHead />
+      <Example title="Bitcoin Chart with Scrubber Beacon">
+        <BitcoinChartWithScrubberBeacon />
+      </Example>
+      <Example title="Scrubber with Imperative Handle">
+        <ScrubberWithImperativeHandle />
       </Example>
       <Example title="Asset Price">
         <AssetPrice />
@@ -1559,6 +1611,9 @@ const LineChartStories = () => {
 const AssetPriceScreen = () => {
   return (
     <ExampleScreen>
+      <Example title="Scrubber with Imperative Handle">
+        <ScrubberWithImperativeHandle />
+      </Example>
       <Example title="Basic">
         <LineChart
           enableScrubbing

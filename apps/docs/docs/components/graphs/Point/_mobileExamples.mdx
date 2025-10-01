@@ -121,51 +121,45 @@ Points can be made interactive by adding click handlers, allowing users to explo
 Points support extensive customization through various properties including colors, sizes, animations, and labels.
 
 ```jsx
-function PerformanceWithPulse() {
-  const theme = useTheme();
+<LineChart
+  height={300}
+  series={[
+    {
+      id: 'performance',
+      data: [65, 70, 72, 85, 88, 92, 78, 82, 90, 95, 91, 94],
+    },
+  ]}
+  curve="monotone"
+  showYAxis
+  showArea
+  yAxis={{
+    showGrid: true,
+    label: 'Performance Score',
+  }}
+  renderPoints={({ dataX, dataY }) => {
+    const isHighPerformance = dataY >= 90;
+    const isLowPerformance = dataY < 75;
 
-  return (
-    <LineChart
-      height={300}
-      series={[
-        {
-          id: 'performance',
-          data: [65, 70, 72, 85, 88, 92, 78, 82, 90, 95, 91, 94],
-        },
-      ]}
-      curve="monotone"
-      showYAxis
-      showArea
-      yAxis={{
-        showGrid: true,
-        label: 'Performance Score',
-      }}
-      renderPoints={({ dataX, dataY }) => {
-        const isHighPerformance = dataY >= 90;
-        const isLowPerformance = dataY < 75;
-
-        return {
-          color: isHighPerformance
-            ? theme.color.bgPositive
-            : isLowPerformance
-              ? theme.color.bgNegative
-              : theme.color.fgPrimary,
-          radius: isHighPerformance ? 6 : 4,
-          strokeWidth: 2,
-          stroke: theme.color.bg,
-          label: isHighPerformance || isLowPerformance ? `${dataY}%` : undefined,
-          labelConfig: {
-            position: isHighPerformance ? 'top' : 'bottom',
-            dy: isHighPerformance ? -10 : 10,
-            color: isHighPerformance
-              ? theme.color.fgPositive
-              : isLowPerformance
-                ? theme.color.fgNegative
-                : undefined,
-          },
-        };
-      }}
-    />
-  );
-}
+    return {
+      color: isHighPerformance
+        ? theme.color.bgPositive
+        : isLowPerformance
+          ? theme.color.bgNegative
+          : theme.color.fgPrimary,
+      radius: isHighPerformance ? 6 : 4,
+      strokeWidth: 2,
+      stroke: theme.color.bg,
+      label: isHighPerformance || isLowPerformance ? `${dataY}%` : undefined,
+      labelConfig: {
+        position: isHighPerformance ? 'top' : 'bottom',
+        dy: isHighPerformance ? -10 : 10,
+        color: isHighPerformance
+          ? theme.color.fgPositive
+          : isLowPerformance
+            ? theme.color.fgNegative
+            : undefined,
+      },
+    };
+  }}
+/>
 ```

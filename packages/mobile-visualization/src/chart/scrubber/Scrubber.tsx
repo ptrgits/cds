@@ -31,7 +31,7 @@ import { useCartesianChartContext } from '../ChartProvider';
 import { ReferenceLine, type ReferenceLineProps } from '../line';
 import { ChartText } from '../text/ChartText';
 
-import { ScrubberHead, type ScrubberHeadProps, type ScrubberHeadRef } from './ScrubberHead';
+import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 
 const AnimatedG = Reanimated.createAnimatedComponent(G);
 const AnimatedLine = Reanimated.createAnimatedComponent(Line);
@@ -150,7 +150,7 @@ const FadeInGroup = memo(
  * Provides consistent API with smart defaults and component customization.
  */
 export type ScrubberProps = SharedProps &
-  Pick<ScrubberHeadProps, 'idlePulse'> & {
+  Pick<ScrubberBeaconProps, 'idlePulse'> & {
     /**
      * An array of series IDs that will receive visual emphasis as the user scrubs through the chart.
      * Use this prop to restrict the scrubbing visual behavior to specific series.
@@ -191,9 +191,9 @@ export type ScrubberProps = SharedProps &
     lineStroke?: ReferenceLineProps['stroke'];
 
     /**
-     * Custom component for the scrubber head.
+     * Custom component for the scrubber beacon.
      */
-    HeadComponent?: React.ComponentType<ScrubberHeadProps>;
+    BeaconComponent?: React.ComponentType<ScrubberBeaconProps>;
 
     /**
      * Custom component for the scrubber line.
@@ -201,10 +201,10 @@ export type ScrubberProps = SharedProps &
     LineComponent?: React.ComponentType<ReferenceLineProps>;
   };
 
-export type ScrubberRef = ScrubberHeadRef;
+export type ScrubberRef = ScrubberBeaconRef;
 
 /**
- * Unified component that manages scrubber elements (heads, line) with smooth animations.
+ * Unified component that manages scrubber elements (beacons, line) with smooth animations.
  */
 export const Scrubber = memo(
   forwardRef<ScrubberRef, ScrubberProps>(
@@ -215,7 +215,7 @@ export const Scrubber = memo(
         label,
         lineStroke,
         scrubberLabelProps,
-        HeadComponent = ScrubberHead,
+        BeaconComponent = ScrubberBeacon,
         LineComponent = ReferenceLine,
         hideOverlay,
         overlayOffset = 2,
@@ -225,7 +225,7 @@ export const Scrubber = memo(
       ref,
     ) => {
       const theme = useTheme();
-      const scrubberHeadRefs = useRefMap<ScrubberHeadRef>();
+      const scrubberBeaconRefs = useRefMap<ScrubberBeaconRef>();
 
       const { scrubberPosition: scrubberPosition } = useScrubberContext();
       const { getXScale, getYScale, getSeriesData, getXAxis, series, drawingArea } =
@@ -235,9 +235,9 @@ export const Scrubber = memo(
       // Expose imperative handle with pulse method
       useImperativeHandle(ref, () => ({
         pulse: () => {
-          // Pulse all registered scrubber heads
-          Object.values(scrubberHeadRefs.refs).forEach((headRef) => {
-            headRef?.pulse();
+          // Pulse all registered scrubber beacons
+          Object.values(scrubberBeaconRefs.refs).forEach((beaconRef) => {
+            beaconRef?.pulse();
           });
         },
       }));
@@ -272,7 +272,7 @@ export const Scrubber = memo(
         return { dataX, dataIndex };
       }, [getXScale, getXAxis, series, scrubberPosition, getStackedSeriesData, getSeriesData]);
 
-      const headPositions = useMemo(() => {
+      const beaconPositions = useMemo(() => {
         const xScale = getXScale() as ChartScaleFunction;
 
         if (!xScale || dataX === undefined || dataIndex === undefined) return [];
@@ -315,9 +315,9 @@ export const Scrubber = memo(
                 };
               }
             })
-            .filter((head: any) => head !== undefined) ?? [];
+            .filter((beacon: any) => beacon !== undefined) ?? [];
 
-        console.log('[Scrubber] headPositions calculated:', {
+        console.log('[Scrubber] beaconPositions calculated:', {
           dataIndex,
           dataX,
           count: positions.length,
@@ -342,16 +342,16 @@ export const Scrubber = memo(
         getYScale,
       ]);
 
-      // Callback to create ref handlers for scrubber heads
-      const createScrubberHeadRef = useCallback(
+      // Callback to create ref handlers for scrubber beacons
+      const createScrubberBeaconRef = useCallback(
         (seriesId: string) => {
-          return (headRef: ScrubberHeadRef | null) => {
-            if (headRef) {
-              scrubberHeadRefs.registerRef(seriesId, headRef);
+          return (beaconRef: ScrubberBeaconRef | null) => {
+            if (beaconRef) {
+              scrubberBeaconRefs.registerRef(seriesId, beaconRef);
             }
           };
         },
-        [scrubberHeadRefs],
+        [scrubberBeaconRefs],
       );
 
       // Check if we have at least the default scales
@@ -393,7 +393,7 @@ export const Scrubber = memo(
         dataIndex,
         dataX,
         pixelX,
-        headPositionsCount: headPositions.length,
+        beaconPositionsCount: beaconPositions.length,
         hideOverlay,
         hideLine,
       });
@@ -442,21 +442,21 @@ export const Scrubber = memo(
                 {scrubberLabel}
               </ChartText>
             )}
-          {headPositions.map((scrubberHead: any) => {
-            if (!scrubberHead) return null;
+          {beaconPositions.map((scrubberBeacon: any) => {
+            if (!scrubberBeacon) return null;
             return (
-              <HeadComponent
-                key={scrubberHead.targetSeries.id}
-                ref={createScrubberHeadRef(scrubberHead.targetSeries.id)}
-                color={scrubberHead.targetSeries?.color}
-                dataX={scrubberHead.x}
-                dataY={scrubberHead.y}
+              <BeaconComponent
+                key={scrubberBeacon.targetSeries.id}
+                ref={createScrubberBeaconRef(scrubberBeacon.targetSeries.id)}
+                color={scrubberBeacon.targetSeries?.color}
+                dataX={scrubberBeacon.x}
+                dataY={scrubberBeacon.y}
                 idlePulse={idlePulse}
                 // OPTIMIZATION: Pass pre-calculated pixel coordinates
-                pixelX={scrubberHead.pixelX}
-                pixelY={scrubberHead.pixelY}
-                seriesId={scrubberHead.targetSeries.id}
-                testID={testID ? `${testID}-${scrubberHead.targetSeries.id}-dot` : undefined}
+                pixelX={scrubberBeacon.pixelX}
+                pixelY={scrubberBeacon.pixelY}
+                seriesId={scrubberBeacon.targetSeries.id}
+                testID={testID ? `${testID}-${scrubberBeacon.targetSeries.id}-dot` : undefined}
               />
             );
           })}

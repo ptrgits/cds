@@ -1077,7 +1077,7 @@ function AvailabilityChart() {
 You can coordinate LineChart with custom styles to create a custom card that shows the latest price and percent change.
 
 ```jsx live
-function BitcoinChartWithScrubberHead() {
+function BitcoinChartWithScrubberBeacon() {
   const prices = [...btcCandles].reverse().map((candle) => parseFloat(candle.close));
   const latestPrice = prices[prices.length - 1];
 
@@ -1148,7 +1148,7 @@ function BitcoinChartWithScrubberHead() {
           width="100%"
           height={92}
         >
-          <Scrubber idlePulse styles={{ scrubberHead: { stroke: 'white' } }} />
+          <Scrubber idlePulse styles={{ beacon: { stroke: 'white' } }} />
         </LineChart>
       </div>
     </VStack>

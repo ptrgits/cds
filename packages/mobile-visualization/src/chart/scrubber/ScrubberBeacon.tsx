@@ -15,9 +15,9 @@ import { Point, type PointProps, type PointRef } from '../point';
 
 const AnimatedG = Reanimated.createAnimatedComponent(G);
 
-export type ScrubberHeadRef = PointRef;
+export type ScrubberBeaconRef = PointRef;
 
-export type ScrubberHeadProps = SharedProps &
+export type ScrubberBeaconProps = SharedProps &
   Omit<
     PointProps,
     | 'pulse'
@@ -33,10 +33,10 @@ export type ScrubberHeadProps = SharedProps &
     | 'pixelCoordinates'
   > & {
     /**
-     * Applies the Point's pulse effect to the scrubber head while it is at rest.
+     * Applies the Point's pulse effect to the scrubber beacon while it is at rest.
      */
     idlePulse?: boolean;
-    // make Point's coordinates optional for ScrubberHead
+    // make Point's coordinates optional for ScrubberBeacon
     dataX?: PointProps['dataX'];
     dataY?: PointProps['dataY'];
     /**
@@ -51,10 +51,10 @@ export type ScrubberHeadProps = SharedProps &
   };
 
 /**
- * The ScrubberHead is a special instance of a Point used to mark the scrubber's position on a specific series.
+ * The ScrubberBeacon is a special instance of a Point used to mark the scrubber's position on a specific series.
  */
-export const ScrubberHead = memo(
-  forwardRef<ScrubberHeadRef, ScrubberHeadProps>(
+export const ScrubberBeacon = memo(
+  forwardRef<ScrubberBeaconRef, ScrubberBeaconProps>(
     (
       {
         seriesId,
@@ -131,7 +131,7 @@ export const ScrubberHead = memo(
       const targetPosition = useMemo(() => {
         // If pixel coordinates provided directly, use them (OPTIMIZATION)
         if (directPixelX !== undefined && directPixelY !== undefined) {
-          console.log('[ScrubberHead] Using pre-calculated pixels (OPTIMIZED):', {
+          console.log('[ScrubberBeacon] Using pre-calculated pixels (OPTIMIZED):', {
             seriesId,
             pixelX: directPixelX,
             pixelY: directPixelY,
