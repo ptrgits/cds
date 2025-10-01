@@ -98,7 +98,9 @@ const LinkScreen = function LinkScreen() {
       </Example>
       <Example inline>
         <Text font="headline">Link Typography defaults to headline</Text>
-        <Link to="https://www.coinbase.com/">Go to Coinbase (Headline)</Link>
+        <Link font="headline" to="https://www.coinbase.com/">
+          Go to Coinbase (Headline)
+        </Link>
       </Example>
       <Example inline>
         <Text font="headline">Testing color</Text>
@@ -150,7 +152,7 @@ const LinkScreen = function LinkScreen() {
       </Example>
       <Example inline>
         <Text font="headline">test forceOpenOutsideApp is set to true</Text>
-        <Link forceOpenOutsideApp color="fgNegative" font="title1" to="https://www.google.com">
+        <Link forceOpenOutsideApp color="fgNegative" font="title1" to="https://www.coinbase.com">
           Go to Coinbase outside of App
         </Link>
       </Example>
@@ -166,7 +168,7 @@ const LinkScreen = function LinkScreen() {
           preventRedirectionIntoApp
           color="fgNegative"
           font="title1"
-          to="https://www.google.com"
+          to="https://www.coinbase.com"
         >
           Test PreventRedirectionIntoApp
         </Link>

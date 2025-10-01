@@ -7,23 +7,25 @@ import { Text } from '../Text';
 
 export const Default = () => (
   <div>
-    <Link href="https://www.google.com/">Default</Link>
+    <Link font="body" href="https://www.coinbase.com/">
+      Default
+    </Link>
     <br />
-    <Link as="button" onClick={noop}>
+    <Link as="button" font="body" onClick={noop}>
       As a button
     </Link>
   </div>
 );
 
 export const VariantBody = () => (
-  <Link font="body" href="https://www.google.com/">
+  <Link font="body" href="https://www.coinbase.com/">
     Body
   </Link>
 );
 
 export const NegativeColor = () => (
   <div>
-    <Link color="fgNegative" font="headline" href="https://www.google.com/">
+    <Link color="fgNegative" font="headline" href="https://www.coinbase.com/">
       Negative
     </Link>
   </div>
@@ -31,7 +33,7 @@ export const NegativeColor = () => (
 
 export const Underline = () => (
   <div>
-    <Link underline href="https://www.google.com/">
+    <Link underline href="https://www.coinbase.com/">
       Default
     </Link>
     <br />
@@ -39,11 +41,11 @@ export const Underline = () => (
       As a button
     </Link>
     <br />
-    <Link underline font="body" href="https://www.google.com/">
+    <Link underline font="body" href="https://www.coinbase.com/">
       Body
     </Link>
     <br />
-    <Link underline color="fgNegative" font="headline" href="https://www.google.com/">
+    <Link underline color="fgNegative" font="headline" href="https://www.coinbase.com/">
       Negative
     </Link>
   </div>
@@ -87,7 +89,7 @@ export const DifferentTextStyle = () => (
 
 export const OpenWindowInExistingTab = () => (
   <div>
-    <Link font="title1" href="https://www.google.com/" target="_blank">
+    <Link font="title1" href="https://www.coinbase.com/" target="_blank">
       Default
     </Link>
   </div>
@@ -95,7 +97,7 @@ export const OpenWindowInExistingTab = () => (
 
 export const SetsRelToNorefferer = () => (
   <div>
-    <Link font="title2" href="https://www.google.com/" rel="noreferrer">
+    <Link font="title2" href="https://www.coinbase.com/" rel="noreferrer">
       Default
     </Link>
   </div>
@@ -103,7 +105,7 @@ export const SetsRelToNorefferer = () => (
 
 export const SetsRelToNoopener = () => (
   <div>
-    <Link font="title3" href="https://www.google.com/" rel="noopener">
+    <Link font="title3" href="https://www.coinbase.com/" rel="noopener">
       Default
     </Link>
   </div>
