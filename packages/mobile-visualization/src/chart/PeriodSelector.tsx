@@ -1,9 +1,16 @@
-import React, { forwardRef, memo, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { forwardRef, memo, useEffect, useMemo } from 'react';
+import { View } from 'react-native';
 import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
-import { Box } from '@coinbase/cds-mobile/layout';
 import {
   SegmentedTabs,
   type SegmentedTabsProps,
@@ -15,7 +22,7 @@ import { tabsSpringConfig } from '@coinbase/cds-mobile/tabs/Tabs';
 import { Text, type TextBaseProps } from '@coinbase/cds-mobile/typography/Text';
 
 // todo: apply this to normal segmented tabs?
-// Animated active indicator to support smooth transition of background color
+// Animated active indicator to support smooth transition of position and size
 export const PeriodSelectorActiveIndicator = ({
   activeTabRect,
   background = 'bgPrimaryWash',
@@ -25,24 +32,22 @@ export const PeriodSelectorActiveIndicator = ({
   const theme = useTheme();
   const { width, height, x } = activeTabRect;
 
-  // Get the target background color
+  // Get the background color
   const backgroundColorKey = background as keyof typeof theme.color;
-  const targetColor = theme.color[backgroundColorKey] || background;
+  const backgroundColor = theme.color[backgroundColorKey] || background;
 
   // Track previous values for first render detection
   const previousActiveTabRect = React.useRef(activeTabRect);
-  const previousColor = React.useRef(targetColor);
 
-  // Combined animated value for position, size, and color
-  const newAnimatedValues = { x, width, backgroundColor: targetColor };
-  const animatedValues = useSharedValue(newAnimatedValues);
+  // Animated value for position and size only
+  const animatedValues = useSharedValue({ x, width });
 
   const isFirstRenderWithWidth =
     previousActiveTabRect.current.width === 0 && activeTabRect.width > 0;
 
-  if (previousActiveTabRect.current !== activeTabRect || previousColor.current !== targetColor) {
+  if (previousActiveTabRect.current !== activeTabRect) {
     previousActiveTabRect.current = activeTabRect;
-    previousColor.current = targetColor;
+    const newAnimatedValues = { x, width };
     animatedValues.value = isFirstRenderWithWidth
       ? newAnimatedValues
       : withSpring(newAnimatedValues, tabsSpringConfig);
@@ -52,7 +57,6 @@ export const PeriodSelectorActiveIndicator = ({
     () => ({
       transform: [{ translateX: animatedValues.value.x }],
       width: animatedValues.value.width,
-      backgroundColor: animatedValues.value.backgroundColor,
     }),
     [animatedValues],
   );
@@ -63,10 +67,10 @@ export const PeriodSelectorActiveIndicator = ({
     <Animated.View
       style={[
         {
-          // todo: fix this
           position: position as any,
           height,
           borderRadius,
+          backgroundColor,
         },
         animatedStyles,
       ]}
@@ -85,6 +89,10 @@ export type LiveTabLabelBaseProps = TextBaseProps & {
    * Whether to hide the dot.
    */
   hideDot?: boolean;
+  /**
+   * Whether to disable the pulse animation.
+   */
+  disablePulse?: boolean;
   /**
    * Style overrides for different parts of the component
    */
@@ -107,8 +115,35 @@ const defaultRootStyle: ViewStyle = {
 
 export const LiveTabLabel = memo(
   forwardRef<View, LiveTabLabelProps>(
-    ({ color = 'fgNegative', label = 'LIVE', font = 'label1', hideDot, styles, ...props }, ref) => {
+    (
+      {
+        color = 'fgNegative',
+        label = 'LIVE',
+        font = 'label1',
+        hideDot,
+        disablePulse,
+        styles,
+        ...props
+      },
+      ref,
+    ) => {
       const theme = useTheme();
+      const opacity = useSharedValue(1);
+
+      useEffect(() => {
+        if (!disablePulse) {
+          // Pulse animation: 1 -> 0 -> 1, repeating infinitely
+          // Total duration: 2 seconds (matching web's pulseTransitionConfig)
+          opacity.value = withRepeat(
+            withSequence(
+              withTiming(0, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+              withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+            ),
+            -1, // -1 means infinite repeats
+            false,
+          );
+        }
+      }, [disablePulse, opacity]);
 
       const dotStyle = useMemo(
         () => [
@@ -124,11 +159,15 @@ export const LiveTabLabel = memo(
         [theme.space, theme.color, color, styles?.dot],
       );
 
+      const animatedDotStyle = useAnimatedStyle(() => ({
+        opacity: opacity.value,
+      }));
+
       const containerStyle = useMemo(() => [defaultRootStyle, styles?.root], [styles?.root]);
 
       return (
         <View ref={ref} style={containerStyle}>
-          {!hideDot && <View style={dotStyle} />}
+          {!hideDot && <Animated.View style={[dotStyle, !disablePulse && animatedDotStyle]} />}
           <Text color={color} font={font} style={styles?.text} {...props}>
             {label}
           </Text>

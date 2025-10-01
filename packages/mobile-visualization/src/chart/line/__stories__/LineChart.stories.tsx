@@ -1,4 +1,14 @@
-import { forwardRef, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { View } from 'react-native';
 import { Defs, LinearGradient, Stop, TSpan } from 'react-native-svg';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
@@ -389,27 +399,8 @@ export const ChartScale = () => {
 };
 
 export const ColorShiftChart = () => {
-  const [activeTab, setActiveTab] = useState<TabValue | null>(null);
-
-  const tabs = useMemo(
-    () => [
-      { id: '1H', label: '1H' },
-      { id: '1D', label: '1D' },
-      { id: '1W', label: '1W' },
-      { id: '1M', label: '1M' },
-      { id: '1Y', label: '1Y' },
-      { id: 'All', label: 'All' },
-    ],
-    [],
-  );
-
-  // Set initial tab
-  if (!activeTab) {
-    setActiveTab(tabs[0]);
-  }
-
-  const [isHovering, setIsHovering] = useState(false);
-  const [highlightedItem, setHighlightedItem] = useState<number | undefined>(undefined);
+  const theme = useTheme();
+  const [activeTab, setActiveTab] = useState<TabValue | null>({ id: '1H', label: '1H' });
 
   const tabConversion = {
     '1H': 'hour',
@@ -428,102 +419,116 @@ export const ColorShiftChart = () => {
       ]
     : sparklineInteractiveData.hour;
 
-  // Reverse the data so it displays chronologically (oldest to newest)
-  const reversedPrices = [...currentPriceData.map((price) => price.value)];
-  const reversedTimestamps = [...currentPriceData.map((price) => price.date.toISOString())];
+  const currentData = useMemo(
+    () => [...currentPriceData.map((price) => price.value)],
+    [currentPriceData],
+  );
+  const currentTimestamps = useMemo(
+    () => [...currentPriceData.map((price) => price.date.toISOString())],
+    [currentPriceData],
+  );
 
-  const currentData = reversedPrices;
-  const currentTimestamps = reversedTimestamps;
   const startPrice = currentData[0];
   const currentPrice = currentData[currentData.length - 1];
+  const priceChange = currentPrice - startPrice;
 
-  const latestPriceCoords = useMemo(() => {
-    if (currentData.length === 0) return {};
-    return {
-      x: currentData.length - 1,
-      y: currentData[currentData.length - 1],
-    };
-  }, [currentData]);
+  // Determine colors based on trend
+  const trendColor = useMemo(() => {
+    return priceChange >= 0 ? theme.color.fgPositive : theme.color.fgNegative;
+  }, [priceChange, theme.color.fgPositive, theme.color.fgNegative]);
 
-  const onScrubberPositionChange = useCallback((item: number | undefined) => {
-    setHighlightedItem(item);
-    setIsHovering(!!item);
+  const activeBackground = useMemo(() => {
+    return priceChange >= 0 ? 'bgPositiveWash' : 'bgNegativeWash';
+  }, [priceChange]);
+
+  const formatPrice = useCallback((price: number) => {
+    return `$${price.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   }, []);
 
-  const displayPrice =
-    highlightedItem !== null && highlightedItem !== undefined
-      ? currentData[highlightedItem]
-      : currentPrice;
-
-  // Calculate trend based on current context (hovering vs current)
-  const { trendPrice, trendPreviousPrice, trendDirection } = useMemo(() => {
-    return calculateTrendData(
-      highlightedItem,
-      currentData,
-      currentTimestamps,
-      startPrice,
-      currentPrice,
-      activeTab?.id || '1H',
-    );
-  }, [highlightedItem, currentData, currentTimestamps, startPrice, currentPrice, activeTab]);
-
-  const calculatedPriceChange = trendPrice - trendPreviousPrice;
-  const calculatedPercentChange = (calculatedPriceChange / trendPreviousPrice) * 100;
-
-  const formattedPrice = `$${displayPrice.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-
-  const formattedPriceChange = `${calculatedPriceChange >= 0 ? '+' : ''}$${Math.abs(
-    calculatedPriceChange,
-  ).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} (${Math.abs(calculatedPercentChange).toFixed(2)}%)`;
-
-  const chartActiveColor = useMemo(() => {
-    const priceChange = currentPrice - startPrice;
-    return priceChange >= 0 ? '#10b981' : '#ef4444'; // Green for positive, red for negative
-  }, [currentPrice, startPrice]);
-
   const scrubberLabel = useCallback(
-    (dataIndex: number | null) => {
-      if (dataIndex === null) return null;
-      const timestamp = currentTimestamps[dataIndex];
+    (index: number) => {
+      const timestamp = currentTimestamps[index];
       return formatChartDate(timestamp, activeTab?.id || '1H');
     },
-    [currentTimestamps, activeTab],
+    [activeTab?.id, currentTimestamps],
+  );
+
+  // Custom tab component that uses the trend color for both active and inactive states
+  const ColorShiftTab: TabComponent = useMemo(
+    () =>
+      memo(
+        forwardRef(({ label, ...props }: SegmentedTabProps, ref: React.ForwardedRef<any>) => {
+          return (
+            <SegmentedTab
+              ref={ref}
+              activeColor={trendColor as any}
+              color={trendColor as any}
+              font="label1"
+              label={label}
+              {...props}
+            />
+          );
+        }),
+      ),
+    [trendColor],
+  );
+
+  const tabs = useMemo(
+    () => [
+      { id: '1H', label: '1H' },
+      { id: '1D', label: '1D' },
+      { id: '1W', label: '1W' },
+      { id: '1M', label: '1M' },
+      { id: '1Y', label: '1Y' },
+      { id: 'All', label: 'All' },
+    ],
+    [],
   );
 
   return (
-    <VStack gap={3} width="100%">
-      <LineChart
-        showArea
-        showXAxis
-        height={defaultChartHeight}
-        inset={{ top: 6, left: 0, right: 0, bottom: 0 }}
-        onScrubberPositionChange={onScrubberPositionChange}
-        series={[
-          {
-            id: 'price',
-            data: currentData,
-            color: chartActiveColor,
-            label: 'XRP',
-          },
-        ]}
-      >
-        <ReferenceLine
-          dataY={startPrice}
-          label={`$${startPrice}`}
-          labelProps={{
-            horizontalAlignment: 'left',
-            inset: 0,
-          }}
-          stroke={chartActiveColor}
+    <Box style={{ marginLeft: -16, marginRight: -16 }}>
+      <VStack gap={3} width="100%">
+        <LineChart
+          enableScrubbing
+          showArea
+          showXAxis
+          height={defaultChartHeight}
+          inset={{ left: 0, right: 24, bottom: 0 }}
+          series={[
+            {
+              id: 'price',
+              data: currentData,
+              color: trendColor,
+            },
+          ]}
+        >
+          <Scrubber idlePulse label={scrubberLabel} />
+          <ReferenceLine
+            dataY={startPrice}
+            label={formatPrice(startPrice)}
+            labelProps={{
+              horizontalAlignment: 'right',
+              inset: 4,
+              borderRadius: 4,
+              dx: -8,
+              color: theme.color.fgInverse,
+              background: priceChange >= 0 ? theme.color.bgPositive : theme.color.bgNegative,
+            }}
+            stroke={priceChange >= 0 ? theme.color.bgPositive : theme.color.bgNegative}
+          />
+        </LineChart>
+        <PeriodSelector
+          TabComponent={ColorShiftTab}
+          activeBackground={activeBackground}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          tabs={tabs}
         />
-      </LineChart>
-    </VStack>
+      </VStack>
+    </Box>
   );
 };
 
@@ -959,45 +964,86 @@ const AssetPriceDotted = () => {
     [sparklineTimePeriodDataValues, formatDate, sparklineTimePeriodDataTimestamps],
   );
 
+  // Chart overview accessibility label
+  const chartOverviewLabel = useMemo(() => {
+    if (sparklineTimePeriodData.length === 0) return '';
+
+    const firstDate = sparklineTimePeriodData[0].date;
+    const lastDate = sparklineTimePeriodData[sparklineTimePeriodData.length - 1].date;
+    const currentYear = new Date().getFullYear();
+    const shouldIncludeTime = timePeriod.id === 'hour' || timePeriod.id === 'day';
+
+    const dateRangeOptions: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: 'numeric',
+      year: firstDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+      ...(shouldIncludeTime && {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }),
+    };
+
+    const startDateStr = shouldIncludeTime
+      ? firstDate.toLocaleString('en-US', dateRangeOptions)
+      : firstDate.toLocaleDateString('en-US', dateRangeOptions);
+    const endDateStr = shouldIncludeTime
+      ? lastDate.toLocaleString('en-US', {
+          ...dateRangeOptions,
+          year: lastDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+        })
+      : lastDate.toLocaleDateString('en-US', {
+          ...dateRangeOptions,
+          year: lastDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+        });
+
+    return `Price chart for Bitcoin, ${startDateStr} to ${endDateStr}. Swipe left or right to navigate data points.`;
+  }, [sparklineTimePeriodData, timePeriod.id]);
+
   return (
-    <VStack gap={2}>
-      <SectionHeader
-        balance={
-          <Text font="title2">
-            {formatPrice(currentPrice)} {sparklineTimePeriodDataValues.length}
-          </Text>
-        }
-        end={
-          <VStack justifyContent="center">
-            <RemoteImage shape="circle" size="xl" source={assets.btc.imageUrl} />
-          </VStack>
-        }
-        padding={0}
-        title={<Text font="title1">Bitcoin</Text>}
-      />
-      <LineChart
-        enableScrubbing
-        showArea
-        areaType="dotted"
-        height={defaultChartHeight}
-        series={[
-          {
-            id: 'btc',
-            data: sparklineTimePeriodDataValues,
-            color: assets.btc.color,
-          },
-        ]}
-      >
-        <Scrubber idlePulse label={scrubberLabel} />
-      </LineChart>
-      <PeriodSelector
-        TabComponent={BTCTab}
-        TabsActiveIndicatorComponent={BTCActiveIndicator}
-        activeTab={timePeriod}
-        onChange={onPeriodChange}
-        tabs={tabs}
-      />
-    </VStack>
+    <Box accessibilityLabel={chartOverviewLabel} accessibilityLiveRegion="polite">
+      <VStack gap={2}>
+        <SectionHeader
+          aria-hidden="true"
+          balance={
+            <Text font="title2">
+              {formatPrice(currentPrice)} {sparklineTimePeriodDataValues.length}
+            </Text>
+          }
+          end={
+            <VStack justifyContent="center">
+              <RemoteImage shape="circle" size="xl" source={assets.btc.imageUrl} />
+            </VStack>
+          }
+          padding={0}
+          title={<Text font="title1">Bitcoin</Text>}
+        />
+        <LineChart
+          enableScrubbing
+          showArea
+          accessibilityLiveRegion="polite"
+          areaType="dotted"
+          height={defaultChartHeight}
+          series={[
+            {
+              id: 'btc',
+              data: sparklineTimePeriodDataValues,
+              color: assets.btc.color,
+            },
+          ]}
+        >
+          <Scrubber idlePulse label={scrubberLabel} />
+        </LineChart>
+        <PeriodSelector
+          TabComponent={BTCTab}
+          TabsActiveIndicatorComponent={BTCActiveIndicator}
+          accessibilityLabel="Select time period for chart"
+          activeTab={timePeriod}
+          onChange={onPeriodChange}
+          tabs={tabs}
+        />
+      </VStack>
+    </Box>
   );
 };
 
@@ -1643,6 +1689,283 @@ const availabilityEvents = [
   },
 ];
 
+// Generate prediction probability data for three candidates
+const generatePredictionData = () => {
+  const now = new Date();
+  const baseTimestamp = now.getTime();
+
+  // Generate data for different time periods
+  const generateForPeriod = (points: number, intervalMs: number) => {
+    return Array.from({ length: points }, (_, i) => {
+      const timestamp = new Date(baseTimestamp - (points - 1 - i) * intervalMs);
+
+      // Generate percentage values for three candidates that roughly sum to 100%
+      const candidate1 = 45 + Math.random() * 30; // 45-75%
+      const candidate2 = 15 + Math.random() * 20; // 15-35%
+      const candidate3 = Math.max(0, 100 - candidate1 - candidate2 - Math.random() * 5); // remainder
+
+      return {
+        date: timestamp,
+        candidate1: Math.round(candidate1 * 10) / 10,
+        candidate2: Math.round(candidate2 * 10) / 10,
+        candidate3: Math.round(candidate3 * 10) / 10,
+      };
+    });
+  };
+
+  return {
+    hour: generateForPeriod(60, 60 * 1000), // 60 points, 1 min apart
+    day: generateForPeriod(96, 15 * 60 * 1000), // 96 points, 15 min apart
+    week: generateForPeriod(84, 2 * 60 * 60 * 1000), // 84 points, 2 hours apart
+    month: generateForPeriod(120, 6 * 60 * 60 * 1000), // 120 points, 6 hours apart
+    year: generateForPeriod(365, 24 * 60 * 60 * 1000), // 365 points, 1 day apart
+    all: generateForPeriod(100, 7 * 24 * 60 * 60 * 1000), // 100 points, 1 week apart
+  };
+};
+
+const predictionData = generatePredictionData();
+
+type PredictionLegendData = {
+  candidate1: number[];
+  candidate2: number[];
+  candidate3: number[];
+};
+
+type PredictionLegendRef = {
+  updateSelectedIndex: (index: number) => void;
+};
+
+type PredictionLegendProps = {
+  data: PredictionLegendData;
+  colors: { pink: string; teal: string; green: string };
+};
+
+const PredictionLegend = memo(
+  forwardRef<PredictionLegendRef, PredictionLegendProps>(({ data, colors }, ref) => {
+    const [selectedIndex, setSelectedIndex] = useState(data.candidate1.length - 1);
+
+    useImperativeHandle(ref, () => ({
+      updateSelectedIndex: (index: number) => {
+        setSelectedIndex(index);
+      },
+    }));
+
+    const candidate1Value = Math.round(data.candidate1[selectedIndex]);
+    const candidate2Value = Math.round(data.candidate2[selectedIndex]);
+    const candidate3Value = Math.round(data.candidate3[selectedIndex]);
+
+    return (
+      <VStack gap={2}>
+        <HStack alignItems="center" gap={2}>
+          <Box style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.pink }} />
+          <Text font="label2">Noah Wyle</Text>
+          <Text font="label1">{candidate1Value}%</Text>
+        </HStack>
+        <HStack alignItems="center" gap={2}>
+          <Box style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.teal }} />
+          <Text font="label2">Adam Scott</Text>
+          <Text font="label1">{candidate2Value}%</Text>
+        </HStack>
+        <HStack alignItems="center" gap={2}>
+          <Box
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: 6,
+              backgroundColor: colors.green,
+            }}
+          />
+          <Text font="label2">Pedro Pascal</Text>
+          <Text font="label1">{candidate3Value}%</Text>
+        </HStack>
+      </VStack>
+    );
+  }),
+);
+
+const PredictionChart = () => {
+  const theme = useTheme();
+
+  // Ref for the legend component
+  const legendRef = useRef<PredictionLegendRef>(null);
+
+  // Define colors using spectrum
+  const colors = useMemo(
+    () => ({
+      pink: `rgb(${theme.spectrum.pink50})`,
+      teal: `rgb(${theme.spectrum.teal50})`,
+      green: `rgb(${theme.spectrum.green50})`,
+    }),
+    [theme.spectrum],
+  );
+
+  const tabs = useMemo(
+    () => [
+      { id: 'hour', label: '1H' },
+      { id: 'day', label: '1D' },
+      { id: 'week', label: '1W' },
+      { id: 'month', label: '1M' },
+      { id: 'year', label: '1Y' },
+      { id: 'all', label: 'All' },
+    ],
+    [],
+  );
+  const [timePeriod, setTimePeriod] = useState<TabValue>(tabs[0]);
+
+  const periodData = useMemo(() => {
+    return predictionData[timePeriod.id as keyof typeof predictionData];
+  }, [timePeriod]);
+
+  const candidate1Data = useMemo(() => periodData.map((d) => d.candidate1), [periodData]);
+  const candidate2Data = useMemo(() => periodData.map((d) => d.candidate2), [periodData]);
+  const candidate3Data = useMemo(() => periodData.map((d) => d.candidate3), [periodData]);
+  const timestamps = useMemo(() => periodData.map((d) => d.date), [periodData]);
+
+  // Data object for the legend
+  const legendData = useMemo(
+    () => ({
+      candidate1: candidate1Data,
+      candidate2: candidate2Data,
+      candidate3: candidate3Data,
+    }),
+    [candidate1Data, candidate2Data, candidate3Data],
+  );
+
+  // Update legend via imperative ref when scrubber position changes
+  const onScrubberPositionChange = useCallback(
+    (dataIndex: number | undefined) => {
+      const idx = dataIndex ?? candidate1Data.length - 1;
+      legendRef.current?.updateSelectedIndex(idx);
+    },
+    [candidate1Data.length],
+  );
+
+  const onPeriodChange = useCallback(
+    (period: TabValue | null) => {
+      setTimePeriod(period || tabs[0]);
+    },
+    [tabs],
+  );
+
+  const scrubberLabel = useCallback(
+    (dataIndex: number) => {
+      const date = timestamps[dataIndex];
+      const currentYear = new Date().getFullYear();
+      const shouldIncludeTime = timePeriod.id === 'hour' || timePeriod.id === 'day';
+
+      const dateOptions: Intl.DateTimeFormatOptions = {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: date.getFullYear() !== currentYear ? 'numeric' : undefined,
+        ...(shouldIncludeTime && {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        }),
+      };
+
+      const dateStr = shouldIncludeTime
+        ? date.toLocaleString('en-US', dateOptions)
+        : date.toLocaleDateString('en-US', dateOptions);
+
+      return dateStr;
+    },
+    [timestamps, timePeriod.id],
+  );
+
+  const chartOverviewLabel = useMemo(() => {
+    if (periodData.length === 0) return '';
+
+    const firstDate = periodData[0].date;
+    const lastDate = periodData[periodData.length - 1].date;
+    const currentYear = new Date().getFullYear();
+    const shouldIncludeTime = timePeriod.id === 'hour' || timePeriod.id === 'day';
+
+    const dateRangeOptions: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: 'numeric',
+      year: firstDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+      ...(shouldIncludeTime && {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }),
+    };
+
+    const startDateStr = shouldIncludeTime
+      ? firstDate.toLocaleString('en-US', dateRangeOptions)
+      : firstDate.toLocaleDateString('en-US', dateRangeOptions);
+    const endDateStr = shouldIncludeTime
+      ? lastDate.toLocaleString('en-US', {
+          ...dateRangeOptions,
+          year: lastDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+        })
+      : lastDate.toLocaleDateString('en-US', {
+          ...dateRangeOptions,
+          year: lastDate.getFullYear() !== currentYear ? 'numeric' : undefined,
+        });
+
+    return `Prediction chart, ${startDateStr} to ${endDateStr}. Swipe left or right to navigate data points.`;
+  }, [periodData, timePeriod.id]);
+
+  return (
+    <Box accessibilityLabel={chartOverviewLabel} accessibilityLiveRegion="polite">
+      <VStack gap={4}>
+        {/* Legend */}
+        <PredictionLegend ref={legendRef} colors={colors} data={legendData} />
+
+        <Box style={{ marginLeft: -16, marginRight: -16 }}>
+          <LineChart
+            enableScrubbing
+            showYAxis
+            accessibilityLiveRegion="polite"
+            height={defaultChartHeight}
+            inset={{ left: 0 }}
+            onScrubberPositionChange={onScrubberPositionChange}
+            series={[
+              {
+                id: 'candidate1',
+                data: candidate1Data,
+                color: colors.pink,
+              },
+              {
+                id: 'candidate2',
+                data: candidate2Data,
+                color: colors.teal,
+              },
+              {
+                id: 'candidate3',
+                data: candidate3Data,
+                color: colors.green,
+              },
+            ]}
+            xAxis={{
+              range: ({ min, max }) => ({ min, max: max - 32 }),
+            }}
+            yAxis={{
+              domain: { min: 0, max: 100 },
+              tickLabelFormatter: (value) => `${value}%`,
+              requestedTickCount: 5,
+              showGrid: true,
+            }}
+          >
+            <Scrubber idlePulse label={scrubberLabel} />
+          </LineChart>
+        </Box>
+
+        {/* Period Selector */}
+        <PeriodSelector
+          accessibilityLabel="Select time period for prediction chart"
+          activeTab={timePeriod}
+          onChange={onPeriodChange}
+          tabs={tabs}
+        />
+      </VStack>
+    </Box>
+  );
+};
+
 const AvailabilityChart = () => {
   const theme = useTheme();
   const [scrubIndex, setScrubIndex] = useState<number | undefined>();
@@ -1993,6 +2316,9 @@ const AssetPriceScreen = () => {
           <Scrubber />
         </LineChart>
       </Example>
+      <Example title="Color Shift Chart">
+        <ColorShiftChart />
+      </Example>
       <Example title="Asset Price Dotted">
         <AssetPriceDotted />
       </Example>
@@ -2010,6 +2336,9 @@ const AssetPriceScreen = () => {
       </Example>
       <Example title="Live Asset Price">
         <LiveAssetPrice />
+      </Example>
+      <Example title="Prediction Chart">
+        <PredictionChart />
       </Example>
       <Example title="Availability Chart">
         <AvailabilityChart />

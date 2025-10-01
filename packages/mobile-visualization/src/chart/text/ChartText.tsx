@@ -1,5 +1,5 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { findNodeHandle, type LayoutChangeEvent, UIManager } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { type LayoutChangeEvent } from 'react-native';
 import { G, Rect as SvgRect, Text, type TextProps } from 'react-native-svg';
 import type { Rect, SharedProps } from '@coinbase/cds-common/types';
 import { type ChartInset, getChartInset } from '@coinbase/cds-common/visualizations/charts';
@@ -211,7 +211,6 @@ export const ChartText = memo<ChartTextProps>(
     onDimensionsChange,
     opacity = 1,
   }) => {
-    const measurementRef = useRef<Text>(null);
     const { width: chartWidth, height: chartHeight } = useCartesianChartContext();
 
     const textAnchor = useMemo(() => getTextAnchor(horizontalAlignment), [horizontalAlignment]);
@@ -321,20 +320,17 @@ export const ChartText = memo<ChartTextProps>(
       }
     }, [reportedRect, onDimensionsChange]);
 
-    useEffect(() => {
-      if (measurementRef.current) {
-        const nodeHandle = findNodeHandle(measurementRef.current);
-        if (nodeHandle !== null) {
-          UIManager.measure(nodeHandle, (x, y, width, height) => {
-            if (width > 0 && height > 0) {
-              if (!textSize || textSize.width !== width || textSize.height !== height) {
-                setTextSize({ x, y, width, height });
-              }
-            }
-          });
+    const onLayout = useCallback(
+      (event: LayoutChangeEvent) => {
+        const layout = event.nativeEvent.layout;
+        if (layout.width > 0 && layout.height > 0) {
+          if (!textSize || textSize.width !== layout.width || textSize.height !== layout.height) {
+            setTextSize(layout);
+          }
         }
-      }
-    }, [measurementRef, children, textSize]);
+      },
+      [textSize],
+    );
 
     return (
       <G opacity={isDimensionsReady ? opacity : 0}>
@@ -360,13 +356,13 @@ export const ChartText = memo<ChartTextProps>(
           </G>
         )}
         <Text
-          ref={measurementRef}
           alignmentBaseline={alignmentBaseline}
           dx={dx}
           dy={dy}
           fill="transparent"
           fontSize={fontSize}
           fontWeight={fontWeight}
+          onLayout={onLayout}
           opacity={0}
           textAnchor={textAnchor}
         >

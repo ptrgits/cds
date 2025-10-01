@@ -1,6 +1,7 @@
 import { forwardRef, memo, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
+import { sparklineInteractiveData } from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
 import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
 import type { TabValue } from '@coinbase/cds-common/tabs/useTabs';
 import { IconButton } from '@coinbase/cds-mobile/buttons';
@@ -9,7 +10,6 @@ import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 import { Box, HStack, VStack } from '@coinbase/cds-mobile/layout';
 import { type TabComponent, type TabsActiveIndicatorProps } from '@coinbase/cds-mobile/tabs';
 import { SegmentedTab, type SegmentedTabProps } from '@coinbase/cds-mobile/tabs/SegmentedTab';
-import { TextLabel1 } from '@coinbase/cds-mobile/typography';
 
 import { LiveTabLabel, PeriodSelector, PeriodSelectorActiveIndicator } from '../PeriodSelector';
 
@@ -144,6 +144,8 @@ const BTCActiveIndicator = memo((props: TabsActiveIndicatorProps) => (
   <PeriodSelectorActiveIndicator {...props} background={`${btcColor}1A` as any} />
 ));
 
+BTCActiveIndicator.displayName = 'BTCActiveIndicator';
+
 const BTCActiveExcludingLiveIndicator = memo((props: TabsActiveIndicatorProps) => {
   const theme = useTheme();
   const { activeTab } = useTabsContext();
@@ -157,35 +159,45 @@ const BTCActiveExcludingLiveIndicator = memo((props: TabsActiveIndicatorProps) =
   return <PeriodSelectorActiveIndicator {...props} background={backgroundColor as any} />;
 });
 
+BTCActiveExcludingLiveIndicator.displayName = 'BTCActiveExcludingLiveIndicator';
+
 const BTCTab: TabComponent = memo(
   forwardRef(({ label, ...props }: SegmentedTabProps, ref: React.ForwardedRef<any>) => {
-    const { activeTab } = useTabsContext();
-    const isActive = activeTab?.id === props.id;
+    const theme = useTheme();
 
-    const textColor = isActive ? btcColor : undefined;
+    // Determine the active color based on theme - use the raw color string for animation
+    const btcActiveColorKey = useMemo(() => {
+      // For light mode, we'll need to use the hex directly as it's not a theme color
+      // For dark mode, we can use the BTC color
+      return theme.activeColorScheme === 'light' ? '#593203' : btcColor;
+    }, [theme.activeColorScheme]);
 
     return (
       <SegmentedTab
         ref={ref}
-        label={
-          typeof label === 'string' ? (
-            <TextLabel1 style={{ color: textColor }}>{label}</TextLabel1>
-          ) : (
-            label
-          )
-        }
+        activeColor={btcActiveColorKey as any}
+        font="label1"
+        label={label}
         {...props}
       />
     );
   }),
 );
 
+BTCTab.displayName = 'BTCTab';
+
 const ColoredPeriodSelectorExample = () => {
+  const theme = useTheme();
+
+  const liveLabelColor = theme.activeColorScheme === 'light' ? '#593203' : btcColor;
+
   const tabs = [
     {
       id: '1H',
       label: (
-        <LiveTabLabel styles={{ text: { color: btcColor }, dot: { backgroundColor: btcColor } }} />
+        <LiveTabLabel
+          styles={{ text: { color: liveLabelColor }, dot: { backgroundColor: liveLabelColor } }}
+        />
       ),
     },
     { id: '1D', label: '1D' },
@@ -229,6 +241,95 @@ const ColoredExcludingLivePeriodSelectorExample = () => {
   );
 };
 
+const ColorShiftPeriodSelectorExample = () => {
+  const theme = useTheme();
+  const [activeTab, setActiveTab] = useState<TabValue | null>({ id: '1H', label: '1H' });
+
+  const tabConversion = {
+    '1H': 'hour',
+    '1D': 'day',
+    '1W': 'week',
+    '1M': 'month',
+    '1Y': 'year',
+    All: 'all',
+  };
+
+  const currentPriceData = activeTab
+    ? sparklineInteractiveData[
+        tabConversion[
+          activeTab.id as keyof typeof tabConversion
+        ] as keyof typeof sparklineInteractiveData
+      ]
+    : sparklineInteractiveData.hour;
+
+  const currentData = useMemo(
+    () => [...currentPriceData.map((price) => price.value)],
+    [currentPriceData],
+  );
+
+  const startPrice = currentData[0];
+  const currentPrice = currentData[currentData.length - 1];
+  const priceChange = currentPrice - startPrice;
+
+  // Determine colors based on trend
+  const trendColor = useMemo(() => {
+    return priceChange >= 0 ? theme.color.fgPositive : theme.color.fgNegative;
+  }, [priceChange, theme.color.fgPositive, theme.color.fgNegative]);
+
+  const activeBackground = useMemo(() => {
+    return priceChange >= 0 ? 'bgPositiveWash' : 'bgNegativeWash';
+  }, [priceChange]);
+
+  const tabs = useMemo(
+    () => [
+      {
+        id: '1H',
+        label: (
+          <LiveTabLabel
+            styles={{ text: { color: trendColor }, dot: { backgroundColor: trendColor } }}
+          />
+        ),
+      },
+      { id: '1D', label: '1D' },
+      { id: '1W', label: '1W' },
+      { id: '1M', label: '1M' },
+      { id: '1Y', label: '1Y' },
+      { id: 'All', label: 'All' },
+    ],
+    [trendColor],
+  );
+
+  // Custom tab component that uses the trend color for both active and inactive states
+  const ColorShiftTab: TabComponent = useMemo(
+    () =>
+      memo(
+        forwardRef(({ label, ...props }: SegmentedTabProps, ref: React.ForwardedRef<any>) => {
+          return (
+            <SegmentedTab
+              ref={ref}
+              activeColor={trendColor as any}
+              color={trendColor as any}
+              font="label1"
+              label={label}
+              {...props}
+            />
+          );
+        }),
+      ),
+    [trendColor],
+  );
+
+  return (
+    <PeriodSelector
+      TabComponent={ColorShiftTab}
+      activeBackground={activeBackground}
+      activeTab={activeTab}
+      onChange={setActiveTab}
+      tabs={tabs}
+    />
+  );
+};
+
 const PeriodSelectorStories = () => {
   return (
     <ExampleScreen>
@@ -249,6 +350,9 @@ const PeriodSelectorStories = () => {
       </Example>
       <Example title="Colored Excluding Live Period Selector">
         <ColoredExcludingLivePeriodSelectorExample />
+      </Example>
+      <Example title="Color Shift Period Selector">
+        <ColorShiftPeriodSelectorExample />
       </Example>
     </ExampleScreen>
   );

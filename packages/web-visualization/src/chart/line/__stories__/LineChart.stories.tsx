@@ -23,6 +23,7 @@ import { Text, TextLabel1 } from '@coinbase/cds-web/typography';
 import { AnimatePresence, m as motion } from 'framer-motion';
 
 import {
+  BarPlot,
   type ChartTextChildren,
   LiveTabLabel,
   PeriodSelector,
@@ -1710,10 +1711,8 @@ const AssetPriceDotted = memo(() => {
         }
         title={<Text font="label1">Bitcoin</Text>}
       />
-      <LineChart
+      <CartesianChart
         enableScrubbing
-        showArea
-        areaType="dotted"
         aria-label={currentDataPointLabel}
         aria-live="polite"
         height={300}
@@ -1728,8 +1727,10 @@ const AssetPriceDotted = memo(() => {
         ]}
         style={{ outlineColor: assets.btc.color }}
       >
+        <Line showArea curve="natural" seriesId="btc" />
+        <Area seriesId="btc" type="dotted" />
         <Scrubber idlePulse label={scrubberLabel} labelProps={{ elevation: 1 }} />
-      </LineChart>
+      </CartesianChart>
       <PeriodSelector
         TabComponent={BTCTab}
         TabsActiveIndicatorComponent={BTCActiveIndicator}
@@ -1894,6 +1895,44 @@ export const All = () => {
       </Example>
       <Example title="Bitcoin Chart With Scrubber Beacon">
         <BitcoinChartWithScrubberBeacon />
+      </Example>
+      <Example title="Component releases">
+        <CartesianChart
+          height={250}
+          series={[
+            {
+              id: 'headcountLong',
+              data: [4, 5, 4, 5, 4, 7, 4, 4, 3, 4, 3],
+              stackId: 'headcount',
+              color: 'var(--color-bgPrimary)',
+            },
+            {
+              id: 'headcountShort',
+              data: [0, 1, 3, 2, 3, 0, 1, 2, 4, 3, 4],
+              stackId: 'headcount',
+              color: 'var(--color-bgPrimaryWash)',
+            },
+            {
+              id: 'components',
+              data: [null, null, null, 4, 5, 4, 4, 0, 0, 7, 8],
+              color: 'var(--color-accentBoldYellow)',
+            },
+          ]}
+          xAxis={{
+            scaleType: 'band',
+          }}
+        >
+          <BarPlot seriesIds={['headcountLong', 'headcountShort']} />
+          <Line
+            renderPoints={({ dataY }: { dataY: number }) => {
+              return { label: `${dataY}`, labelConfig: { position: 'top', dy: -24, fontSize: 18 } };
+            }}
+            seriesId="components"
+            strokeWidth={4}
+          />
+          <YAxis position="left" />
+          <XAxis />
+        </CartesianChart>
       </Example>
     </VStack>
   );

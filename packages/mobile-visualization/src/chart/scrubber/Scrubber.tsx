@@ -5,9 +5,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef,
 } from 'react';
-import { Animated } from 'react-native';
 import Reanimated, {
   runOnJS,
   useAnimatedProps,
@@ -15,7 +13,7 @@ import Reanimated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { G, Line, Rect, type RectProps } from 'react-native-svg';
+import { G, Line, Rect } from 'react-native-svg';
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import {
@@ -26,20 +24,14 @@ import {
 import { useTheme } from '@coinbase/cds-mobile';
 
 import { useCartesianChartContext } from '../ChartProvider';
-import { ReferenceLine, type ReferenceLineProps } from '../line';
+import { type ReferenceLineProps } from '../line';
 import { ChartText } from '../text/ChartText';
 
 import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 
 const AnimatedG = Reanimated.createAnimatedComponent(G);
-const RNAnimatedRect = Animated.createAnimatedComponent(Rect);
-const RNAnimatedLine = Animated.createAnimatedComponent(Line);
-
-const AnimatedRect = memo(
-  forwardRef<Rect, RectProps>((props, ref) => {
-    return <Rect ref={ref} {...props} />;
-  }),
-);
+const RNAnimatedRect = Reanimated.createAnimatedComponent(Rect);
+const RNAnimatedLine = Reanimated.createAnimatedComponent(Line);
 
 type FadeInGroupProps = {
   children: React.ReactNode;
@@ -158,9 +150,9 @@ export const Scrubber = memo(
         },
       }));
 
-      // React Native Animated values for overlay
-      const overlayAnimatedX = useRef(new Animated.Value(0)).current;
-      const overlayAnimatedWidth = useRef(new Animated.Value(0)).current;
+      // Reanimated shared values for overlay
+      const overlayAnimatedX = useSharedValue(0);
+      const overlayAnimatedWidth = useSharedValue(0);
 
       const { dataX, dataIndex } = useMemo(() => {
         const xScale = getXScale() as ChartScaleFunction;
@@ -263,16 +255,16 @@ export const Scrubber = memo(
 
       const pixelX = dataX !== undefined && defaultXScale ? defaultXScale(dataX) : undefined;
 
-      // Memoize overlay calculations and update Animated values
-      useMemo(() => {
+      // Update shared values for overlay
+      useEffect(() => {
         const rightEdge = drawingArea.x + drawingArea.width + overlayOffset;
         if (pixelX === undefined) {
-          overlayAnimatedX.setValue(rightEdge);
-          overlayAnimatedWidth.setValue(0);
+          overlayAnimatedX.value = rightEdge;
+          overlayAnimatedWidth.value = 0;
         } else {
           const newWidth = Math.max(0, rightEdge - pixelX);
-          overlayAnimatedX.setValue(pixelX);
-          overlayAnimatedWidth.setValue(newWidth);
+          overlayAnimatedX.value = pixelX;
+          overlayAnimatedWidth.value = newWidth;
         }
       }, [
         pixelX,
@@ -282,6 +274,18 @@ export const Scrubber = memo(
         overlayAnimatedX,
         overlayAnimatedWidth,
       ]);
+
+      // Animated props for overlay rect
+      const overlayRectAnimatedProps = useAnimatedProps(() => ({
+        x: overlayAnimatedX.value,
+        width: overlayAnimatedWidth.value,
+      }));
+
+      // Animated props for overlay line
+      const overlayLineAnimatedProps = useAnimatedProps(() => ({
+        x1: overlayAnimatedX.value,
+        x2: overlayAnimatedX.value,
+      }));
 
       const scrubberLabel: ReferenceLineProps['label'] = useMemo(() => {
         if (typeof label === 'function') {
@@ -300,27 +304,25 @@ export const Scrubber = memo(
             scrubberPosition !== undefined &&
             pixelX !== undefined && (
               <G>
+                {/* Overlay rect that obscures future data */}
+                <RNAnimatedRect
+                  animatedProps={overlayRectAnimatedProps}
+                  fill={theme.color.bg}
+                  height={drawingArea.height + overlayOffset * 2}
+                  opacity={0.8}
+                  y={drawingArea.y - overlayOffset}
+                />
                 {/* Vertical line */}
                 <RNAnimatedLine
+                  animatedProps={overlayLineAnimatedProps}
                   stroke={lineStroke ?? theme.color.fgMuted}
                   strokeDasharray="0 4"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
                   vectorEffect="non-scaling-stroke"
-                  x1={overlayAnimatedX}
-                  x2={overlayAnimatedX}
                   y1={drawingArea.y - overlayOffset}
                   y2={drawingArea.y + drawingArea.height + overlayOffset}
-                />
-                {/* Overlay rect that obscures future data */}
-                <RNAnimatedRect
-                  fill={theme.color.bg}
-                  height={drawingArea.height + overlayOffset * 2}
-                  opacity={0.8}
-                  width={overlayAnimatedWidth}
-                  x={overlayAnimatedX}
-                  y={drawingArea.y - overlayOffset}
                 />
               </G>
             )}
@@ -330,9 +332,9 @@ export const Scrubber = memo(
             scrubberLabel &&
             pixelX !== undefined && (
               <ChartText
-                horizontalAlignment="center"
+                verticalAlignment="middle"
                 x={pixelX}
-                y={drawingArea.y - overlayOffset - 4}
+                y={drawingArea.y / 2}
                 {...labelProps}
               >
                 {scrubberLabel}
