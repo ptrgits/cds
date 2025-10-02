@@ -8,6 +8,26 @@ All notable changes to this project will be documented in this file.
 
 <!-- template-start -->
 
+### 🚀 Added
+
+Generated with `yarn nx run illustrations:sync-illustrations`
+
+#### Pictogram
+
+- coinbaseOneUnlimtedRewards
+
+### 🐞 Updated
+
+Generated with `yarn nx run illustrations:sync-illustrations`
+
+#### Hero Square
+
+- instantUnstakingClock
+
+#### Pictogram
+
+- instantUnstakingClock
+
 ## 4.23.0 (9/25/2025 PST)
 
 - Feat: Publish illustrations 09/30/2025. [[#38](https://github.com/coinbase/cds/pull/38)]
