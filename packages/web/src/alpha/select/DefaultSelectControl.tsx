@@ -173,6 +173,18 @@ const DefaultSelectControlComponent = memo(
         [label, labelVariant],
       );
 
+      const interactableBlendStyles = useMemo(
+        () =>
+          isMultiSelect
+            ? {
+                hoveredBackground: 'rgba(0, 0, 0, 0)',
+                hoveredOpacity: 1,
+                ...blendStyles,
+              }
+            : blendStyles,
+        [isMultiSelect, blendStyles],
+      );
+
       const valueNode = useMemo(() => {
         if (hasValue && isMultiSelect) {
           const valuesToShow =
@@ -326,6 +338,7 @@ const DefaultSelectControlComponent = memo(
           compact,
           valueNode,
           setOpen,
+          interactableBlendStyles,
         ],
       );
 
