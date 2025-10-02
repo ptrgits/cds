@@ -209,6 +209,21 @@ const LabelVariantExample = () => {
   );
 };
 
+const LabelVariantExample = () => {
+  const [value, setValue] = useState<string | null>('1');
+
+  return (
+    <Select
+      label="Single select - label variant inside"
+      labelVariant="inside"
+      onChange={setValue}
+      options={exampleOptions}
+      placeholder="Empty value"
+      value={value}
+    />
+  );
+};
+
 const WithHelperTextExample = () => {
   const [value, setValue] = useState<string | null>('1');
 
