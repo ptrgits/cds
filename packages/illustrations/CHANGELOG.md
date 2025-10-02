@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 
 <!-- template-start -->
 
+## 4.24.0 (10/2/2025 PST)
+
+#### 🚀 Updates
+
+- Feat: Publish illustrations 10/2/2025.
+
 ### 🚀 Added
 
 Generated with `yarn nx run illustrations:sync-illustrations`
