@@ -59,6 +59,11 @@ export const routes = [
     getComponent: () => require('@coinbase/cds-mobile/banner/__stories__/Banner.stories').default,
   },
   {
+    key: 'BarChart',
+    getComponent: () =>
+      require('@coinbase/cds-mobile-visualization/chart/bar/__stories__/BarChart.stories').default,
+  },
+  {
     key: 'Box',
     getComponent: () => require('@coinbase/cds-mobile/layout/__stories__/Box.stories').default,
   },
@@ -94,6 +99,17 @@ export const routes = [
     key: 'CarouselMedia',
     getComponent: () =>
       require('@coinbase/cds-mobile/media/__stories__/CarouselMedia.stories').default,
+  },
+  {
+    key: 'CartesianChart',
+    getComponent: () =>
+      require('@coinbase/cds-mobile-visualization/chart/__stories__/CartesianChart.stories')
+        .default,
+  },
+  {
+    key: 'ChartAxis',
+    getComponent: () =>
+      require('@coinbase/cds-mobile-visualization/chart/axis/__stories__/Axis.stories').default,
   },
   {
     key: 'Checkbox',
@@ -262,6 +278,12 @@ export const routes = [
       require('@coinbase/cds-mobile/gradients/__stories__/LinearGradient.stories').default,
   },
   {
+    key: 'LineChart',
+    getComponent: () =>
+      require('@coinbase/cds-mobile-visualization/chart/line/__stories__/LineChart.stories')
+        .default,
+  },
+  {
     key: 'Link',
     getComponent: () => require('@coinbase/cds-mobile/typography/__stories__/Link.stories').default,
   },
@@ -404,6 +426,12 @@ export const routes = [
       require('@coinbase/cds-mobile/system/__stories__/PatternError.stories').default,
   },
   {
+    key: 'PeriodSelector',
+    getComponent: () =>
+      require('@coinbase/cds-mobile-visualization/chart/__stories__/PeriodSelector.stories')
+        .default,
+  },
+  {
     key: 'Pictogram',
     getComponent: () =>
       require('@coinbase/cds-mobile/illustrations/__stories__/Pictogram.stories').default,
@@ -442,6 +470,12 @@ export const routes = [
     key: 'RemoteImage',
     getComponent: () =>
       require('@coinbase/cds-mobile/media/__stories__/RemoteImage.stories').default,
+  },
+  {
+    key: 'ReferenceLine',
+    getComponent: () =>
+      require('@coinbase/cds-mobile-visualization/chart/line/__stories__/ReferenceLine.stories')
+        .default,
   },
   {
     key: 'RemoteImageGroup',
