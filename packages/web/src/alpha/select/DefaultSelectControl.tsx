@@ -166,8 +166,10 @@ const DefaultSelectControlComponent = memo(
           typeof label === 'string' && labelVariant === 'inside' ? (
             <Pressable
               noScaleOnPress
+              className={classNames?.controlLabelNode}
               disabled={disabled}
               onClick={() => setOpen((s) => !s)}
+              style={styles?.controlLabelNode}
               tabIndex={-1}
             >
               <InputLabel color="fg" paddingBottom={0} paddingTop={1} paddingX={2}>
@@ -177,7 +179,14 @@ const DefaultSelectControlComponent = memo(
           ) : (
             label
           ),
-        [label, labelVariant, disabled, setOpen],
+        [
+          label,
+          labelVariant,
+          disabled,
+          setOpen,
+          classNames?.controlLabelNode,
+          styles?.controlLabelNode,
+        ],
       );
 
       const interactableBlendStyles = useMemo(
@@ -346,7 +355,6 @@ const DefaultSelectControlComponent = memo(
           compact,
           valueNode,
           setOpen,
-          interactableBlendStyles,
         ],
       );
 
