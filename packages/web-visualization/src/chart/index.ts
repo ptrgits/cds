@@ -8,6 +8,7 @@ export * from './line/index';
 export * from './Path';
 export * from './PeriodSelector';
 export * from './Point';
+export * from './polar/index';
 export * from './scrubber/index';
 export * from './text/index';
 export * from './utils/index';
