@@ -22,7 +22,7 @@ This is an artificial version bump with no new change.
 
 #### 🚀 Updates
 
-- Feat: Publish icons 09/25/2025. [[#17](https://github.com/coinbase/cds/pull/19)]
+- Feat: Publish icons 09/25/2025. [[#19](https://github.com/coinbase/cds/pull/19)]
 
 ##### ⭐️ Added (9)
 

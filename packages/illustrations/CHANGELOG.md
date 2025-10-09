@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 
 <!-- template-start -->
 
+## 4.24.0 (10/9/2025 PST)
+
+#### 🚀 Updates
+
+- Feat: Publish icons 10/9/2025. [[#93](https://github.com/coinbase/cds/pull/93)]
+
 ##### ⭐️ Added (4)
 
 ###### Pictogram (2)
