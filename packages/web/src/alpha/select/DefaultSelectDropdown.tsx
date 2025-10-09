@@ -151,14 +151,14 @@ const DefaultSelectDropdownComponent = memo(
 
       const handleEscPress = useCallback(() => setOpen(false), [setOpen]);
 
-      useEffect(() => {
-        if (!controlRef.current) return;
-        const resizeObserver = new ResizeObserver((entries) => {
-          setContainerWidth(entries[0].contentRect.width);
-        });
-        resizeObserver.observe(controlRef.current);
-        return () => resizeObserver.disconnect();
-      }, [controlRef]);
+  useEffect(() => {
+    if (!controlRef.current) return;
+    const resizeObserver = new ResizeObserver((entries) => {
+      setContainerWidth(entries[0].contentRect.width);
+    });
+    resizeObserver.observe(controlRef.current);
+    return () => resizeObserver.disconnect();
+  }, [controlRef]);
 
       const indeterminate = !isAllOptionsSelected && isSomeOptionsSelected ? true : false;
 
@@ -251,13 +251,97 @@ const DefaultSelectDropdownComponent = memo(
               style={dropdownStyles}
               {...props}
             >
-              <FocusTrap
-                disableAutoFocus
-                focusTabIndexElements
-                includeTriggerInFocusTrap
-                respectNegativeTabIndex
-                restoreFocusOnUnmount
-                onEscPress={handleEscPress}
+              {clearAllLabel}
+            </Button>
+          )
+        }
+        disabled={disabled}
+        label={`${selectAllLabel} (${options.filter((o) => o.value !== null).length})`}
+        media={
+          media ?? (
+            <Checkbox
+              readOnly
+              checked={isAllOptionsSelected}
+              iconStyle={{ opacity: 1 }}
+              indeterminate={!isAllOptionsSelected && isSomeOptionsSelected ? true : false}
+              tabIndex={-1}
+            />
+          )
+        }
+        onClick={toggleSelectAll}
+        selected={isAllOptionsSelected || isSomeOptionsSelected}
+        style={styles?.option}
+        styles={{
+          optionCell: styles?.optionCell,
+          optionContent: styles?.optionContent,
+          optionLabel: styles?.optionLabel,
+          optionDescription: styles?.optionDescription,
+          selectAllDivider: styles?.selectAllDivider,
+        }}
+        type={type}
+        value={'select-all' as T}
+      />
+    ),
+    [
+      SelectAllOptionComponent,
+      accessory,
+      styles?.optionBlendStyles,
+      styles?.option,
+      styles?.optionCell,
+      styles?.optionContent,
+      styles?.optionLabel,
+      styles?.optionDescription,
+      styles?.selectAllDivider,
+      classNames?.option,
+      classNames?.optionCell,
+      classNames?.optionContent,
+      classNames?.optionLabel,
+      classNames?.optionDescription,
+      classNames?.selectAllDivider,
+      compact,
+      detail,
+      disabled,
+      selectAllLabel,
+      options,
+      media,
+      toggleSelectAll,
+      isAllOptionsSelected,
+      type,
+      handleClearAll,
+      clearAllLabel,
+      isSomeOptionsSelected,
+    ],
+  );
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <Box
+          ref={ref as React.Ref<HTMLDivElement>}
+          aria-label={accessibilityLabel}
+          aria-multiselectable={isMultiSelect}
+          className={className}
+          display="block"
+          role={accessibilityRoles?.dropdown}
+          style={dropdownStyles}
+          {...props}
+        >
+          <FocusTrap
+            disableAutoFocus
+            focusTabIndexElements
+            includeTriggerInFocusTrap
+            respectNegativeTabIndex
+            restoreFocusOnUnmount
+            onEscPress={handleEscPress}
+          >
+            <motion.div animate={animateStyle} exit={initialStyle} initial={initialStyle}>
+              <Box
+                bordered
+                borderRadius={400}
+                elevation={2}
+                flexDirection="column"
+                maxHeight={252}
+                overflow="auto"
               >
                 <motion.div animate={animateStyle} exit={initialStyle} initial={initialStyle}>
                   <Box
