@@ -66,13 +66,13 @@ const DefaultSelectOptionComponent = <
     [description, multiline, label, styles?.optionDescription],
   );
 
-  const handlePress = useCallback(() => onPress?.(value), [onPress, value]);
+    const handlePress = useCallback(() => onPress?.(value), [onPress, value]);
 
-  const multiSelectCheckedAccessibilityState = useMemo(() => {
-    if (selected) return true;
-    if (indeterminate) return 'mixed';
-    return false;
-  }, [selected, indeterminate]);
+    const multiSelectCheckedAccessibilityState = useMemo(() => {
+      if (selected) return true;
+      if (indeterminate) return 'mixed';
+      return false;
+    }, [selected, indeterminate]);
 
   // Note: Cell component doesn't support ref forwarding yet, so we can't pass the ref
   // TODO: Add ref support to Cell component and then pass ref here

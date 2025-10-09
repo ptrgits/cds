@@ -325,35 +325,6 @@ const NoLabelExample = () => {
   );
 };
 
-type TestValue = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
-
-const typedOptions: SelectOption<TestValue>[] = [
-  { value: null, label: 'Remove selection' },
-  { value: '1', label: 'Option 1' },
-  { value: '2', label: 'Option 2' },
-  { value: '3', label: 'Option 3' },
-  { value: '4', label: 'Option 4' },
-  { value: '5', label: 'Option 5' },
-  { value: '6', label: 'Option 6' },
-  { value: '7', label: 'Option 7' },
-  { value: '8', label: 'Option 8' },
-  { value: '9', label: 'Option 9' },
-];
-
-const Typed = () => {
-  const [value, setValue] = useState<TestValue | null>('1');
-
-  return (
-    <Select
-      label="Typed select"
-      onChange={setValue}
-      options={typedOptions}
-      placeholder="Empty value"
-      value={value}
-    />
-  );
-};
-
 const EmptyOptionsExample = () => {
   const [value, setValue] = useState<string | null>(null);
 
@@ -1178,9 +1149,6 @@ const SelectV3Screen = () => {
       </Example>
       <Example title="No Label">
         <NoLabelExample />
-      </Example>
-      <Example title="Typed">
-        <Typed />
       </Example>
       <Example title="Empty Options">
         <EmptyOptionsExample />
