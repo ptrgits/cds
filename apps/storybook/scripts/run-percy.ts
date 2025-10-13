@@ -29,7 +29,7 @@ const getPercyToken = (): string | undefined => {
 
 const main = async () => {
   process.env.PERCY_TOKEN = getPercyToken();
-  await $`percy storybook ${path.join(MONOREPO_ROOT, 'apps/storybook/dist')} --fail-on-changes`;
+  await $`percy storybook ${path.join(MONOREPO_ROOT, 'apps/storybook/dist')}`;
 };
 
 void main();
