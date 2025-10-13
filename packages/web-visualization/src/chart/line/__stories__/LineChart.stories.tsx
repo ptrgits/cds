@@ -1688,6 +1688,34 @@ const AssetPriceDotted = memo(() => {
 
 const sampleData = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
+const ConnectNullsChart = () => {
+  const dataWithGaps = [10, 22, 29, null, null, 45, 22, 52, null, 4, 68, 20, 21, 58];
+  const dataWithGapsOffset = dataWithGaps.map((value) => (value !== null ? value + 40 : null));
+
+  return (
+    <CartesianChart
+      enableScrubbing
+      height={250}
+      series={[
+        {
+          id: 'withGaps',
+          data: dataWithGaps,
+        },
+        {
+          id: 'connected',
+          data: dataWithGapsOffset,
+          color: 'var(--color-fgPositive)',
+        },
+      ]}
+    >
+      <YAxis showGrid />
+      <Line curve="monotone" seriesId="withGaps" />
+      <Line connectNulls curve="monotone" seriesId="connected" />
+      <Scrubber />
+    </CartesianChart>
+  );
+};
+
 export const All = () => {
   return (
     <VStack gap={2}>
@@ -1728,6 +1756,9 @@ export const All = () => {
       </Example>
       <Example title="Gain/Loss">
         <GainLossChart />
+      </Example>
+      <Example title="Connect Nulls">
+        <ConnectNullsChart />
       </Example>
       <Example title="Multiple Series">
         <MultipleSeriesChart />

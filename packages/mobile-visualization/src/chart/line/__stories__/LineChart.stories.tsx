@@ -12,7 +12,6 @@ import {
 import type { View } from 'react-native';
 import { Defs, LinearGradient, Stop, TSpan } from 'react-native-svg';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
-import { candles as btcCandles } from '@coinbase/cds-common/internal/data/candles';
 import { prices } from '@coinbase/cds-common/internal/data/prices';
 import { sparklineInteractiveData } from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
 import { useTabsContext } from '@coinbase/cds-common/tabs/TabsContext';
@@ -847,19 +846,6 @@ export const ForecastChart = () => {
   );
 };
 
-const PeriodSelectorExample = () => {
-  const tabs = [
-    { id: '1H', label: '1H' },
-    { id: '1D', label: '1D' },
-    { id: '1W', label: '1W' },
-    { id: '1M', label: '1M' },
-    { id: '1Y', label: '1Y' },
-    { id: 'All', label: 'All' },
-  ];
-  const [activeTab, setActiveTab] = useState<TabValue | null>(tabs[0]);
-  return <PeriodSelector activeTab={activeTab} onChange={(tab) => setActiveTab(tab)} tabs={tabs} />;
-};
-
 const BTCTab: TabComponent = memo(
   forwardRef(({ label, ...props }: SegmentedTabProps, ref: React.ForwardedRef<View>) => {
     const { activeTab } = useTabsContext();
@@ -1363,71 +1349,6 @@ const GainLossChart = () => {
       <Line curve="monotone" seriesId="prices" stroke={solidColor} strokeWidth={3} />
       <Scrubber hideOverlay />
     </CartesianChart>
-  );
-};
-
-const BitcoinChartWithScrubberBeacon = () => {
-  const theme = useTheme();
-  const prices = [...btcCandles].reverse().map((candle) => parseFloat(candle.close));
-  const latestPrice = prices[prices.length - 1];
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
-
-  const formatPercentChange = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price);
-  };
-
-  const percentChange = (latestPrice - prices[0]) / prices[0];
-
-  return (
-    <Box borderRadius={300} overflow="hidden" style={{ backgroundColor: '#ED702F' }}>
-      {/* Semi-transparent black overlay */}
-      <VStack style={{ backgroundColor: 'rgba(0, 0, 0, 0.80)' }}>
-        <HStack alignItems="center" gap={2} padding={2} paddingBottom={0}>
-          <RemoteImage shape="circle" size="xxl" source={assets.btc.imageUrl} />
-          <VStack flexGrow={1} gap={0.25}>
-            <Text font="title1" style={{ color: 'white' }}>
-              BTC
-            </Text>
-            <Text color="fgMuted" font="label1">
-              Bitcoin
-            </Text>
-          </VStack>
-          <VStack alignItems="flex-end" gap={0.25}>
-            <Text font="title1" style={{ color: 'white' }}>
-              {formatPrice(latestPrice)}
-            </Text>
-            <Text color="fgPositive" font="label1">
-              +{formatPercentChange(percentChange)}
-            </Text>
-          </VStack>
-        </HStack>
-        <LineChart
-          showArea
-          height={64}
-          inset={{ left: 0, right: 3, bottom: 0, top: 2 }}
-          series={[
-            {
-              id: 'btcPrice',
-              data: prices,
-              color: assets.btc.color,
-            },
-          ]}
-          width="100%"
-        >
-          <Scrubber />
-        </LineChart>
-      </VStack>
-    </Box>
   );
 };
 
@@ -2074,185 +1995,36 @@ const AvailabilityChart = () => {
 
 const sampleData = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-const LineChartStories = () => {
+const ConnectNullsChart = () => {
   const theme = useTheme();
+  const dataWithGaps = [10, 22, 29, null, null, 45, 22, 52, null, 4, 68, 20, 21, 58];
+  const dataWithGapsOffset = dataWithGaps.map((value) => (value !== null ? value + 40 : null));
 
   return (
-    <ExampleScreen>
-      <Example title="Basic">
-        <LineChart
-          enableScrubbing
-          showArea
-          showYAxis
-          curve="monotone"
-          height={defaultChartHeight}
-          series={[
-            {
-              id: 'prices',
-              data: sampleData,
-            },
-          ]}
-          yAxis={{
-            showGrid: true,
-          }}
-        >
-          <Scrubber />
-        </LineChart>
-      </Example>
-      <Example title="Simple">
-        <LineChart
-          curve="monotone"
-          height={defaultChartHeight}
-          series={[
-            {
-              id: 'prices',
-              data: sampleData,
-            },
-          ]}
-        />
-      </Example>
-      <Example title="Gain/Loss">
-        <GainLossChart />
-      </Example>
-      <Example title="BTC Price Chart">
-        <BTCPriceChart />
-      </Example>
-      <Example title="Price Chart">
-        <PriceChart />
-      </Example>
-      <Example title="Asset Price Dotted">
-        <AssetPriceDotted />
-      </Example>
-      <Example title="Multiple Series">
-        <LineChart
-          enableScrubbing
-          showXAxis
-          showYAxis
-          height={defaultChartHeight}
-          series={[
-            {
-              id: 'pageViews',
-              data: [2400, 1398, 9800, 3908, 4800, 3800, 4300],
-              label: 'Page Views',
-              color: theme.color.accentBoldBlue,
-              curve: 'natural',
-            },
-            {
-              id: 'uniqueVisitors',
-              data: [4000, 3000, 2000, 2780, 1890, 2390, 3490],
-              label: 'Unique Visitors',
-              color: theme.color.accentBoldGreen,
-              curve: 'natural',
-            },
-          ]}
-          xAxis={{
-            data: ['Page A', 'Page B', 'Page C', 'Page D', 'Page E', 'Page F', 'Page G'],
-            scaleType: 'band',
-          }}
-          yAxis={{
-            domain: {
-              min: 0,
-            },
-            showGrid: true,
-            tickLabelFormatter: (value) => value.toLocaleString(),
-          }}
-        >
-          <Scrubber />
-        </LineChart>
-      </Example>
-      <Example title="Points">
-        <CartesianChart
-          height={defaultChartHeight}
-          series={[
-            {
-              id: 'prices',
-              data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
-            },
-          ]}
-        >
-          <Area curve="monotone" fill={`rgb(${theme.spectrum.blue5})`} seriesId="prices" />
-          <Line
-            curve="monotone"
-            renderPoints={({ dataX, ...props }) =>
-              [4, 6, 7, 9, 10].includes(dataX)
-                ? {
-                    ...props,
-                    strokeWidth: 2,
-                    stroke: theme.color.bg,
-                    radius: 5,
-                    onClick: () => alert('You have clicked a key market shift!'),
-                  }
-                : false
-            }
-            seriesId="prices"
-          />
-        </CartesianChart>
-      </Example>
-      <Example title="Data Formats">
-        <LineChart
-          enableScrubbing
-          showArea
-          showXAxis
-          showYAxis
-          curve="natural"
-          height={defaultChartHeight}
-          renderPoints={() => true}
-          series={[
-            {
-              id: 'line',
-              data: [2, 5.5, 2, 8.5, 1.5, 5],
-            },
-          ]}
-          xAxis={{ data: [1, 2, 3, 5, 8, 10], showLine: true, showTickMarks: true, showGrid: true }}
-          yAxis={{
-            domain: { min: 0 },
-            position: 'left',
-            showLine: true,
-            showTickMarks: true,
-            showGrid: true,
-          }}
-        >
-          <Scrubber />
-        </LineChart>
-      </Example>
-      <Example title="Bitcoin Chart with Scrubber Beacon">
-        <BitcoinChartWithScrubberBeacon />
-      </Example>
-      <Example title="Scrubber with Imperative Handle">
-        <ScrubberWithImperativeHandle />
-      </Example>
-      <Example title="Asset Price">
-        <AssetPrice />
-      </Example>
-      <Example title="Line Styles">
-        <LineStyles />
-      </Example>
-      <Example title="Chart Scale">
-        <ChartScale />
-      </Example>
-      <Example title="Color Shift Chart">
-        <ColorShiftChart />
-      </Example>
-      <Example title="Price Chart">
-        <PriceChart />
-      </Example>
-      <Example title="Forecast Chart">
-        <ForecastChart />
-      </Example>
-      <Example title="Period Selector">
-        <PeriodSelectorExample />
-      </Example>
-      <Example title="Live Asset Price">
-        <LiveAssetPrice />
-      </Example>
-      <Example title="Availability Chart">
-        <AvailabilityChart />
-      </Example>
-    </ExampleScreen>
+    <CartesianChart
+      enableScrubbing
+      height={defaultChartHeight}
+      series={[
+        {
+          id: 'withGaps',
+          data: dataWithGaps,
+        },
+        {
+          id: 'connected',
+          data: dataWithGapsOffset,
+          color: theme.color.fgPositive,
+        },
+      ]}
+    >
+      <YAxis showGrid />
+      <Line curve="monotone" seriesId="withGaps" />
+      <Line connectNulls curve="monotone" seriesId="connected" />
+      <Scrubber />
+    </CartesianChart>
   );
 };
 
-const AssetPriceScreen = () => {
+const LineChartStories = () => {
   return (
     <ExampleScreen>
       <Example title="Scrubber with Imperative Handle">
@@ -2318,6 +2090,9 @@ const AssetPriceScreen = () => {
       </Example>
       <Example title="Color Shift Chart">
         <ColorShiftChart />
+      </Example>
+      <Example title="Connect Nulls">
+        <ConnectNullsChart />
       </Example>
       <Example title="Asset Price Dotted">
         <AssetPriceDotted />
@@ -2347,4 +2122,4 @@ const AssetPriceScreen = () => {
   );
 };
 
-export default AssetPriceScreen;
+export default LineChartStories;

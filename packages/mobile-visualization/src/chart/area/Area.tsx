@@ -67,6 +67,12 @@ export type AreaProps = {
    * When set, overrides the default baseline.
    */
   baseline?: number;
+  /**
+   * When true, null values are skipped and the area connects across gaps.
+   * When false, null values create gaps in the area.
+   * @default false
+   */
+  connectNulls?: boolean;
 };
 
 export const Area = memo<AreaProps>(
@@ -80,6 +86,7 @@ export const Area = memo<AreaProps>(
     stroke,
     strokeWidth,
     baseline,
+    connectNulls = false,
   }) => {
     const theme = useTheme();
     const { getSeries, getSeriesData, getXScale, getYScale, getXAxis, drawingArea } =
@@ -113,8 +120,9 @@ export const Area = memo<AreaProps>(
         yScale,
         curve,
         xData,
+        connectNulls,
       });
-    }, [sourceData, xScale, yScale, curve, xAxis?.data]);
+    }, [sourceData, xScale, yScale, curve, xAxis?.data, connectNulls]);
 
     const AreaComponent = useMemo((): AreaComponent => {
       if (SelectedAreaComponent) {
