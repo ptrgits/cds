@@ -14,11 +14,13 @@ import {
 import { Area, type AreaProps } from './Area';
 
 export type AreaSeries = Series &
-  Partial<Pick<AreaProps, 'AreaComponent' | 'curve' | 'fillOpacity' | 'type' | 'fill'>> &
+  Partial<
+    Pick<AreaProps, 'AreaComponent' | 'curve' | 'fillOpacity' | 'type' | 'fill' | 'connectNulls'>
+  > &
   Partial<Pick<LineProps, 'LineComponent' | 'strokeWidth' | 'stroke' | 'opacity'>>;
 
 export type AreaChartProps = Omit<CartesianChartProps, 'xAxis' | 'yAxis' | 'series'> &
-  Pick<AreaProps, 'AreaComponent' | 'curve' | 'fillOpacity' | 'type'> &
+  Pick<AreaProps, 'AreaComponent' | 'curve' | 'fillOpacity' | 'type' | 'connectNulls'> &
   Pick<LineProps, 'LineComponent' | 'strokeWidth'> & {
     /**
      * Configuration objects that define how to visualize the data.
@@ -67,6 +69,7 @@ export const AreaChart = memo(
         curve,
         fillOpacity,
         type,
+        connectNulls,
         LineComponent,
         strokeWidth,
         showXAxis,
@@ -184,6 +187,7 @@ export const AreaChart = memo(
               <Area
                 key={id}
                 AreaComponent={AreaComponent}
+                connectNulls={connectNulls}
                 curve={curve}
                 fillOpacity={fillOpacity}
                 seriesId={id}
@@ -209,6 +213,7 @@ export const AreaChart = memo(
                   <Line
                     key={`${id}-line`}
                     LineComponent={LineComponent}
+                    connectNulls={connectNulls}
                     curve={curve}
                     seriesId={id} // Line component now handles stacked data automatically
                     stroke={color} // Default to series color

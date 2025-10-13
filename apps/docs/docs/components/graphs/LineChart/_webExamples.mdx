@@ -247,6 +247,42 @@ function GainLossChart() {
 }
 ```
 
+## Connect Nulls
+
+By default, null values in data create gaps in the line. Use `connectNulls` to skip null values and draw a continuous line.
+Note that scrubber beacons and points are still only shown at non-null data values.
+
+```jsx live
+function ConnectNullsExample() {
+  const dataWithGaps = [10, 22, 29, null, null, 45, 22, 52, null, 4, 68, 20, 21, 58];
+  const dataWithGapsOffset = dataWithGaps.map((value) => (value !== null ? value + 40 : null));
+
+  return (
+    <CartesianChart
+      enableScrubbing
+      height={{ base: 150, tablet: 200, desktop: 250 }}
+      series={[
+        {
+          id: 'withGaps',
+          data: dataWithGaps,
+        },
+        {
+          id: 'connected',
+          data: dataWithGapsOffset,
+          color: 'var(--color-fgPositive)',
+        },
+      ]}
+      padding={{ left: 2, right: 2 }}
+    >
+      <YAxis showGrid />
+      <Line seriesId="withGaps" curve="monotone" />
+      <Line seriesId="connected" connectNulls curve="monotone" />
+      <Scrubber />
+    </CartesianChart>
+  );
+}
+```
+
 ## Multiple Series
 
 You can add multiple series to a line chart.

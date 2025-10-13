@@ -86,6 +86,11 @@ export type LineProps = SharedProps & {
    */
   renderPoints?: (params: RenderPointsParams) => boolean | null | undefined | PointConfig;
   strokeWidth?: number;
+  /**
+   * When true, null values are skipped and the line connects across gaps.
+   * By default, null values create gaps in the line.
+   */
+  connectNulls?: boolean;
 };
 
 export const Line = memo<LineProps>(
@@ -102,6 +107,7 @@ export const Line = memo<LineProps>(
     AreaComponent,
     opacity = 1,
     renderPoints,
+    connectNulls,
     ...props
   }) => {
     const { animate, getSeries, getSeriesData, getXScale, getYScale, getXAxis } =
@@ -164,8 +170,9 @@ export const Line = memo<LineProps>(
         yScale,
         curve,
         xData,
+        connectNulls,
       });
-    }, [chartData, xScale, yScale, curve, xAxis?.data]);
+    }, [chartData, xScale, yScale, curve, xAxis?.data, connectNulls]);
 
     const LineComponent = useMemo((): LineComponent => {
       if (SelectedLineComponent) {
@@ -199,6 +206,7 @@ export const Line = memo<LineProps>(
           <Area
             AreaComponent={AreaComponent}
             baseline={areaBaseline}
+            connectNulls={connectNulls}
             curve={curve}
             fill={stroke}
             fillOpacity={opacity}

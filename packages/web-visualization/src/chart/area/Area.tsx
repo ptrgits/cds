@@ -52,6 +52,11 @@ export type AreaProps = Pick<
    * Takes precedence over the type prop if provided.
    */
   AreaComponent?: AreaComponent;
+  /**
+   * When true, null values are skipped and the area connects across gaps.
+   * By default, null values create gaps in the area.
+   */
+  connectNulls?: boolean;
 };
 
 export const Area = memo<AreaProps>(
@@ -65,6 +70,7 @@ export const Area = memo<AreaProps>(
     stroke,
     strokeWidth,
     baseline,
+    connectNulls,
   }) => {
     const { getSeries, getSeriesData, getXScale, getYScale, getXAxis } = useCartesianChartContext();
 
@@ -100,8 +106,9 @@ export const Area = memo<AreaProps>(
         yScale,
         curve,
         xData,
+        connectNulls,
       });
-    }, [sourceData, xScale, yScale, curve, xAxis?.data]);
+    }, [sourceData, xScale, yScale, curve, xAxis?.data, connectNulls]);
 
     const AreaComponent = useMemo((): AreaComponent => {
       if (SelectedAreaComponent) {

@@ -24,6 +24,7 @@ export type LineSeries = Series &
       | 'opacity'
       | 'renderPoints'
       | 'strokeWidth'
+      | 'connectNulls'
     >
   >;
 
@@ -39,6 +40,7 @@ export type LineChartProps = Omit<CartesianChartProps, 'xAxis' | 'yAxis' | 'seri
     | 'curve'
     | 'renderPoints'
     | 'strokeWidth'
+    | 'connectNulls'
   > & {
     /**
      * Configuration objects that define how to visualize the data.
@@ -71,6 +73,7 @@ export const LineChart = memo(
         curve,
         renderPoints,
         strokeWidth,
+        connectNulls,
         showXAxis,
         showYAxis,
         xAxis,
@@ -156,6 +159,7 @@ export const LineChart = memo(
               AreaComponent={AreaComponent}
               LineComponent={LineComponent}
               areaType={areaType}
+              connectNulls={connectNulls}
               curve={curve}
               onPointClick={onPointClick}
               renderPoints={renderPoints}
