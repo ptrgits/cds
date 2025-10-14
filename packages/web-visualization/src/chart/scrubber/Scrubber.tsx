@@ -121,9 +121,9 @@ export const Scrubber = memo(
         label,
         lineStroke,
         labelProps,
-        BeaconComponent,
-        BeaconLabelComponent,
-        LineComponent,
+        BeaconComponent = ScrubberBeacon,
+        BeaconLabelComponent = ScrubberBeaconLabel,
+        LineComponent = ReferenceLine,
         hideOverlay,
         overlayOffset = 2,
         testID,
@@ -547,11 +547,6 @@ export const Scrubber = memo(
       const defaultXScale = getXScale();
       if (!defaultXScale) return null;
 
-      // Use custom components if provided
-      const ScrubberLineComponent = LineComponent ?? ReferenceLine;
-      const ScrubberBeaconComponent = BeaconComponent ?? ScrubberBeacon;
-      const ScrubberBeaconLabelComponent = BeaconLabelComponent ?? ScrubberBeaconLabel;
-
       const pixelX =
         dataX !== undefined && defaultXScale ? getPointOnScale(dataX, defaultXScale) : undefined;
 
@@ -585,7 +580,7 @@ export const Scrubber = memo(
               />
             )}
           {!hideLine && scrubberPosition !== undefined && dataX !== undefined && (
-            <ScrubberLineComponent
+            <LineComponent
               className={classNames?.line}
               dataX={dataX}
               label={typeof label === 'function' ? label(dataIndex) : label}
@@ -606,7 +601,7 @@ export const Scrubber = memo(
 
             return (
               <g key={beacon.targetSeries.id} data-component="scrubber-beacon">
-                <ScrubberBeaconComponent
+                <BeaconComponent
                   ref={createScrubberBeaconRef(beacon.targetSeries.id) as any}
                   className={classNames?.beacon}
                   color={beacon.targetSeries?.color}
@@ -625,7 +620,7 @@ export const Scrubber = memo(
                     const finalSide = adjustment?.side ?? labelPositioning.strategy;
 
                     return (
-                      <ScrubberBeaconLabelComponent
+                      <BeaconLabelComponent
                         background="var(--color-bg)"
                         bounds={drawingArea}
                         className={classNames?.beaconLabel}
@@ -653,7 +648,7 @@ export const Scrubber = memo(
                         y={finalAnchorY}
                       >
                         {beacon.label}
-                      </ScrubberBeaconLabelComponent>
+                      </BeaconLabelComponent>
                     );
                   })()}
               </g>

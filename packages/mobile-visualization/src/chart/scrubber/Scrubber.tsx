@@ -244,7 +244,12 @@ export const Scrubber = memo(
             <LineComponent
               dataX={dataX}
               label={memoizedScrubberLabel}
-              labelProps={labelProps}
+              labelProps={{
+                verticalAlignment: 'middle',
+                // Place in the middle vertically by default
+                dy: -0.5 * drawingArea.y,
+                ...labelProps,
+              }}
               stroke={lineStroke}
             />
           )}
