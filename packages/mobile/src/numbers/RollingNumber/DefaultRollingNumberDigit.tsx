@@ -63,13 +63,20 @@ export const DefaultRollingNumberDigit: RollingNumberDigitComponent = memo(
       const maskStyle = useMemo(() => ({ height: digitHeight }), [digitHeight]);
 
       const digitStackStyle = useMemo(
-        () => [animatedStyle, { height: digitHeight * 10 }, style, styles?.root, styles?.text],
+        () => [
+          animatedStyle,
+          { height: digitHeight * 10 },
+          style,
+          styles?.root,
+          styles?.text,
+          { lineHeight: digitHeight },
+        ],
         [animatedStyle, digitHeight, style, styles?.root, styles?.text],
       );
 
       return (
         <RollingNumberMaskComponent ref={ref} {...props} style={maskStyle}>
-          <AnimatedText style={digitStackStyle} {...textProps}>
+          <AnimatedText {...textProps} style={digitStackStyle}>
             {/* We are doing it this way instead of a VStack because it's more performant, the color animation is applied 1 time instead of 10 */}
             {digits.join('\n')}
           </AnimatedText>

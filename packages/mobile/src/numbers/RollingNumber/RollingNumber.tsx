@@ -1,6 +1,7 @@
 import { forwardRef, memo, useMemo, useState } from 'react';
 import {
   type LayoutChangeEvent,
+  PixelRatio,
   type StyleProp,
   StyleSheet,
   type TextStyle,
@@ -437,7 +438,8 @@ export const RollingNumber = memo(
 
       const handleMeasureDigits = (e: LayoutChangeEvent) => {
         const { layout } = e.nativeEvent;
-        setDigitHeight(Math.floor(layout.height));
+        const snappedHeight = PixelRatio.roundToNearestPixel(layout.height);
+        setDigitHeight(snappedHeight);
       };
 
       const textProps = useMemo(
