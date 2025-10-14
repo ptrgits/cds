@@ -393,6 +393,61 @@ export const All = () => {
           }}
         />
       </Example>
+      <Example title="Right Y-Axis with Labels">
+        <CartesianChart
+          height={400}
+          series={[
+            {
+              id: 'revenue',
+              data: [45, 52, 38, 45, 19, 23, 32],
+              color: 'var(--color-accentBoldBlue)',
+            },
+          ]}
+          xAxis={{
+            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            scaleType: 'band',
+          }}
+        >
+          <XAxis showLine showTickMarks label="Day of Week" />
+          <YAxis
+            showGrid
+            showLine
+            showTickMarks
+            label="Revenue"
+            position="right"
+            requestedTickCount={5}
+            tickLabelFormatter={(value) => `$${value}k`}
+          />
+          <BarPlot />
+        </CartesianChart>
+      </Example>
+      <Example title="Negative Values with Top Axis">
+        <CartesianChart
+          height={400}
+          series={[
+            {
+              id: 'losses',
+              data: [-45, -52, -38, -45, -19, -23, -32],
+              color: 'var(--color-fgNegative)',
+            },
+          ]}
+          xAxis={{
+            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            scaleType: 'band',
+          }}
+        >
+          <XAxis showLine showTickMarks label="Day of Week" position="top" />
+          <YAxis
+            showGrid
+            showLine
+            showTickMarks
+            label="Loss"
+            requestedTickCount={5}
+            tickLabelFormatter={(value) => `$${value}k`}
+          />
+          <BarPlot />
+        </CartesianChart>
+      </Example>
       <Example title="Positive and Negative Cash Flow">
         <PositiveAndNegativeCashFlow />
       </Example>
@@ -432,23 +487,27 @@ export const All = () => {
             },
           ]}
         >
-          <XAxis showLine showTickMarks />
+          <XAxis showLine showTickMarks label="Month" />
           <YAxis
             showGrid
             showLine
             showTickMarks
             axisId="revenue"
+            label="Revenue"
             position="left"
             requestedTickCount={5}
             tickLabelFormatter={(value) => `$${value}k`}
-            width={60}
+            width={80}
           />
           <YAxis
             showLine
             showTickMarks
             axisId="profit"
+            label="Profit"
+            position="right"
             requestedTickCount={5}
             tickLabelFormatter={(value) => `$${value}k`}
+            width={70}
           />
           <BarPlot />
         </CartesianChart>

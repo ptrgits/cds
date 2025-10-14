@@ -1,17 +1,21 @@
 import { memo, useCallback, useEffect, useId, useMemo } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { G, Line } from 'react-native-svg';
+import { Circle, G, Line, Rect } from 'react-native-svg';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { DottedLine } from '../line/DottedLine';
 import { ReferenceLine } from '../line/ReferenceLine';
+import { ChartText } from '../text/ChartText';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
 import { getAxisTicksData, isCategoricalScale } from '../utils';
 
 import type { AxisBaseProps, AxisProps } from './Axis';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
+
+const AXIS_WIDTH = 44;
+const LABEL_SIZE = 20;
 
 export type YAxisBaseProps = AxisBaseProps & {
   /**
@@ -26,7 +30,7 @@ export type YAxisBaseProps = AxisBaseProps & {
   position?: 'left' | 'right';
   /**
    * Width of the axis. This value is inclusive of the padding.
-   * @default 44
+   * @default 44 when no label is provided, 64 when a label is provided
    */
   width?: number;
 };
@@ -47,12 +51,14 @@ export const YAxis = memo<YAxisProps>(
     classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 8,
-    width = 44,
     minTickLabelGap = 0,
     showTickMarks,
     showLine,
     tickMarkSize = 4,
     tickInterval,
+    label,
+    labelGap = 4,
+    width = label ? AXIS_WIDTH + LABEL_SIZE : AXIS_WIDTH,
     ...props
   }) => {
     const theme = useTheme();
@@ -184,7 +190,13 @@ export const YAxis = memo<YAxisProps>(
       opacity: gridOpacity.value,
     }));
 
-    if (!yScale) return;
+    if (!yScale || !axisBounds) return;
+
+    const labelX =
+      position === 'left'
+        ? axisBounds.x + LABEL_SIZE / 2
+        : axisBounds.x + axisBounds.width - LABEL_SIZE / 2;
+    const labelY = axisBounds.y + axisBounds.height / 2;
 
     return (
       <G data-axis="y" data-position={position} {...props}>
@@ -233,7 +245,7 @@ export const YAxis = memo<YAxisProps>(
             })}
           </G>
         )}
-        {axisBounds && showLine && (
+        {showLine && (
           <Line
             {...axisLineProps}
             x1={position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x}
@@ -241,6 +253,17 @@ export const YAxis = memo<YAxisProps>(
             y1={axisBounds.y}
             y2={axisBounds.y + axisBounds.height}
           />
+        )}
+        {label && (
+          <ChartText
+            horizontalAlignment="center"
+            transform={`rotate(${position === 'left' ? -90 : 90})`}
+            verticalAlignment="middle"
+            x={labelX}
+            y={labelY}
+          >
+            {label}
+          </ChartText>
         )}
       </G>
     );

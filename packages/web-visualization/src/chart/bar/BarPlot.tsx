@@ -108,7 +108,7 @@ export const BarPlot = memo<BarPlotProps>(
             />
           </clipPath>
         </defs>
-        <g clipPath={`url(#${clipPathId})`} data-testid="whoa">
+        <g clipPath={`url(#${clipPathId})`}>
           {stackGroups.map((group, stackIndex) => (
             <BarStackGroup
               key={group.stackId}

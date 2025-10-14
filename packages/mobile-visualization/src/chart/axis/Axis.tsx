@@ -54,6 +54,15 @@ export type AxisBaseProps = {
    */
   GridLineComponent?: LineComponent;
   /**
+   * Label text to display for the axis.
+   */
+  label?: string;
+  /**
+   * Gap between the tick labels and the axis label.
+   * @default 4
+   */
+  labelGap?: number;
+  /**
    * Minimum gap between tick labels.
    * Labels will be hidden if they are closer than this gap.
    * @default 4
@@ -160,6 +169,10 @@ export type AxisProps = AxisBaseProps & {
      */
     root?: string;
     /**
+     * Custom className for the axis label.
+     */
+    label?: string;
+    /**
      * Custom className for the tick labels.
      */
     tickLabel?: string;
@@ -188,6 +201,10 @@ export type AxisProps = AxisBaseProps & {
      * Custom style for the root element.
      */
     root?: React.CSSProperties;
+    /**
+     * Custom style for the axis label.
+     */
+    label?: React.CSSProperties;
     /**
      * Custom style for the tick labels.
      */

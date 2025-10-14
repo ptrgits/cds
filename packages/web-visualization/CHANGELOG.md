@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 
 <!-- template-start -->
 
+## 3.4.0-beta.4 (10/16/2025 PST)
+
+#### 🚀 Updates
+
+- Support connecting null values in Area and Line
+- Added label to XAxis and YAxis
+
 ## 3.4.0-beta.3 (10/6/2025 PST)
 
 #### 🐞 Fixes

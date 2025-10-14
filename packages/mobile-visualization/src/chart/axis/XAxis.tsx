@@ -1,17 +1,21 @@
 import { memo, useCallback, useEffect, useId, useMemo } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { G, Line } from 'react-native-svg';
+import { Circle, G, Line, Rect } from 'react-native-svg';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { DottedLine } from '../line/DottedLine';
 import { ReferenceLine } from '../line/ReferenceLine';
+import { ChartText } from '../text/ChartText';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
 import { getAxisTicksData, isCategoricalScale } from '../utils';
 
 import { type AxisBaseProps, type AxisProps } from './Axis';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
+
+const AXIS_HEIGHT = 32;
+const LABEL_SIZE = 20;
 
 export type XAxisBaseProps = AxisBaseProps & {
   /**
@@ -21,7 +25,7 @@ export type XAxisBaseProps = AxisBaseProps & {
   position?: 'top' | 'bottom';
   /**
    * Height of the axis. This value is inclusive of the padding.
-   * @default 32
+   * @default 32 when no label is provided, 52 when a label is provided
    */
   height?: number;
 };
@@ -41,7 +45,6 @@ export const XAxis = memo<XAxisProps>(
     classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 2,
-    height = 32,
     minTickLabelGap = 4,
     showTickMarks,
     showLine,
@@ -49,6 +52,9 @@ export const XAxis = memo<XAxisProps>(
     tickInterval = 32,
     tickMinStep = 1,
     tickMaxStep,
+    label,
+    labelGap = 4,
+    height = label ? AXIS_HEIGHT + LABEL_SIZE : AXIS_HEIGHT,
     ...props
   }) => {
     const theme = useTheme();
@@ -157,12 +163,17 @@ export const XAxis = memo<XAxisProps>(
       return ticksData.map((tick) => {
         const tickOffset = tickMarkLabelGap + (showTickMarks ? tickMarkSize : 0);
 
-        const availableSpace = axisBounds.height - tickOffset;
+        // Use AXIS_HEIGHT for centering, not full axisBounds.height
+        // This ensures tick labels are centered in the axis area, not including label space
+        const availableSpace = AXIS_HEIGHT - tickOffset;
         const labelOffset = availableSpace / 2;
+
+        // For bottom position: start at axisBounds.y
+        // For top position with label: start at axisBounds.y + LABEL_SIZE
+        const baseY = position === 'top' && label ? axisBounds.y + LABEL_SIZE : axisBounds.y;
+
         const labelY =
-          position === 'top'
-            ? axisBounds.y + labelOffset - tickOffset
-            : axisBounds.y + labelOffset + tickOffset;
+          position === 'top' ? baseY + labelOffset - tickOffset : baseY + labelOffset + tickOffset;
 
         return {
           x: tick.position,
@@ -188,13 +199,20 @@ export const XAxis = memo<XAxisProps>(
       formatTick,
       classNames?.tickLabel,
       styles?.tickLabel,
+      label,
     ]);
 
     const gridAnimatedStyle = useAnimatedStyle(() => ({
       opacity: gridOpacity.value,
     }));
 
-    if (!xScale) return;
+    if (!xScale || !axisBounds) return;
+
+    const labelX = axisBounds.x + axisBounds.width / 2;
+    const labelY =
+      position === 'bottom'
+        ? axisBounds.y + axisBounds.height - LABEL_SIZE / 2
+        : axisBounds.y + LABEL_SIZE / 2;
 
     return (
       <G data-axis="x" data-position={position} {...props}>
@@ -239,7 +257,7 @@ export const XAxis = memo<XAxisProps>(
             })}
           </G>
         )}
-        {axisBounds && showLine && (
+        {showLine && (
           <Line
             {...axisLineProps}
             x1={axisBounds.x}
@@ -247,6 +265,11 @@ export const XAxis = memo<XAxisProps>(
             y1={position === 'bottom' ? axisBounds.y : axisBounds.y + axisBounds.height}
             y2={position === 'bottom' ? axisBounds.y : axisBounds.y + axisBounds.height}
           />
+        )}
+        {label && (
+          <ChartText horizontalAlignment="center" verticalAlignment="middle" x={labelX} y={labelY}>
+            {label}
+          </ChartText>
         )}
       </G>
     );

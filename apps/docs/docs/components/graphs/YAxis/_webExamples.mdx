@@ -428,82 +428,85 @@ You can customize the tick labels using the `tickLabelFormatter` prop.
 </CartesianChart>
 ```
 
+### Label
+
+You can add a label to the axis using the `label` prop.
+
+```jsx live
+<CartesianChart
+  enableScrubbing
+  height={250}
+  series={[
+    {
+      id: 'prices',
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
+    },
+  ]}
+>
+  <YAxis showGrid label="Price ($)" tickLabelFormatter={(value) => `$${value}`} />
+  <Line seriesId="prices" curve="monotone" showArea />
+  <Scrubber />
+</CartesianChart>
+```
+
 ## Customization
 
 ### Multiple Y Axes
 
 ```jsx live
-<VStack gap={2}>
-  <CartesianChart
-    height={400}
-    series={[
-      {
-        id: 'revenue',
-        data: [455, 520, 380, 455, 285, 235],
-        yAxisId: 'revenue',
-        color: 'var(--color-accentBoldYellow)',
-      },
-      {
-        id: 'profitMargin',
-        data: [23, 20, 16, 38, 12, 9],
-        yAxisId: 'profitMargin',
-        color: 'var(--color-fgPositive)',
-      },
-    ]}
-    xAxis={{
-      data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      scaleType: 'band',
-    }}
-    yAxis={[
-      {
-        id: 'revenue',
-        domain: { min: 0 },
-      },
-      {
-        id: 'profitMargin',
-        domain: { min: 0, max: 100 },
-      },
-    ]}
-  >
-    <XAxis showLine showTickMarks />
-    <YAxis
-      showGrid
-      showLine
-      showTickMarks
-      axisId="revenue"
-      position="left"
-      requestedTickCount={5}
-      width={60}
-      tickLabelFormatter={(value) => `$${value}k`}
-    />
-    <YAxis
-      showLine
-      showTickMarks
-      axisId="profitMargin"
-      requestedTickCount={5}
-      tickLabelFormatter={(value) => `${value}%`}
-    />
-    <BarPlot />
-  </CartesianChart>
-  <HStack justifyContent="center" gap={2}>
-    <Box alignItems="center" gap={0.5}>
-      <Box
-        borderRadius={1000}
-        width={10}
-        height={10}
-        style={{ background: 'var(--color-accentBoldYellow)' }}
-      />
-      <Text font="label2">Revenue ($)</Text>
-    </Box>
-    <Box alignItems="center" gap={0.5}>
-      <Box
-        borderRadius={1000}
-        width={10}
-        height={10}
-        style={{ background: 'var(--color-fgPositive)' }}
-      />
-      <Text font="label2">Profit Margin (%)</Text>
-    </Box>
-  </HStack>
-</VStack>
+<CartesianChart
+  height={400}
+  series={[
+    {
+      id: 'revenue',
+      data: [455, 520, 380, 455, 285, 235],
+      yAxisId: 'revenue',
+      color: 'var(--color-accentBoldYellow)',
+    },
+    {
+      id: 'profitMargin',
+      data: [23, 20, 16, 38, 12, 9],
+      yAxisId: 'profitMargin',
+      color: 'var(--color-fgPositive)',
+    },
+  ]}
+  xAxis={{
+    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    scaleType: 'band',
+  }}
+  yAxis={[
+    {
+      id: 'revenue',
+      domain: { min: 0 },
+    },
+    {
+      id: 'profitMargin',
+      domain: { min: 0, max: 100 },
+    },
+  ]}
+  inset={{ left: 0, right: 0 }}
+>
+  <XAxis showLine showTickMarks label="Month" />
+  <YAxis
+    showGrid
+    showLine
+    showTickMarks
+    axisId="revenue"
+    position="left"
+    label="Revenue"
+    width={80}
+    requestedTickCount={5}
+    tickLabelFormatter={(value) => `$${value}k`}
+  />
+  <YAxis
+    showLine
+    showTickMarks
+    axisId="profitMargin"
+    label="Profit Margin"
+    width={70}
+    requestedTickCount={5}
+    tickLabelFormatter={(value) => `${value}%`}
+  />
+  <BarPlot />
+</CartesianChart>
 ```

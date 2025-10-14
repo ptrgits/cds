@@ -6,6 +6,7 @@ import { AnimatePresence, m as motion } from 'framer-motion';
 import { useCartesianChartContext } from '../ChartProvider';
 import { DottedLine } from '../line/DottedLine';
 import { ReferenceLine } from '../line/ReferenceLine';
+import { ChartText } from '../text/ChartText';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
 import { getAxisTicksData, isCategoricalScale } from '../utils';
 
@@ -16,6 +17,9 @@ import {
   axisTickMarkStyles,
   axisUpdateAnimationVariants,
 } from './Axis';
+
+const AXIS_WIDTH = 44;
+const LABEL_SIZE = 20;
 
 const axisTickMarkCss = css`
   ${axisTickMarkStyles}
@@ -37,7 +41,7 @@ export type YAxisBaseProps = AxisBaseProps & {
   position?: 'left' | 'right';
   /**
    * Width of the axis. This value is inclusive of the padding.
-   * @default 44
+   * @default 44 when no label is provided, 64 when a label is provided
    */
   width?: number;
 };
@@ -58,12 +62,14 @@ export const YAxis = memo<YAxisProps>(
     classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 8,
-    width = 44,
     minTickLabelGap = 0,
     showTickMarks,
     showLine,
     tickMarkSize = 4,
     tickInterval,
+    label,
+    labelGap = 4,
+    width = label ? AXIS_WIDTH + LABEL_SIZE : AXIS_WIDTH,
     ...props
   }) => {
     const registrationId = useId();
@@ -166,7 +172,13 @@ export const YAxis = memo<YAxisProps>(
       styles?.tickLabel,
     ]);
 
-    if (!yScale) return;
+    if (!yScale || !axisBounds) return;
+
+    const labelX =
+      position === 'left'
+        ? axisBounds.x + LABEL_SIZE / 2
+        : axisBounds.x + axisBounds.width - LABEL_SIZE / 2;
+    const labelY = axisBounds.y + axisBounds.height / 2;
 
     return (
       <g
@@ -219,7 +231,7 @@ export const YAxis = memo<YAxisProps>(
             </motion.g>
           </AnimatePresence>
         )}
-        {axisBounds && showTickMarks && (
+        {showTickMarks && (
           <g data-testid="tick-marks">
             {ticksData.map((tick, index) => {
               const tickX = position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x;
@@ -243,7 +255,7 @@ export const YAxis = memo<YAxisProps>(
             })}
           </g>
         )}
-        {axisBounds && showLine && (
+        {showLine && (
           <line
             className={cx(axisLineCss, classNames?.line)}
             style={styles?.line}
@@ -252,6 +264,26 @@ export const YAxis = memo<YAxisProps>(
             y1={axisBounds.y}
             y2={axisBounds.y + axisBounds.height}
           />
+        )}
+        {label && (
+          <g
+            style={{
+              transformOrigin: `${labelX}px ${labelY}px`,
+              transform: `rotate(${position === 'left' ? -90 : 90}deg)`,
+            }}
+          >
+            <ChartText
+              disableRepositioning
+              className={classNames?.label}
+              horizontalAlignment="center"
+              style={styles?.label}
+              verticalAlignment="middle"
+              x={labelX}
+              y={labelY}
+            >
+              {label}
+            </ChartText>
+          </g>
         )}
       </g>
     );

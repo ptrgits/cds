@@ -184,23 +184,26 @@ const MultipleYAxes = () => {
         },
       ]}
     >
-      <XAxis showLine showTickMarks />
+      <XAxis showLine showTickMarks label="Month" />
       <YAxis
         showGrid
         showLine
         showTickMarks
         axisId="revenue"
+        label="Revenue"
         position="left"
         requestedTickCount={5}
         tickLabelFormatter={(value) => `$${value}k`}
-        width={60}
+        width={80}
       />
       <YAxis
         showLine
         showTickMarks
         axisId="profit"
+        label="Profit"
         requestedTickCount={5}
         tickLabelFormatter={(value) => `$${value}k`}
+        width={70}
       />
       <BarPlot />
     </CartesianChart>
@@ -238,6 +241,37 @@ const UpdatingChartValues = () => {
       />
       <Button onPress={() => setData((data) => data.map((d) => d + 10))}>Update Data</Button>
     </VStack>
+  );
+};
+
+const NegativeValuesWithTopAxis = () => {
+  const theme = useTheme();
+  return (
+    <CartesianChart
+      height={defaultChartHeight}
+      series={[
+        {
+          id: 'losses',
+          data: [-45, -52, -38, -45, -19, -23, -32],
+          color: theme.color.fgNegative,
+        },
+      ]}
+      xAxis={{
+        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        scaleType: 'band',
+      }}
+    >
+      <XAxis showLine showTickMarks label="Day of Week" position="top" />
+      <YAxis
+        showGrid
+        showLine
+        showTickMarks
+        label="Loss"
+        requestedTickCount={5}
+        tickLabelFormatter={(value) => `$${value}k`}
+      />
+      <BarPlot />
+    </CartesianChart>
   );
 };
 
@@ -282,6 +316,9 @@ const BarChartStories = () => {
       <Example title="Basic">
         <UpdatingChartValues />
       </Example>
+      <Example title="Negative Values with Top Axis">
+        <NegativeValuesWithTopAxis />
+      </Example>
       <Example title="Positive and Negative Cash Flow">
         <PositiveAndNegativeCashFlow />
       </Example>
@@ -290,11 +327,11 @@ const BarChartStories = () => {
       </Example>
       <Example title="Monthly Rewards">
         <MonthlyRewards />
-      </Example>
+      </Example>*/}
       <Example title="Multiple Y Axes">
         <MultipleYAxes />
       </Example>
-      <Example title="Candlestick Chart">
+      {/*<Example title="Candlestick Chart">
         <Candlesticks />
       </Example>*/}
     </ExampleScreen>

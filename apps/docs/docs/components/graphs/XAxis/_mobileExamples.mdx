@@ -581,3 +581,28 @@ If no data is set for the axis, it will receive the regular number value of the 
   <Scrubber />
 </CartesianChart>
 ```
+
+### Label
+
+You can add a label to the axis using the `label` prop.
+
+```jsx
+<CartesianChart
+  enableScrubbing
+  height={250}
+  series={[
+    {
+      id: 'prices',
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
+    },
+  ]}
+  xAxis={{
+    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+  }}
+>
+  <XAxis showLine showTickMarks showGrid label="Month" />
+  <YAxis showGrid />
+  <Line seriesId="prices" curve="monotone" showArea />
+  <Scrubber />
+</CartesianChart>
+```

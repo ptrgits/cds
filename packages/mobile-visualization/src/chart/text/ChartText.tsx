@@ -40,7 +40,7 @@ export type TextHorizontalAlignment = 'left' | 'center' | 'right';
 export type TextVerticalAlignment = 'top' | 'middle' | 'bottom';
 
 export type ChartTextProps = SharedProps &
-  Pick<TextProps, 'dx' | 'dy' | 'fontSize' | 'fontWeight' | 'opacity'> & {
+  Pick<TextProps, 'dx' | 'dy' | 'fontSize' | 'fontWeight' | 'opacity' | 'transform'> & {
     /**
      * The text color.
      * @default theme.color.fgMuted
@@ -148,6 +148,7 @@ type ChartTextVisibleProps = {
   inset?: number | ChartInset;
   dx?: TextProps['dx'];
   dy?: TextProps['dy'];
+  transform?: TextProps['transform'];
 };
 
 const ChartTextVisible = memo<ChartTextVisibleProps>(
@@ -164,6 +165,7 @@ const ChartTextVisible = memo<ChartTextVisibleProps>(
     textDimensions,
     dx,
     dy,
+    transform,
   }) => {
     const theme = useTheme();
     const inset = useMemo(() => getChartInset(insetInput), [insetInput]);
@@ -178,7 +180,7 @@ const ChartTextVisible = memo<ChartTextVisibleProps>(
     );
 
     return (
-      <G>
+      <G transform={transform}>
         {background !== 'transparent' && (
           <SvgRect
             fill={background}
@@ -226,6 +228,7 @@ export const ChartText = memo<ChartTextProps>(
     inset: insetInput,
     onDimensionsChange,
     opacity = 1,
+    transform,
   }) => {
     const { width: chartWidth, height: chartHeight } = useCartesianChartContext();
 
@@ -358,6 +361,7 @@ export const ChartText = memo<ChartTextProps>(
               inset={insetInput}
               textAnchor={textAnchor}
               textDimensions={textSize}
+              transform={transform}
             >
               {children}
             </ChartTextVisible>
@@ -373,6 +377,7 @@ export const ChartText = memo<ChartTextProps>(
           onLayout={onLayout}
           opacity={0}
           textAnchor={textAnchor}
+          transform={transform}
         >
           {children}
         </Text>

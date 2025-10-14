@@ -442,6 +442,27 @@ You can customize the tick labels using the `tickLabelFormatter` prop.
 </CartesianChart>
 ```
 
+### Label
+
+You can add a label to the axis using the `label` prop.
+
+```jsx
+<CartesianChart
+  enableScrubbing
+  height={250}
+  series={[
+    {
+      id: 'prices',
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
+    },
+  ]}
+>
+  <YAxis showGrid label="Price ($)" tickLabelFormatter={(value) => `$${value}`} />
+  <Line seriesId="prices" curve="monotone" showArea />
+  <Scrubber />
+</CartesianChart>
+```
+
 ## Customization
 
 ### Multiple Y Axes
