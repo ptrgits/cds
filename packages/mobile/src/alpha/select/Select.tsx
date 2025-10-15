@@ -556,8 +556,11 @@ const SelectBase = memo(
           />
         </View>
       );
-    },
-  ),
-);
+    };
 
-export const Select = SelectBase as SelectComponent;
+export const Select = memo(forwardRef(SelectInner)) as <
+  Type extends SelectType = 'single',
+  T extends string = string,
+>(
+  props: SelectProps<Type, T> & { ref?: React.Ref<View> },
+) => React.ReactElement;
