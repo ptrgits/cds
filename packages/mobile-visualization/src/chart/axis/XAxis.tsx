@@ -39,10 +39,6 @@ export const XAxis = memo<XAxisProps>(
     requestedTickCount,
     ticks,
     tickLabelFormatter,
-    style,
-    className,
-    styles,
-    classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 2,
     minTickLabelGap = 4,
@@ -180,10 +176,8 @@ export const XAxis = memo<XAxisProps>(
           y: labelY,
           label: String(formatTick(tick.tick)),
           chartTextProps: {
-            className: classNames?.tickLabel,
             color: theme.color.fgMuted,
             verticalAlignment: 'middle',
-            style: styles?.tickLabel,
             horizontalAlignment: 'center',
           },
         };
@@ -197,8 +191,6 @@ export const XAxis = memo<XAxisProps>(
       tickMarkSize,
       position,
       formatTick,
-      classNames?.tickLabel,
-      styles?.tickLabel,
       label,
     ]);
 

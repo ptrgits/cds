@@ -45,10 +45,6 @@ export const YAxis = memo<YAxisProps>(
     requestedTickCount = 5,
     ticks,
     tickLabelFormatter,
-    style,
-    className,
-    styles,
-    classNames,
     GridLineComponent = DottedLine,
     tickMarkLabelGap = 8,
     minTickLabelGap = 0,
@@ -165,10 +161,8 @@ export const YAxis = memo<YAxisProps>(
           y: tick.position,
           label: String(formatTick(tick.tick)),
           chartTextProps: {
-            className: classNames?.tickLabel,
             color: theme.color.fgMuted,
             verticalAlignment: 'middle',
-            style: styles?.tickLabel,
             horizontalAlignment: position === 'left' ? 'right' : 'left',
           },
         };
@@ -182,8 +176,6 @@ export const YAxis = memo<YAxisProps>(
       tickMarkSize,
       position,
       formatTick,
-      classNames?.tickLabel,
-      styles?.tickLabel,
     ]);
 
     const gridAnimatedStyle = useAnimatedStyle(() => ({
