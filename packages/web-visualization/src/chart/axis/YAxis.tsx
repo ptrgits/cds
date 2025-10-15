@@ -6,9 +6,10 @@ import { AnimatePresence, m as motion } from 'framer-motion';
 import { useCartesianChartContext } from '../ChartProvider';
 import { DottedLine } from '../line/DottedLine';
 import { ReferenceLine } from '../line/ReferenceLine';
+import { SolidLine } from '../line/SolidLine';
 import { ChartText } from '../text/ChartText';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
-import { getAxisTicksData, isCategoricalScale } from '../utils';
+import { getAxisTicksData, isCategoricalScale, lineToPath } from '../utils';
 
 import type { AxisBaseProps, AxisProps } from './Axis';
 import {
@@ -61,6 +62,8 @@ export const YAxis = memo<YAxisProps>(
     styles,
     classNames,
     GridLineComponent = DottedLine,
+    LineComponent = SolidLine,
+    TickMarkLineComponent = SolidLine,
     tickMarkLabelGap = 8,
     minTickLabelGap = 0,
     showTickMarks,
@@ -242,27 +245,33 @@ export const YAxis = memo<YAxisProps>(
                   : axisBounds.x + tickMarkSizePixels;
 
               return (
-                <line
+                <TickMarkLineComponent
                   key={`tick-mark-${tick.tick}-${index}`}
                   className={cx(axisTickMarkCss, classNames?.tickMark)}
+                  clipPath={undefined}
+                  d={lineToPath(tickX, tick.position, tickX2, tick.position)}
+                  stroke="var(--color-fg)"
+                  strokeLinecap="square"
+                  strokeWidth={1}
                   style={styles?.tickMark}
-                  x1={tickX}
-                  x2={tickX2}
-                  y1={tick.position}
-                  y2={tick.position}
                 />
               );
             })}
           </g>
         )}
         {showLine && (
-          <line
+          <LineComponent
             className={cx(axisLineCss, classNames?.line)}
+            d={lineToPath(
+              position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x,
+              axisBounds.y,
+              position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x,
+              axisBounds.y + axisBounds.height,
+            )}
+            stroke="var(--color-fg)"
+            strokeLinecap="square"
+            strokeWidth={1}
             style={styles?.line}
-            x1={position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x}
-            x2={position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x}
-            y1={axisBounds.y}
-            y2={axisBounds.y + axisBounds.height}
           />
         )}
         {label && (

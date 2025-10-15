@@ -232,6 +232,20 @@ export const getAreaPath = ({
 };
 
 /**
+ * Converts line coordinates to an SVG path string.
+ * Useful for rendering axis lines and tick marks.
+ *
+ * @example
+ * ```typescript
+ * const path = lineToPath(0, 0, 100, 100);
+ * // Returns: "M 0 0 L 100 100"
+ * ```
+ */
+export const lineToPath = (x1: number, y1: number, x2: number, y2: number): string => {
+  return `M${x1},${y1} L${x2},${y2}`;
+};
+
+/**
  * Creates an SVG path string for a rectangle with selective corner rounding.
  * Useful for creating bars in charts with optional rounded corners.
  *

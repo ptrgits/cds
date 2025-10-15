@@ -17,6 +17,7 @@ export type LineComponentProps = {
   strokeOpacity?: number;
   strokeWidth?: number;
   testID?: string;
+  clipPath?: string;
 };
 
 export type LineComponent = React.FC<LineComponentProps>;

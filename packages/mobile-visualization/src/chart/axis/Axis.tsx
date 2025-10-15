@@ -49,11 +49,6 @@ export const axisUpdateAnimationVariants = {
 
 export type AxisBaseProps = {
   /**
-   * Component to render the grid lines.
-   * @default DottedLine
-   */
-  GridLineComponent?: LineComponent;
-  /**
    * Label text to display for the axis.
    */
   label?: string;
@@ -112,24 +107,6 @@ export type AxisBaseProps = {
    */
   ticks?: number[] | ((value: number) => boolean);
   /**
-   * Formatter function for axis tick values.
-   * Tick values will be wrapped in ChartText component.
-   *
-   * @example
-   * // Simple string formatting
-   * tickLabelFormatter: (value) => `$${prices[value]}`
-   *
-   * @example
-   * // ReactNode with conditional styling
-   * tickLabelFormatter: (index) => {
-   *   if (index % 12 === 0) {
-   *     return <tspan style={{ fontWeight: 'bold' }}>${prices[index]}</tspan>;
-   *   }
-   *   return `$${prices[index]}`;
-   * }
-   */
-  tickLabelFormatter?: (value: any) => ChartTextChildren;
-  /**
    * Space between the axis tick mark and labels.
    * If tick marks are not shown, this is the gap between the axis and the chart.
    * @default 2 for x-axis, 8 for y-axis
@@ -155,4 +132,38 @@ export type AxisBaseProps = {
   tickMaxStep?: number;
 };
 
-export type AxisProps = AxisBaseProps;
+export type AxisProps = AxisBaseProps & {
+  /**
+   * Component to render the grid lines.
+   * @default DottedLine
+   */
+  GridLineComponent?: LineComponent;
+  /**
+   * Component to render the axis line.
+   * @default SolidLine
+   */
+  LineComponent?: LineComponent;
+  /**
+   * Component to render the tick marks.
+   * @default SolidLine
+   */
+  TickMarkLineComponent?: LineComponent;
+  /**
+   * Formatter function for axis tick values.
+   * Tick values will be wrapped in ChartText component.
+   *
+   * @example
+   * // XAxis
+   * tickLabelFormatter: (index) => {
+   *   if (index % 12 === 0) {
+   *     return <TSpan style={{ fontWeight: 'bold' }}>${prices[index]}</TSpan>;
+   *   }
+   *   return `$${prices[index]}`;
+   * }
+   *
+   * @example
+   * // YAxis
+   * tickLabelFormatter: (value) => `$${prices[value]}`
+   */
+  tickLabelFormatter?: (value: number) => ChartTextChildren;
+};

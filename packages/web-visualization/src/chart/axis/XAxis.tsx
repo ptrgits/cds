@@ -6,9 +6,10 @@ import { AnimatePresence, m as motion } from 'framer-motion';
 import { useCartesianChartContext } from '../ChartProvider';
 import { DottedLine } from '../line/DottedLine';
 import { ReferenceLine } from '../line/ReferenceLine';
+import { SolidLine } from '../line/SolidLine';
 import { ChartText } from '../text/ChartText';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
-import { getAxisTicksData, isCategoricalScale } from '../utils';
+import { getAxisTicksData, isCategoricalScale, lineToPath } from '../utils';
 
 import {
   type AxisBaseProps,
@@ -56,6 +57,8 @@ export const XAxis = memo<XAxisProps>(
     styles,
     classNames,
     GridLineComponent = DottedLine,
+    LineComponent = SolidLine,
+    TickMarkLineComponent = SolidLine,
     tickMarkLabelGap = 2,
     minTickLabelGap = 4,
     showTickMarks,
@@ -249,34 +252,36 @@ export const XAxis = memo<XAxisProps>(
           <g data-testid="tick-marks">
             {ticksData.map((tick, index) => {
               const tickY = position === 'bottom' ? axisBounds.y : axisBounds.y + axisBounds.height;
-              const tickMarkSizePixels = tickMarkSize;
-              const tickY2 =
-                position === 'bottom'
-                  ? axisBounds.y + tickMarkSizePixels
-                  : axisBounds.y + axisBounds.height - tickMarkSizePixels;
+              const tickY2 = position === 'bottom' ? tickY + tickMarkSize : tickY - tickMarkSize;
 
               return (
-                <line
+                <TickMarkLineComponent
                   key={`tick-mark-${tick.tick}-${index}`}
                   className={cx(axisTickMarkCss, classNames?.tickMark)}
+                  clipPath={undefined}
+                  d={lineToPath(tick.position, tickY2, tick.position, tickY)}
+                  stroke="var(--color-fg)"
+                  strokeLinecap="square"
+                  strokeWidth={1}
                   style={styles?.tickMark}
-                  x1={tick.position}
-                  x2={tick.position}
-                  y1={tickY}
-                  y2={tickY2}
                 />
               );
             })}
           </g>
         )}
         {showLine && (
-          <line
+          <LineComponent
             className={cx(axisLineCss, classNames?.line)}
+            d={lineToPath(
+              axisBounds.x,
+              position === 'bottom' ? axisBounds.y : axisBounds.y + axisBounds.height,
+              axisBounds.x + axisBounds.width,
+              position === 'bottom' ? axisBounds.y : axisBounds.y + axisBounds.height,
+            )}
+            stroke="var(--color-fg)"
+            strokeLinecap="square"
+            strokeWidth={1}
             style={styles?.line}
-            x1={axisBounds.x}
-            x2={axisBounds.x + axisBounds.width}
-            y1={position === 'bottom' ? axisBounds.y : axisBounds.y + axisBounds.height}
-            y2={position === 'bottom' ? axisBounds.y : axisBounds.y + axisBounds.height}
           />
         )}
         {label && (

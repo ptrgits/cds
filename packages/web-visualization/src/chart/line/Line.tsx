@@ -20,6 +20,9 @@ export type LineComponentProps = {
   strokeWidth?: number;
   testID?: string;
   animate?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  clipPath?: string;
 };
 
 export type LineComponent = React.FC<LineComponentProps>;

@@ -1,16 +1,17 @@
 import { memo, useCallback, useEffect, useId, useMemo } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { Circle, G, Line, Rect } from 'react-native-svg';
+import { Circle, G, Rect } from 'react-native-svg';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { DottedLine } from '../line/DottedLine';
 import { ReferenceLine } from '../line/ReferenceLine';
+import { SolidLine } from '../line/SolidLine';
 import { ChartText } from '../text/ChartText';
 import { SmartChartTextGroup, type TextLabelData } from '../text/SmartChartTextGroup';
-import { getAxisTicksData, isCategoricalScale } from '../utils';
+import { getAxisTicksData, isCategoricalScale, lineToPath } from '../utils';
 
-import type { AxisBaseProps, AxisProps } from './Axis';
+import { type AxisBaseProps, type AxisProps } from './Axis';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 
@@ -46,6 +47,8 @@ export const YAxis = memo<YAxisProps>(
     ticks,
     tickLabelFormatter,
     GridLineComponent = DottedLine,
+    LineComponent = SolidLine,
+    TickMarkLineComponent = SolidLine,
     tickMarkLabelGap = 8,
     minTickLabelGap = 0,
     showTickMarks,
@@ -68,23 +71,6 @@ export const YAxis = memo<YAxisProps>(
     const axisBounds = getAxisBounds(registrationId);
 
     const gridOpacity = useSharedValue(1);
-    const axisLineProps = useMemo(
-      () => ({
-        stroke: theme.color.fg,
-        strokeLinecap: 'square' as const,
-        strokeWidth: 1,
-      }),
-      [theme.color.fg],
-    );
-
-    const axisTickMarkProps = useMemo(
-      () => ({
-        stroke: theme.color.fg,
-        strokeLinecap: 'square' as const,
-        strokeWidth: 1,
-      }),
-      [theme.color.fg],
-    );
 
     useEffect(() => {
       registerAxis(registrationId, position, width);
@@ -225,25 +211,29 @@ export const YAxis = memo<YAxisProps>(
                   : axisBounds.x + tickMarkSizePixels;
 
               return (
-                <Line
+                <TickMarkLineComponent
                   key={`tick-mark-${tick.tick}-${index}`}
-                  {...axisTickMarkProps}
-                  x1={tickX}
-                  x2={tickX2}
-                  y1={tick.position}
-                  y2={tick.position}
+                  clipPath={undefined}
+                  d={lineToPath(tickX, tick.position, tickX2, tick.position)}
+                  stroke={theme.color.fg}
+                  strokeLinecap="square"
+                  strokeWidth={1}
                 />
               );
             })}
           </G>
         )}
         {showLine && (
-          <Line
-            {...axisLineProps}
-            x1={position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x}
-            x2={position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x}
-            y1={axisBounds.y}
-            y2={axisBounds.y + axisBounds.height}
+          <LineComponent
+            d={lineToPath(
+              position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x,
+              axisBounds.y,
+              position === 'left' ? axisBounds.x + axisBounds.width : axisBounds.x,
+              axisBounds.y + axisBounds.height,
+            )}
+            stroke={theme.color.fg}
+            strokeLinecap="square"
+            strokeWidth={1}
           />
         )}
         {label && (
