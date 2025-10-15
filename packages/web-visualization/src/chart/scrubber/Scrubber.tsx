@@ -58,6 +58,12 @@ export type ScrubberProps = SharedProps &
     label?: ReferenceLineProps['label'] | ((dataIndex: number) => ReferenceLineProps['label']);
 
     /**
+     * Accessibility label for the scrubber. Can be a static string or a function that receives the current dataIndex.
+     * By default, if label resolves to a string, it will be used as the accessibility label.
+     */
+    accessibilityLabel?: string | ((dataIndex: number) => string);
+
+    /**
      * Props passed to the scrubber line's label.
      */
     labelProps?: ReferenceLineProps['labelProps'];
@@ -119,6 +125,7 @@ export const Scrubber = memo(
         seriesIds,
         hideLine,
         label,
+        accessibilityLabel,
         lineStroke,
         labelProps,
         BeaconComponent = ScrubberBeacon,
@@ -238,6 +245,22 @@ export const Scrubber = memo(
 
       const labelVerticalInset = 2;
       const labelHorizontalInset = 4;
+
+      // Compute resolved accessibility label
+      const resolvedAccessibilityLabel = useMemo(() => {
+        if (dataIndex === undefined) return undefined;
+
+        // If accessibilityLabel is provided, use it
+        if (accessibilityLabel) {
+          return typeof accessibilityLabel === 'function'
+            ? accessibilityLabel(dataIndex)
+            : accessibilityLabel;
+        }
+
+        // Otherwise, if label resolves to a string, use that
+        const resolvedLabel = typeof label === 'function' ? label(dataIndex) : label;
+        return typeof resolvedLabel === 'string' ? resolvedLabel : undefined;
+      }, [accessibilityLabel, label, dataIndex]);
 
       // Calculate optimal label positioning strategy
       const labelPositioning = useMemo(() => {
@@ -553,8 +576,12 @@ export const Scrubber = memo(
       return (
         <motion.g
           ref={scrubberGroupRef}
+          aria-atomic="true"
+          aria-label={resolvedAccessibilityLabel}
+          aria-live="polite"
           data-component="scrubber-group"
           data-testid={testID}
+          role="status"
           {...(animate
             ? {
                 animate: 'animate',

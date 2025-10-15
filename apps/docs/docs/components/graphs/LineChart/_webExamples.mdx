@@ -2,18 +2,20 @@
 
 ```jsx live
 function BasicExample() {
-  const [scrubIndex, setScrubIndex] = useState(undefined);
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === undefined) return undefined;
-    return `Value: ${data[scrubIndex]} at index ${scrubIndex}`;
-  }, [scrubIndex, data]);
+  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
+    },
+    [data],
+  );
 
   return (
     <LineChart
       enableScrubbing
-      onScrubberPositionChange={setScrubIndex}
       height={{ base: 150, tablet: 200, desktop: 250 }}
       series={[
         {
@@ -27,9 +29,9 @@ function BasicExample() {
       yAxis={{
         showGrid: true,
       }}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={chartAccessibilityLabel}
     >
-      <Scrubber />
+      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
     </LineChart>
   );
 }
@@ -224,6 +226,17 @@ function GainLossChart() {
 
   const solidColor = `url(#${gradientId}-solid)`;
 
+  const chartAccessibilityLabel = `Gain/Loss chart showing price changes. Current value: ${priceFormatter(data[data.length - 1])}`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      const value = data[index];
+      const status = value >= 0 ? 'gain' : 'loss';
+      return `Position ${index + 1} of ${data.length}: ${priceFormatter(value)} ${status}`;
+    },
+    [data, priceFormatter],
+  );
+
   return (
     <CartesianChart
       enableScrubbing
@@ -236,12 +249,13 @@ function GainLossChart() {
         },
       ]}
       inset={{ top: 12, bottom: 12, left: 16, right: 0 }}
+      accessibilityLabel={chartAccessibilityLabel}
     >
       <ChartDefs />
       <YAxis requestedTickCount={2} showGrid tickLabelFormatter={priceFormatter} />
       <Area seriesId="prices" curve="monotone" fill={`url(#${gradientId}-gradient)`} />
       <Line strokeWidth={3} curve="monotone" seriesId="prices" stroke={solidColor} />
-      <Scrubber hideOverlay />
+      <Scrubber hideOverlay accessibilityLabel={scrubberAccessibilityLabel} />
     </CartesianChart>
   );
 }
@@ -256,6 +270,20 @@ Note that scrubber beacons and points are still only shown at non-null data valu
 function ConnectNullsExample() {
   const dataWithGaps = [10, 22, 29, null, null, 45, 22, 52, null, 4, 68, 20, 21, 58];
   const dataWithGapsOffset = dataWithGaps.map((value) => (value !== null ? value + 40 : null));
+
+  const chartAccessibilityLabel = 'Chart comparing series with and without connected null values';
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      const value1 = dataWithGaps[index];
+      const value2 = dataWithGapsOffset[index];
+      if (value1 === null && value2 === null) {
+        return `Position ${index + 1}: No data`;
+      }
+      return `Position ${index + 1}: ${value1 ?? 'No data'} and ${value2 ?? 'No data'}`;
+    },
+    [dataWithGaps, dataWithGapsOffset],
+  );
 
   return (
     <CartesianChart
@@ -273,11 +301,12 @@ function ConnectNullsExample() {
         },
       ]}
       padding={{ left: 16, right: 16 }}
+      accessibilityLabel={chartAccessibilityLabel}
     >
       <YAxis showGrid />
       <Line seriesId="withGaps" curve="monotone" />
       <Line seriesId="connected" connectNulls curve="monotone" />
-      <Scrubber />
+      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
     </CartesianChart>
   );
 }
@@ -289,10 +318,17 @@ You can add multiple series to a line chart.
 
 ```jsx live
 function MultipleSeriesChart() {
-  const [scrubIndex, setScrubIndex] = useState(undefined);
-
   const prices = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
   const volume = [4, 8, 11, 15, 16, 14, 16, 10, 12, 14, 16, 14, 16, 10];
+
+  const chartAccessibilityLabel = `Chart showing Prices and Volume trends. Current prices: ${prices[prices.length - 1]}, Volume: ${volume[volume.length - 1]}`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Position ${index + 1}: Prices ${prices[index]}, Volume ${volume[index]}`;
+    },
+    [prices, volume],
+  );
 
   return (
     <LineChart
@@ -301,13 +337,13 @@ function MultipleSeriesChart() {
       series={[
         {
           id: 'prices',
-          data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
+          data: prices,
           label: 'Prices',
           color: 'var(--color-accentBoldBlue)',
         },
         {
           id: 'volume',
-          data: [4, 8, 11, 15, 16, 14, 16, 10, 12, 14, 16, 14, 16, 10],
+          data: volume,
           label: 'Volume',
           color: 'var(--color-accentBoldGreen)',
         },
@@ -320,8 +356,9 @@ function MultipleSeriesChart() {
         showGrid: true,
       }}
       curve="monotone"
+      accessibilityLabel={chartAccessibilityLabel}
     >
-      <Scrubber />
+      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
     </LineChart>
   );
 }
@@ -432,7 +469,6 @@ This example shows how to use an empty state for a line chart.
 ```jsx live
 function LiveAssetPrice() {
   const scrubberRef = useRef(null);
-  const [scrubIndex, setScrubIndex] = useState(undefined);
 
   const initialData = useMemo(() => {
     return sparklineInteractiveData.hour.map((d) => d.value);
@@ -485,17 +521,21 @@ function LiveAssetPrice() {
     return () => clearInterval(priceUpdateInterval);
   }, [intervalSeconds, maxPercentChange]);
 
-  const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === undefined)
-      return `Bitcoin Price: $${priceData[priceData.length - 1].toFixed(2)}`;
-    const price = priceData[scrubIndex];
-    return `Bitcoin Price: $${price.toFixed(2)} at position ${scrubIndex + 1}`;
-  }, [scrubIndex, priceData]);
+  const chartAccessibilityLabel = useMemo(() => {
+    return `Live Bitcoin price chart. Current price: $${priceData[priceData.length - 1].toFixed(2)}`;
+  }, [priceData]);
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      const price = priceData[index];
+      return `Bitcoin price at position ${index + 1}: $${price.toFixed(2)}`;
+    },
+    [priceData],
+  );
 
   return (
     <LineChart
       enableScrubbing
-      onScrubberPositionChange={setScrubIndex}
       showArea
       height={{ base: 150, tablet: 200, desktop: 250 }}
       series={[
@@ -506,9 +546,9 @@ function LiveAssetPrice() {
         },
       ]}
       inset={{ right: 64 }}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={chartAccessibilityLabel}
     >
-      <Scrubber ref={scrubberRef} labelProps={{ elevation: 1 }} />
+      <Scrubber ref={scrubberRef} labelProps={{ elevation: 1 }} accessibilityLabel={scrubberAccessibilityLabel} />
     </LineChart>
   );
 }
@@ -520,20 +560,21 @@ You can adjust the y values for a series of data by setting the `data` prop on t
 
 ```jsx live
 function DataFormatChart() {
-  const [scrubIndex, setScrubIndex] = useState(undefined);
-
   const yData = [2, 5.5, 2, 8.5, 1.5, 5];
   const xData = [1, 2, 3, 5, 8, 10];
 
-  const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === undefined) return undefined;
-    return `X: ${xData[scrubIndex]}, Y: ${yData[scrubIndex]} at point ${scrubIndex + 1}`;
-  }, [scrubIndex, xData, yData]);
+  const chartAccessibilityLabel = `Chart with custom X and Y data. ${yData.length} data points`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Point ${index + 1}: X value ${xData[index]}, Y value ${yData[index]}`;
+    },
+    [xData, yData],
+  );
 
   return (
     <LineChart
       enableScrubbing
-      onScrubberPositionChange={setScrubIndex}
       series={[
         {
           id: 'line',
@@ -555,9 +596,9 @@ function DataFormatChart() {
         showGrid: true,
       }}
       inset={{ top: 16, right: 16, bottom: 0, left: 0 }}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={chartAccessibilityLabel}
     >
-      <Scrubber hideOverlay />
+      <Scrubber hideOverlay accessibilityLabel={scrubberAccessibilityLabel} />
     </LineChart>
   );
 }
@@ -565,24 +606,29 @@ function DataFormatChart() {
 
 ## Accessibility
 
-You can use `accessibilityLabel` to provide a descriptive label for the chart. This is especially important for charts with scrubbing enabled, where the label should update dynamically to reflect the current data point.
+You can use `accessibilityLabel` on both the chart and the scrubber to provide descriptive labels. The chart's label gives an overview, while the scrubber's label provides specific information about the current data point being viewed.
 
 ```jsx live
 function AccessibleBasicChart() {
-  const [scrubIndex, setScrubIndex] = useState(undefined);
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === undefined) {
-      return `Current price: ${data[data.length - 1]}`;
-    }
-    return `Price at position ${scrubIndex + 1}: ${data[scrubIndex]}`;
-  }, [scrubIndex, data]);
+  // Chart-level accessibility label provides overview
+  const chartAccessibilityLabel = useMemo(() => {
+    const currentPrice = data[data.length - 1];
+    return `Price chart showing trend over ${data.length} data points. Current value: ${currentPrice}. Use arrow keys to adjust view`;
+  }, [data]);
+
+  // Scrubber-level accessibility label provides specific position info
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
+    },
+    [data],
+  );
 
   return (
     <LineChart
       enableScrubbing
-      onScrubberPositionChange={setScrubIndex}
       height={{ base: 150, tablet: 200, desktop: 250 }}
       series={[
         {
@@ -596,37 +642,39 @@ function AccessibleBasicChart() {
       yAxis={{
         showGrid: true,
       }}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={chartAccessibilityLabel}
     >
-      <Scrubber />
+      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
     </LineChart>
   );
 }
 ```
 
-When a chart has a visible header or title, you can use `aria-labelledby` to reference it.
+When a chart has a visible header or title, you can use `aria-labelledby` to reference it, and still provide a dynamic scrubber accessibility label.
 
 ```jsx live
 function AccessibleChartWithHeader() {
   const headerId = useId();
-  const [scrubIndex, setScrubIndex] = useState(undefined);
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === undefined) {
-      return `Line chart showing price trend. Current value: ${data[data.length - 1]}`;
-    }
-    return `Value: ${data[scrubIndex]} at position ${scrubIndex + 1}`;
-  }, [scrubIndex, data]);
+  // Display label provides overview
+  const displayLabel = `Revenue chart showing trend. Current value: ${data[data.length - 1]}`;
+
+  // Scrubber-specific accessibility label
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Viewing position ${index + 1} of ${data.length}, value: ${data[index]}`;
+    },
+    [data],
+  );
 
   return (
     <VStack gap={2}>
       <Text id={headerId} font="label1">
-        {accessibilityLabel}
+        {displayLabel}
       </Text>
       <LineChart
         enableScrubbing
-        onScrubberPositionChange={setScrubIndex}
         height={{ base: 150, tablet: 200, desktop: 250 }}
         series={[
           {
@@ -642,7 +690,7 @@ function AccessibleChartWithHeader() {
         }}
         aria-labelledby={headerId}
       >
-        <Scrubber />
+        <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
       </LineChart>
     </VStack>
   );
@@ -689,7 +737,6 @@ const BTCActiveIndicator = memo(({ style, ...props }: TabsActiveIndicatorProps) 
   ));
 
   const AssetPriceDotted = memo(() => {
-  const [scrubIndex, setScrubIndex] = useState<number | undefined>(undefined);
   const currentPrice =
     sparklineInteractiveData.hour[sparklineInteractiveData.hour.length - 1].value;
   const tabs = [
@@ -773,7 +820,9 @@ const BTCActiveIndicator = memo(({ style, ...props }: TabsActiveIndicatorProps) 
     [scrubberPriceFormatter, sparklineTimePeriodDataValues, sparklineTimePeriodDataTimestamps, formatDate],
   );
 
-  const accessibilityLabel = useCallback(
+  const chartAccessibilityLabel = `Bitcoin price chart for ${timePeriod.label} period. Current price: ${formatPrice(currentPrice)}`;
+
+  const scrubberAccessibilityLabel = useCallback(
     (index: number) => {
       const price = scrubberPriceFormatter.format(sparklineTimePeriodDataValues[index]);
       const date = formatDate(sparklineTimePeriodDataTimestamps[index]);
@@ -797,7 +846,6 @@ const BTCActiveIndicator = memo(({ style, ...props }: TabsActiveIndicatorProps) 
       <LineChart
         overflow="visible"
         enableScrubbing
-        onScrubberPositionChange={setScrubIndex}
         series={[
           {
             id: 'btc',
@@ -809,9 +857,9 @@ const BTCActiveIndicator = memo(({ style, ...props }: TabsActiveIndicatorProps) 
         areaType="dotted"
         height={{ base: 150, tablet: 200, desktop: 250 }}
         style={{ outlineColor: assets.btc.color }}
-        accessibilityLabel={scrubberLabel}
+        accessibilityLabel={chartAccessibilityLabel}
       >
-        <Scrubber label={scrubberLabel} labelProps={{ elevation: 1 }} idlePulse />
+        <Scrubber label={scrubberLabel} labelProps={{ elevation: 1 }} idlePulse accessibilityLabel={scrubberAccessibilityLabel} />
       </LineChart>
       <PeriodSelector
         TabComponent={BTCTab}
@@ -838,7 +886,6 @@ function ForecastAssetPrice() {
   );
 
   const ForecastChart = memo(() => {
-    const [scrubIndex, setScrubIndex] = useState<number | undefined>(undefined);
 
     const getDataFromSparkline = useCallback((startDate: Date) => {
       const allData = sparklineInteractiveData.all;
@@ -947,13 +994,16 @@ function ForecastAssetPrice() {
       [priceFormatter, allDataPoints, formatDate],
     );
 
-    const accessibilityLabel = useCallback(
+    const chartAccessibilityLabel = 'Bitcoin price forecast chart showing historical data and 5-year projection';
+
+    const scrubberAccessibilityLabel = useCallback(
       (index: number) => {
         const price = priceFormatter.format(allDataPoints[index].value);
         const date = formatDate(allDataPoints[index].date);
-        return `${price} USD ${date}`;
+        const isForecast = index >= historicalData.length;
+        return `${isForecast ? 'Forecast' : 'Historical'}: ${price} USD ${date}`;
       },
-      [priceFormatter, allDataPoints, formatDate],
+      [priceFormatter, allDataPoints, formatDate, historicalData.length],
     );
 
     return (
@@ -994,10 +1044,10 @@ function ForecastAssetPrice() {
           },
           tickInterval: 2,
         }}
-        accessibilityLabel={accessibilityLabel}
+        accessibilityLabel={chartAccessibilityLabel}
         style={{ outlineColor: assets.btc.color }}
       >
-        <Scrubber label={scrubberLabel} labelProps={{ elevation: 1 }} />
+        <Scrubber label={scrubberLabel} labelProps={{ elevation: 1 }} accessibilityLabel={scrubberAccessibilityLabel} />
       </LineChart>
     );
   });
@@ -1010,8 +1060,6 @@ function ForecastAssetPrice() {
 
 ```jsx live
 function AvailabilityChart() {
-  const [scrubIndex, setScrubIndex] = useState(undefined);
-
   const availabilityEvents = [
     {
       date: new Date('2022-01-01'),
@@ -1039,19 +1087,23 @@ function AvailabilityChart() {
     },
   ];
 
-  const accessibilityLabel = useMemo(() => {
-    if (scrubIndex === undefined) return undefined;
-    const event = availabilityEvents[scrubIndex];
-    const formattedDate = event.date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    const status =
-      event.availability >= 90 ? 'Good' : event.availability >= 85 ? 'Warning' : 'Critical';
-    return `${formattedDate}: Availability ${event.availability}% - Status: ${status}`;
-  }, [scrubIndex, availabilityEvents]);
+  const chartAccessibilityLabel = `Availability chart showing ${availabilityEvents.length} data points over time`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      const event = availabilityEvents[index];
+      const formattedDate = event.date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      const status =
+        event.availability >= 90 ? 'Good' : event.availability >= 85 ? 'Warning' : 'Critical';
+      return `${formattedDate}: Availability ${event.availability}% - Status: ${status}`;
+    },
+    [availabilityEvents],
+  );
 
   const ChartDefs = memo(({ yellowThresholdPercentage = 85, greenThresholdPercentage = 90 }) => {
     const { drawingArea, height, series, getYScale, getYAxis } = useCartesianChartContext();
@@ -1098,7 +1150,6 @@ function AvailabilityChart() {
   return (
     <CartesianChart
       enableScrubbing
-      onScrubberPositionChange={setScrubIndex}
       height={{ base: 150, tablet: 200, desktop: 250 }}
       series={[
         {
@@ -1114,7 +1165,7 @@ function AvailabilityChart() {
         domain: ({ min, max }) => ({ min: Math.max(min - 2, 0), max: Math.min(max + 2, 100) }),
       }}
       padding={{ left: 16, right: 16 }}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={chartAccessibilityLabel}
     >
       <ChartDefs />
       <XAxis
@@ -1139,7 +1190,7 @@ function AvailabilityChart() {
         })}
         seriesId="availability"
       />
-      <Scrubber hideOverlay />
+      <Scrubber hideOverlay accessibilityLabel={scrubberAccessibilityLabel} />
     </CartesianChart>
   );
 }
@@ -1171,6 +1222,15 @@ function BitcoinChartWithScrubberBeacon() {
   };
 
   const percentChange = (latestPrice - prices[0]) / prices[0];
+
+  const chartAccessibilityLabel = `Bitcoin price chart. Current price: ${formatPrice(latestPrice)}. Change: ${formatPercentChange(percentChange)}`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Bitcoin price at position ${index + 1}: ${formatPrice(prices[index])}`;
+    },
+    [prices],
+  );
 
   return (
     <VStack
@@ -1223,8 +1283,9 @@ function BitcoinChartWithScrubberBeacon() {
           showArea
           width="100%"
           height={92}
+          accessibilityLabel={chartAccessibilityLabel}
         >
-          <Scrubber idlePulse styles={{ beacon: { stroke: 'white' } }} />
+          <Scrubber idlePulse styles={{ beacon: { stroke: 'white' } }} accessibilityLabel={scrubberAccessibilityLabel} />
         </LineChart>
       </div>
     </VStack>
