@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 
-import { Table } from '../../Table';
+import { Table } from '../../TableContainer';
 import { TableBody } from '../../TableBody';
 import { TableFooter } from '../../TableFooter';
 import { TableHeader } from '../../TableHeader';

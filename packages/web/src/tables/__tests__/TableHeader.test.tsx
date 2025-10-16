@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { Table } from '../Table';
+import { Table } from '../TableContainer';
 import { TableBody } from '../TableBody';
 import { TableCell } from '../TableCell';
 import { TableHeader, tableHeaderStaticClassName } from '../TableHeader';

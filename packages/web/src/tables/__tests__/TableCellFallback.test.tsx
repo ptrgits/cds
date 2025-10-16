@@ -1,7 +1,7 @@
 import { renderA11y } from '@coinbase/cds-web-utils/jest';
 import { render, screen } from '@testing-library/react';
 
-import { Table } from '../Table';
+import { Table } from '../TableContainer';
 import { TableBody } from '../TableBody';
 import { TableCellFallback } from '../TableCellFallback';
 import { TableRow } from '../TableRow';

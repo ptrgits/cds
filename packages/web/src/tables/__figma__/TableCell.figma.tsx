@@ -1,6 +1,6 @@
 import { figma } from '@figma/code-connect';
 
-import { Table } from '../Table';
+import { Table } from '../TableContainer';
 import { TableBody } from '../TableBody';
 import { TableCell } from '../TableCell';
 import { TableHeader } from '../TableHeader';

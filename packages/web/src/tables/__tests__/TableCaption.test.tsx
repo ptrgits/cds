@@ -2,7 +2,7 @@ import { renderA11y } from '@coinbase/cds-web-utils/jest';
 import { render, screen } from '@testing-library/react';
 
 import { Text } from '../../typography/Text';
-import { Table } from '../Table';
+import { Table } from '../TableContainer';
 import { TableCaption, type TableCaptionProps } from '../TableCaption';
 
 const DEFAULT_CAPTION = 'Table Caption';

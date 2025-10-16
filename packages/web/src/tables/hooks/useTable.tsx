@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import type { CellSpacing } from '../../cells/Cell';
 import { TableContext } from '../context/TableContext';
 import { TableSectionContext } from '../context/TableSectionContext';
-import type { TableCellSpacing } from '../Table';
+import type { TableCellSpacing } from '../TableContainer';
 import type { TableCellProps, TableCellTag } from '../TableCell';
 import type { TableSectionTag } from '../TableSection';
 

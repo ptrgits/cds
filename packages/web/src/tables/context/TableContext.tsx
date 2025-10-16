@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import type { TableProps } from '../Table';
+import type { TableProps } from '../TableContainer';
 
 export type TableContextValue = Pick<TableProps, 'variant' | 'cellSpacing' | 'compact'>;
 

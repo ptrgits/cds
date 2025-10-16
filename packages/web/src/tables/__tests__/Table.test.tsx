@@ -3,8 +3,8 @@ import { renderA11y } from '@coinbase/cds-web-utils/jest';
 import { render, screen } from '@testing-library/react';
 
 import { Text } from '../../typography/Text';
-import type { TableProps } from '../Table';
-import { Table } from '../Table';
+import type { TableProps } from '../TableContainer';
+import { Table } from '../TableContainer';
 
 const A11Y_LABEL = 'An accessible label';
 
