@@ -5,7 +5,7 @@ import { CardBody, type CardBodyBaseProps } from './CardBody';
 
 export type FeatureEntryCardBaseProps = CardBaseProps & CardBodyBaseProps;
 
-/** @deprecated will be removed in v7.0.0 use NudgeCard or UpsellCard instead */
+/** @deprecated This component will be removed in a future version. Use NudgeCard or UpsellCard instead. */
 export type FeatureEntryCardProps = FeatureEntryCardBaseProps;
 
 /** @deprecated This component will be removed in a future version. Use NudgeCard or UpsellCard instead. */
