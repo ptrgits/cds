@@ -110,7 +110,7 @@ export const Avatar = memo(
           </Text>
         );
       }
-      if (size === 'm' || isCustomSizeAndSmall) {
+      if (size === 'm' || size === 's' || isCustomSizeAndSmall) {
         return (
           <Text
             align="center"

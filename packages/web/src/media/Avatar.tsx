@@ -96,6 +96,13 @@ const borderRadiusCss: Record<AvatarShape, LinariaClassName> = {
   `,
 };
 
+const textFallbackCss = css`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`;
+
 export type AvatarBaseProps = SharedProps & {
   /** Absolute url to the image that should be shown in the Avatar. If no src is provided then a generic fallback image is used. */
   src?: string;
@@ -189,6 +196,11 @@ export const Avatar = memo(
 
     const shouldShowBorder = Boolean((src || !name) && borderColor);
 
+    const dimensionProps = useMemo(
+      () => ({ width: computedSize, height: computedSize }),
+      [computedSize],
+    );
+
     const avatarInlineStyles = useMemo<React.CSSProperties>(
       () => ({
         width: computedSize,
@@ -225,23 +237,22 @@ export const Avatar = memo(
           {/* render the Remote image when neither a src URL or name is passed in */}
           {!!src || !name ? (
             <RemoteImage
+              {...dimensionProps}
               alt={alt}
-              height={computedSize}
               shape={shape}
               source={src || fallbackImageSrc}
-              width={computedSize}
             />
           ) : (
             <Box
-              alignItems="center"
+              {...dimensionProps}
               background="currentColor"
               className={borderRadiusCss[shape]}
-              flexGrow={1}
-              height="100%"
-              justifyContent="center"
+              position="relative"
               testID={`${testID}-fallback`}
             >
-              {avatarText}
+              <Box className={textFallbackCss}>
+                {avatarText}
+              </Box>
             </Box>
           )}
         </Box>

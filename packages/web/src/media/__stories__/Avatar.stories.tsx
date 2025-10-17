@@ -115,7 +115,7 @@ export const FallbackImage = () => {
         </HStack>
         <HStack alignItems="center" gap={2}>
           {sizes.map((size, i) => (
-            <Avatar key={i} alt="" shape="square" size={size} />
+            <Avatar key={i} alt="" name="Alice" shape="square" size={size} />
           ))}
         </HStack>
         <HStack alignItems="center" gap={2}>
@@ -188,5 +188,33 @@ export const FallbackColored = () => {
         return <Avatar key={name} alt="" colorScheme={avatarFallbackColor} name={name} />;
       })}
     </HStack>
+  );
+};
+
+export const Idk = () => {
+  const AvatarTest = ({ size, name }: { size: AvatarSize; name?: string }) => {
+    return (
+      <VStack alignItems="center" alignSelf="baseline">
+        <Avatar size={size} name={name} />
+      </VStack>
+    );
+  };
+
+  return (
+    <VStack gap={6}>
+      <HStack gap={3} alignItems="baseline">
+        <AvatarTest size="s" />
+        <AvatarTest size="m" />
+        <AvatarTest size="l" />
+        <AvatarTest size="l" />
+      </HStack>
+
+      <HStack gap={3} alignItems="baseline">
+        <AvatarTest size="s" name="Avatar" />
+        <AvatarTest size="m" name="Avatar" />
+        <AvatarTest size="l" name="Avatar" />
+        <AvatarTest size="l" name="Avatar" />
+      </HStack>
+    </VStack>
   );
 };
