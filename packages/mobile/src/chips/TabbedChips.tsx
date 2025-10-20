@@ -68,7 +68,13 @@ const TabbedChipsComponent = memo(
       handleScroll,
       handleScrollContainerLayout,
       handleScrollContentSizeChange,
+      getPressableLayoutHandler,
     } = useHorizontallyScrollingPressables(value);
+
+    const tabsWithOnLayout = useMemo(
+      () => tabs.map(({ id, ...tab }) => ({ ...tab, id, onLayout: getPressableLayoutHandler(id) })),
+      [tabs, getPressableLayoutHandler],
+    );
 
     return (
       <Box
@@ -94,7 +100,7 @@ const TabbedChipsComponent = memo(
             activeTab={activeTab || null}
             gap={1}
             onChange={handleChange}
-            tabs={tabs}
+            tabs={tabsWithOnLayout}
           />
         </ScrollView>
         {isScrollContentOverflowing && isScrollContentOffscreenRight ? <OverflowGradient /> : null}

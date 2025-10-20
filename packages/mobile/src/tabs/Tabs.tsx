@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { View } from 'react-native';
+import { type LayoutChangeEvent, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -34,6 +34,7 @@ const AnimatedBox = Animated.createAnimatedComponent(Box);
 type TabContainerProps = {
   id: string;
   registerRef: (tabId: string, ref: View) => void;
+  onLayout?: (event: LayoutChangeEvent) => void;
   children?: React.ReactNode;
 };
 
@@ -62,7 +63,10 @@ export type TabsActiveIndicatorComponent = React.FC<TabsActiveIndicatorProps>;
 
 export type TabsProps<T extends string = string> = {
   /** The array of tabs data. Each tab may optionally define a custom Component to render. */
-  tabs: (TabValue<T> & { Component?: TabComponent<T> })[];
+  tabs: (TabValue<T> & {
+    Component?: TabComponent<T>;
+    onLayout?: (event: LayoutChangeEvent) => void;
+  })[];
   /** The default Component to render each tab. */
   TabComponent: TabComponent<T>;
   /** The default Component to render the tabs active indicator. */
@@ -119,14 +123,16 @@ const TabsComponent = memo(
 
       const tabComponents = useMemo(
         () =>
-          tabs.map(({ id, Component: CustomTabComponent, disabled: tabDisabled, ...props }) => {
-            const RenderedTab = CustomTabComponent ?? TabComponent;
-            return (
-              <TabContainer key={id} id={id} registerRef={refMap.registerRef}>
-                <RenderedTab disabled={tabDisabled} id={id} {...props} />
-              </TabContainer>
-            );
-          }),
+          tabs.map(
+            ({ id, Component: CustomTabComponent, disabled: tabDisabled, onLayout, ...props }) => {
+              const RenderedTab = CustomTabComponent ?? TabComponent;
+              return (
+                <TabContainer key={id} id={id} onLayout={onLayout} registerRef={refMap.registerRef}>
+                  <RenderedTab disabled={tabDisabled} id={id} {...props} />
+                </TabContainer>
+              );
+            },
+          ),
         [tabs, TabComponent, refMap],
       );
 
