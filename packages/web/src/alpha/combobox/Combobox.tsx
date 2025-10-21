@@ -1,4 +1,4 @@
-import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
+import { forwardRef, memo, useCallback, useMemo, useRef, useState } from 'react';
 import type { SharedAccessibilityProps } from '@coinbase/cds-common';
 import Fuse from 'fuse.js';
 
@@ -55,7 +55,7 @@ export type ComboboxBaseProps<T extends string = string> = Pick<
     /** Controlled search text value */
     searchText?: string;
     /** Search text change handler */
-    onSearch?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    onSearch?: (searchText: string) => void;
     /** Default search text value for uncontrolled mode */
     defaultSearchText?: string;
     /** Controlled open state of the dropdown */
@@ -187,8 +187,8 @@ const ComboboxBase = memo(
         value,
         options,
         onChange,
-        open,
-        setOpen,
+        open: openProp,
+        setOpen: setOpenProp,
         disabled,
         disableClickOutsideClose,
         placeholder,
@@ -230,9 +230,14 @@ const ComboboxBase = memo(
       }: ComboboxProps<T>,
       ref: React.Ref<ComboboxRef>,
     ) => {
+      const controlRef = useRef<SelectRef>(null);
+
       const [searchTextInternal, setSearchTextInternal] = useState(defaultSearchText);
       const searchText = searchTextProp ?? searchTextInternal;
 
+      const [openInternal, setOpenInternal] = useState(defaultOpen ?? false);
+      const open = openProp ?? openInternal;
+      const setOpen = setOpenProp ?? setOpenInternal;
       if (
         (typeof searchTextProp === 'undefined' && typeof onSearchProp !== 'undefined') ||
         (typeof searchTextProp !== 'undefined' && typeof onSearchProp === 'undefined')
@@ -241,8 +246,8 @@ const ComboboxBase = memo(
           'Combobox component must be fully controlled or uncontrolled: "searchText" and "onSearch" props must be provided together or not at all',
         );
 
-      const handleSearch = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTextInternal(event.target.value);
+      const handleSearch = useCallback((searchText: string) => {
+        setSearchTextInternal(searchText);
       }, []);
 
       const onSearch = onSearchProp ?? handleSearch;
@@ -278,48 +283,76 @@ const ComboboxBase = memo(
       );
 
       return (
-        <Select
-          ref={ref}
-          SelectAllOptionComponent={SelectAllOptionComponent}
-          SelectControlComponent={ComboboxControlWrapper}
-          SelectDropdownComponent={SelectDropdownComponent}
-          SelectEmptyDropdownContentsComponent={SelectEmptyDropdownContentsComponent}
-          SelectOptionComponent={SelectOptionComponent}
-          accessibilityLabel={accessibilityLabel}
-          accessibilityRoles={accessibilityRoles}
-          accessory={accessory}
-          className={className}
-          classNames={classNames}
-          clearAllLabel={clearAllLabel}
-          compact={compact}
-          defaultOpen={defaultOpen}
-          detail={detail}
-          disableClickOutsideClose={disableClickOutsideClose}
-          disabled={disabled}
-          emptyOptionsLabel={emptyOptionsLabel}
-          endNode={endNode}
-          helperText={helperText}
-          hiddenSelectedOptionsLabel={hiddenSelectedOptionsLabel}
-          hideSelectAll={hideSelectAll}
-          label={label}
-          labelVariant={labelVariant}
-          maxSelectedOptionsToShow={maxSelectedOptionsToShow}
-          media={media}
-          onChange={onChange}
-          open={open}
-          options={filteredOptions}
-          placeholder={placeholder}
-          removeSelectedOptionAccessibilityLabel={removeSelectedOptionAccessibilityLabel}
-          selectAllLabel={selectAllLabel}
-          setOpen={setOpen}
-          startNode={startNode}
-          style={style}
-          styles={styles}
-          testID={testID}
-          type="multi"
-          value={value}
-          variant={variant}
-        />
+        <div>
+          <DefaultComboboxControl
+            ref={controlRef.current?.refs.setReference}
+            accessibilityLabel={accessibilityLabel}
+            // ariaHaspopup={ariaHaspopup}
+            classNames={classNames}
+            compact={compact}
+            disabled={disabled}
+            // endNode={customEndNode}
+            helperText={helperText}
+            hiddenSelectedOptionsLabel={hiddenSelectedOptionsLabel}
+            label={label}
+            labelVariant={labelVariant}
+            maxSelectedOptionsToShow={maxSelectedOptionsToShow}
+            onChange={(value) => onChange?.(value as T | T[])}
+            onSearch={onSearch}
+            open={open}
+            options={options}
+            placeholder={placeholder}
+            removeSelectedOptionAccessibilityLabel={removeSelectedOptionAccessibilityLabel}
+            searchText={searchText}
+            setOpen={setOpen}
+            startNode={startNode}
+            styles={styles}
+            testID={testID}
+            value={value}
+            variant={variant}
+          />
+          <Select
+            ref={controlRef}
+            SelectControlComponent={() => null}
+            SelectDropdownComponent={SelectDropdownComponent}
+            SelectEmptyDropdownContentsComponent={SelectEmptyDropdownContentsComponent}
+            SelectOptionComponent={SelectOptionComponent}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRoles={accessibilityRoles}
+            accessory={accessory}
+            className={className}
+            classNames={classNames}
+            clearAllLabel={clearAllLabel}
+            compact={compact}
+            defaultOpen={defaultOpen}
+            detail={detail}
+            disableClickOutsideClose={disableClickOutsideClose}
+            disabled={disabled}
+            emptyOptionsLabel={emptyOptionsLabel}
+            endNode={endNode}
+            helperText={helperText}
+            hiddenSelectedOptionsLabel={hiddenSelectedOptionsLabel}
+            hideSelectAll={hideSelectAll}
+            label={label}
+            labelVariant={labelVariant}
+            maxSelectedOptionsToShow={maxSelectedOptionsToShow}
+            media={media}
+            onChange={onChange}
+            open={open}
+            options={filteredOptions}
+            placeholder={placeholder}
+            removeSelectedOptionAccessibilityLabel={removeSelectedOptionAccessibilityLabel}
+            selectAllLabel={selectAllLabel}
+            setOpen={setOpen}
+            startNode={startNode}
+            style={style}
+            styles={styles}
+            testID={testID}
+            type="multi"
+            value={value}
+            variant={variant}
+          />
+        </div>
       );
     },
   ),

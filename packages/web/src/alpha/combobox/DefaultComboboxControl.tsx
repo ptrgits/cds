@@ -55,7 +55,7 @@ export type ComboboxControlProps<T extends string = string> = {
   /** Search text value */
   searchText: string;
   /** Search text change handler */
-  onSearch: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearch: (searchText: string) => void;
   /** Label displayed above the control */
   label?: React.ReactNode;
   /** Placeholder text displayed in the search input */
@@ -147,8 +147,8 @@ const DefaultComboboxControlComponent = <T extends string = string>(
   const valueNodeContainerRef = useRef<HTMLDivElement>(null);
 
   const handleUnselectValue = useCallback(
-    (e: React.MouseEvent, index: number) => {
-      e.stopPropagation();
+    (event: React.MouseEvent, index: number) => {
+      event.stopPropagation();
       const currentValue = [...value];
       const changedValue = currentValue[index];
       onChange?.(changedValue);
@@ -160,13 +160,20 @@ const DefaultComboboxControlComponent = <T extends string = string>(
   );
 
   const handleInputClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (!open) {
-        setOpen(true);
-      }
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      setOpen(true);
     },
-    [setOpen, open],
+    [setOpen],
+  );
+
+  const handleInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      console.log('handleInputChange', event.target.value);
+      event.stopPropagation();
+      onSearch(event.target.value);
+    },
+    [onSearch],
   );
 
   const helperTextNode = useMemo(
@@ -297,7 +304,7 @@ const DefaultComboboxControlComponent = <T extends string = string>(
             alignItems="center"
             flexGrow={1}
             paddingBottom={1}
-            paddingTop={0}
+            paddingTop={value.length > 0 ? 0 : 1}
             paddingX={1}
             width="100%"
           >
@@ -306,7 +313,7 @@ const DefaultComboboxControlComponent = <T extends string = string>(
               aria-haspopup={ariaHaspopup}
               containerSpacing={nativeInputContainerCss}
               disabled={disabled}
-              onChange={onSearch}
+              onChange={handleInputChange}
               onClick={handleInputClick}
               placeholder={placeholder as string}
               testID={testID}
@@ -325,9 +332,10 @@ const DefaultComboboxControlComponent = <T extends string = string>(
       startNode,
       shouldShowCompactLabel,
       label,
+      value.length,
       ariaHaspopup,
       disabled,
-      onSearch,
+      handleInputChange,
       handleInputClick,
       placeholder,
       testID,
