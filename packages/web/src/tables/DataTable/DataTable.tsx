@@ -11,15 +11,17 @@ export type DataTableProps = React.HTMLAttributes<HTMLTableElement> & {
 
 export const DataTable = forwardRef<HTMLTableElement, DataTableProps>(
   ({ table, ...props }, ref) => {
-    const visibleColumns = table.getVisibleLeafColumns();
+    // Only virtualize the center (unpinned) columns. Left/Right pinned columns
+    // are rendered outside of the virtualized range to support sticky pinning.
+    const centerColumns = table.getVisibleLeafColumns().filter((col) => !col.getIsPinned());
 
     //The virtualizers need to know the scrollable container element
     const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
     //we are using a slightly different virtualization strategy for columns (compared to virtual rows) in order to support dynamic row heights
     const columnVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableCellElement>({
-      count: visibleColumns.length,
-      estimateSize: (index) => visibleColumns[index].getSize(), //estimate width of each column for accurate scrollbar dragging
+      count: centerColumns.length,
+      estimateSize: (index) => centerColumns[index].getSize(), //estimate width of each center column for accurate scrollbar dragging
       getScrollElement: () => tableContainerRef.current,
       horizontal: true,
       overscan: 3, //how many columns to render on each side off screen each way (adjust this for performance)

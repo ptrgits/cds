@@ -1,6 +1,8 @@
 import { type Cell, flexRender, type Row, type Table } from '@tanstack/react-table';
 import { useVirtualizer, type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
 
+import { getCommonPinningStyles } from './getCommonPinningStyles';
+
 export type DataTableBodyProps = {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
   table: Table<any>;
@@ -29,6 +31,8 @@ export const DataTableBodyCell = ({ cell }: DataTableBodyCellProps) => {
       style={{
         display: 'flex',
         width: cell.column.getSize(),
+        backgroundColor: 'white',
+        ...getCommonPinningStyles(cell.column),
       }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -46,6 +50,9 @@ export const DataTableBodyRow = ({
 }: DataTableBodyRowProps) => {
   const visibleCells = row.getVisibleCells();
   const virtualColumns = columnVirtualizer.getVirtualItems();
+  const leftCells = visibleCells.filter((c) => c.column.getIsPinned() === 'left');
+  const centerCells = visibleCells.filter((c) => !c.column.getIsPinned());
+  const rightCells = visibleCells.filter((c) => c.column.getIsPinned() === 'right');
   return (
     <tr
       key={row.id}
@@ -58,18 +65,27 @@ export const DataTableBodyRow = ({
         width: '100%',
       }}
     >
+      {/* Left pinned */}
+      {leftCells.map((cell) => (
+        <DataTableBodyCell key={cell.id} cell={cell} />
+      ))}
       {virtualPaddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
         <td style={{ display: 'flex', width: virtualPaddingLeft }} />
       ) : null}
       {virtualColumns.map((virtualColumn) => {
-        const cell = visibleCells[virtualColumn.index];
+        const cell = centerCells[virtualColumn.index];
+        if (!cell) return null;
         return <DataTableBodyCell key={cell.id} cell={cell} />;
       })}
       {virtualPaddingRight ? (
         //fake empty column to the right for virtualization scroll padding
         <td style={{ display: 'flex', width: virtualPaddingRight }} />
       ) : null}
+      {/* Right pinned */}
+      {rightCells.map((cell) => (
+        <DataTableBodyCell key={cell.id} cell={cell} />
+      ))}
     </tr>
   );
 };
