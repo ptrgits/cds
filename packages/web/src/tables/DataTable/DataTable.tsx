@@ -39,25 +39,32 @@ export const DataTable = forwardRef<HTMLTableElement, DataTableProps>(
         columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
     }
 
+    // determine if there are top pinned rows to layer header above them
+    const hasTopPinnedRows = table.getRowModel().rows.some((r) => r.getIsPinned?.() === 'top');
+    const [headerHeight, setHeaderHeight] = React.useState(0);
+
     return (
       <div
         ref={tableContainerRef}
         style={{
           overflow: 'auto', //our scrollable table container
           position: 'relative', //needed for sticky header
-          height: '800px', //should be a fixed height
+          height: '500px', //should be a fixed height
         }}
       >
         {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
         <table ref={ref} style={{ display: 'grid' }} {...props}>
           <DataTableHead
             columnVirtualizer={columnVirtualizer}
+            isSticky={hasTopPinnedRows}
+            onHeightChange={setHeaderHeight}
             table={table}
             virtualPaddingLeft={virtualPaddingLeft}
             virtualPaddingRight={virtualPaddingRight}
           />
           <DataTableBody
             columnVirtualizer={columnVirtualizer}
+            headerOffsetTop={hasTopPinnedRows ? headerHeight : 0}
             table={table}
             tableContainerRef={tableContainerRef}
             virtualPaddingLeft={virtualPaddingLeft}

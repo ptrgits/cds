@@ -3,13 +3,15 @@ import type { Virtualizer } from '@tanstack/react-virtual';
 
 import { Box } from '../../layout';
 
-import { getCommonPinningStyles } from './getCommonPinningStyles';
+import { actionsColumnWidth, getColumnPinningStyles } from './getColumnPinningStyles';
 
 export type DataTableHeadProps = {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
   table: Table<any>;
   virtualPaddingLeft?: number;
   virtualPaddingRight?: number;
+  isSticky?: boolean;
+  onHeightChange?: (px: number) => void;
 };
 
 export type TableHeadRowProps = {
@@ -21,9 +23,10 @@ export type TableHeadRowProps = {
 
 export type TableHeadCellProps = {
   header: Header<any, unknown>;
+  leftOffset?: number;
 };
 
-export const TableHeadCell = ({ header }: TableHeadCellProps) => {
+export const TableHeadCell = ({ header, leftOffset = 0 }: TableHeadCellProps) => {
   return (
     <th
       key={header.id}
@@ -31,7 +34,7 @@ export const TableHeadCell = ({ header }: TableHeadCellProps) => {
         display: 'flex',
         width: header.getSize(),
         backgroundColor: 'white',
-        ...getCommonPinningStyles(header.column),
+        ...getColumnPinningStyles(header.column, leftOffset),
       }}
     >
       <Box
@@ -94,9 +97,22 @@ export const TableHeadRow = ({
   const rightHeaders = headerGroup.headers.filter((h) => h.column.getIsPinned() === 'right');
   return (
     <tr key={headerGroup.id} style={{ display: 'flex', width: '100%' }}>
+      {/* Row actions sticky column header */}
+      <th
+        style={{
+          backgroundColor: 'white',
+          display: 'flex',
+          left: 0,
+          position: 'sticky',
+          width: actionsColumnWidth,
+          zIndex: 2,
+        }}
+      >
+        Row
+      </th>
       {/* Left pinned */}
       {leftHeaders.map((header) => (
-        <TableHeadCell key={header.id} header={header} />
+        <TableHeadCell key={header.id} header={header} leftOffset={actionsColumnWidth} />
       ))}
       {virtualPaddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
@@ -124,14 +140,20 @@ export const DataTableHead = ({
   table,
   virtualPaddingLeft,
   virtualPaddingRight,
+  isSticky,
+  onHeightChange,
 }: DataTableHeadProps) => {
   return (
     <thead
+      ref={(node) => {
+        if (node && onHeightChange) onHeightChange(node.getBoundingClientRect().height);
+      }}
       style={{
         display: 'grid',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1,
+        position: isSticky ? 'sticky' : 'relative',
+        top: isSticky ? 0 : undefined,
+        zIndex: isSticky ? 2 : 1,
+        background: isSticky ? 'white' : undefined,
       }}
     >
       {table.getHeaderGroups().map((headerGroup) => (
