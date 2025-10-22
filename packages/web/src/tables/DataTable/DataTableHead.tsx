@@ -105,7 +105,7 @@ export const TableHeadRow = ({
           left: 0,
           position: 'sticky',
           width: actionsColumnWidth,
-          zIndex: 2,
+          zIndex: 3,
         }}
       >
         Row
@@ -152,7 +152,7 @@ export const DataTableHead = ({
         display: 'grid',
         position: isSticky ? 'sticky' : 'relative',
         top: isSticky ? 0 : undefined,
-        zIndex: isSticky ? 2 : 1,
+        zIndex: isSticky ? 3 : 1,
         background: isSticky ? 'white' : undefined,
       }}
     >

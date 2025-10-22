@@ -1,3 +1,4 @@
+import type { HTMLAttributes } from 'react';
 import { type Cell, flexRender, type Row, type Table } from '@tanstack/react-table';
 import { useVirtualizer, type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
 
@@ -22,15 +23,16 @@ export type DataTableBodyRowProps = {
   staticPosition?: boolean;
 };
 
-export type DataTableBodyCellProps = {
+export type DataTableBodyCellProps = HTMLAttributes<HTMLTableCellElement> & {
   cell: Cell<any, unknown>;
   leftOffset?: number;
 };
 
-export const DataTableBodyCell = ({ cell, leftOffset }: DataTableBodyCellProps) => {
+export const DataTableBodyCell = ({ cell, leftOffset, ...props }: DataTableBodyCellProps) => {
   return (
     <td
       key={cell.id}
+      {...props}
       style={{
         display: 'flex',
         width: cell.column.getSize(),
@@ -64,8 +66,6 @@ export const DataTableBodyRow = ({
       data-index={staticPosition ? undefined : virtualRow.index} //needed for dynamic row height measurement
       style={{
         display: 'flex',
-        position: staticPosition ? 'relative' : 'absolute',
-        transform: staticPosition ? undefined : `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
         width: '100%',
       }}
     >
@@ -158,6 +158,14 @@ export const DataTableBody = ({
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
+  let virtualPaddingTop: number | undefined;
+  let virtualPaddingBottom: number | undefined;
+
+  if (rowVirtualizer && virtualRows?.length) {
+    virtualPaddingTop = virtualRows[0]?.start ?? 0;
+    virtualPaddingBottom =
+      rowVirtualizer.getTotalSize() - (virtualRows[virtualRows.length - 1]?.end ?? 0);
+  }
 
   return (
     <>
@@ -169,7 +177,7 @@ export const DataTableBody = ({
             display: 'grid',
             position: 'sticky',
             top: headerOffsetTop,
-            zIndex: 1,
+            zIndex: 3,
           }}
         >
           {topRows.map((row, i) => (
@@ -191,10 +199,14 @@ export const DataTableBody = ({
       <tbody
         style={{
           display: 'grid',
-          height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
-          position: 'relative', //needed for absolute positioning of rows
         }}
       >
+        {virtualPaddingTop ? (
+          //fake empty row at the top for virtualization scroll padding
+          <tr style={{ display: 'flex', width: '100%', height: virtualPaddingTop }}>
+            <td style={{ display: 'flex', height: virtualPaddingTop, width: '100%' }} />
+          </tr>
+        ) : null}
         {virtualRows.map((virtualRow) => {
           const row = centerRows[virtualRow.index] as Row<any>;
 
@@ -210,6 +222,12 @@ export const DataTableBody = ({
             />
           );
         })}
+        {virtualPaddingBottom ? (
+          //fake empty row at the bottom for virtualization scroll padding
+          <tr style={{ display: 'flex', width: '100%', height: virtualPaddingBottom }}>
+            <td style={{ display: 'flex', height: virtualPaddingBottom, width: '100%' }} />
+          </tr>
+        ) : null}
       </tbody>
 
       {/* Bottom pinned rows */}
@@ -220,7 +238,7 @@ export const DataTableBody = ({
             display: 'grid',
             position: 'sticky',
             bottom: 0,
-            zIndex: 1,
+            zIndex: 3,
           }}
         >
           {bottomRows.map((row, i) => (
