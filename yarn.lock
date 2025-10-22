@@ -2626,6 +2626,10 @@ __metadata:
     "@coinbase/cds-lottie-files": "workspace:^"
     "@coinbase/cds-utils": "workspace:^"
     "@coinbase/cds-web-utils": "workspace:^"
+    "@dnd-kit/core": "npm:^6.1.0"
+    "@dnd-kit/modifiers": "npm:^8.0.0"
+    "@dnd-kit/sortable": "npm:^8.0.0"
+    "@dnd-kit/utilities": "npm:^3.2.1"
     "@figma/code-connect": "npm:^1.3.4"
     "@floating-ui/react-dom": "npm:^2.1.1"
     "@linaria/core": "npm:^3.0.0-beta.22"
@@ -3393,7 +3397,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dnd-kit/core@npm:^6.3.1":
+"@dnd-kit/core@npm:^6.1.0":
   version: 6.3.1
   resolution: "@dnd-kit/core@npm:6.3.1"
   dependencies:
@@ -3407,33 +3411,33 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dnd-kit/modifiers@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "@dnd-kit/modifiers@npm:9.0.0"
+"@dnd-kit/modifiers@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@dnd-kit/modifiers@npm:8.0.0"
   dependencies:
     "@dnd-kit/utilities": "npm:^3.2.2"
     tslib: "npm:^2.0.0"
   peerDependencies:
-    "@dnd-kit/core": ^6.3.0
+    "@dnd-kit/core": ^6.2.0
     react: ">=16.8.0"
-  checksum: 10c0/ca8cc9da8296df10774d779c1611074dc327ccc3c49041c102111c98c7f2b2b73b6af5209c0eef6b2fe978ac63dc2a985efa87c85a8d786577304bd2e64cee1d
+  checksum: 10c0/e1609c1a62a532d8d3e07537d3056d6bbd76284edf65df806515cc7f5865316b3f7f902df9b19a61a20f2d4244697e1aa7021f1a7a38a52206a8cd83b843ab8e
   languageName: node
   linkType: hard
 
-"@dnd-kit/sortable@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "@dnd-kit/sortable@npm:10.0.0"
+"@dnd-kit/sortable@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@dnd-kit/sortable@npm:8.0.0"
   dependencies:
     "@dnd-kit/utilities": "npm:^3.2.2"
     tslib: "npm:^2.0.0"
   peerDependencies:
-    "@dnd-kit/core": ^6.3.0
+    "@dnd-kit/core": ^6.1.0
     react: ">=16.8.0"
-  checksum: 10c0/37ee48bc6789fb512dc0e4c374a96d19abe5b2b76dc34856a5883aaa96c3297891b94cc77bbc409e074dcce70967ebcb9feb40cd9abadb8716fc280b4c7f99af
+  checksum: 10c0/a6066c652b892c6a11320c7d8f5c18fdf723e721e8eea37f4ab657dee1ac5e7ca710ac32ce0712a57fe968bc07c13bcea5d5599d90dfdd95619e162befd4d2fb
   languageName: node
   linkType: hard
 
-"@dnd-kit/utilities@npm:^3.2.2":
+"@dnd-kit/utilities@npm:^3.2.1, @dnd-kit/utilities@npm:^3.2.2":
   version: 3.2.2
   resolution: "@dnd-kit/utilities@npm:3.2.2"
   dependencies:
@@ -17717,10 +17721,6 @@ __metadata:
     "@babel/template": "npm:^7.20.7"
     "@babel/types": "npm:^7.20.7"
     "@coinbase/eslint-plugin-internal": "workspace:^"
-    "@dnd-kit/core": "npm:^6.3.1"
-    "@dnd-kit/modifiers": "npm:^9.0.0"
-    "@dnd-kit/sortable": "npm:^10.0.0"
-    "@dnd-kit/utilities": "npm:^3.2.2"
     "@figma/code-connect": "npm:^1.3.4"
     "@graphql-tools/jest-transform": "npm:^2.0.0"
     "@inquirer/prompts": "npm:^7.5.3"
