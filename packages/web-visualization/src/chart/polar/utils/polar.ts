@@ -2,6 +2,8 @@
  * Utilities for polar chart calculations (pie, donut, etc.)
  */
 
+import { arc as d3Arc } from 'd3-shape';
+
 export type PolarDataPoint = {
   /**
    * The value of this data point.
@@ -112,7 +114,8 @@ export function calculateArcData(
 }
 
 /**
- * Creates an SVG path for an arc.
+ * Creates an SVG path for an arc using d3-shape's arc generator.
+ * This matches MUI X Charts' implementation for consistent rounded corners.
  */
 export function createArcPath(
   startAngle: number,
@@ -121,74 +124,20 @@ export function createArcPath(
   outerRadius: number,
   cornerRadius = 0,
 ): string {
-  const clampedInnerRadius = Math.max(0, innerRadius);
-  const clampedOuterRadius = Math.max(0, outerRadius);
-
-  if (clampedOuterRadius <= 0) return '';
+  // Handle degenerate cases
+  if (outerRadius <= 0) return '';
   if (startAngle === endAngle) return '';
 
-  // Ensure angles are in the correct range
-  const normalizedStartAngle = startAngle % (2 * Math.PI);
-  const normalizedEndAngle = endAngle % (2 * Math.PI);
+  // Use d3's arc generator with cornerRadius support
+  // This provides the same high-quality rounded corners as MUI X Charts
+  const path = d3Arc().cornerRadius(cornerRadius)({
+    innerRadius: Math.max(0, innerRadius),
+    outerRadius: Math.max(0, outerRadius),
+    startAngle,
+    endAngle,
+  });
 
-  const angleDiff = endAngle - startAngle;
-  const isFullCircle = Math.abs(angleDiff) >= 2 * Math.PI - 0.0001;
-
-  // Start and end points for outer arc
-  const x1 = Math.cos(startAngle) * clampedOuterRadius;
-  const y1 = Math.sin(startAngle) * clampedOuterRadius;
-  const x2 = Math.cos(endAngle) * clampedOuterRadius;
-  const y2 = Math.sin(endAngle) * clampedOuterRadius;
-
-  // Large arc flag
-  const largeArcFlag = angleDiff > Math.PI ? 1 : 0;
-
-  if (clampedInnerRadius === 0) {
-    // Pie slice (no inner radius)
-    if (isFullCircle) {
-      return `
-        M 0,0
-        L ${x1},${y1}
-        A ${clampedOuterRadius},${clampedOuterRadius} 0 1,1 ${-x1},${-y1}
-        A ${clampedOuterRadius},${clampedOuterRadius} 0 1,1 ${x1},${y1}
-        Z
-      `.trim();
-    }
-
-    return `
-      M 0,0
-      L ${x1},${y1}
-      A ${clampedOuterRadius},${clampedOuterRadius} 0 ${largeArcFlag},1 ${x2},${y2}
-      Z
-    `.trim();
-  }
-
-  // Start and end points for inner arc
-  const x3 = Math.cos(endAngle) * clampedInnerRadius;
-  const y3 = Math.sin(endAngle) * clampedInnerRadius;
-  const x4 = Math.cos(startAngle) * clampedInnerRadius;
-  const y4 = Math.sin(startAngle) * clampedInnerRadius;
-
-  if (isFullCircle) {
-    return `
-      M ${x1},${y1}
-      A ${clampedOuterRadius},${clampedOuterRadius} 0 1,1 ${-x1},${-y1}
-      A ${clampedOuterRadius},${clampedOuterRadius} 0 1,1 ${x1},${y1}
-      M ${x4},${y4}
-      A ${clampedInnerRadius},${clampedInnerRadius} 0 1,0 ${-x4},${-y4}
-      A ${clampedInnerRadius},${clampedInnerRadius} 0 1,0 ${x4},${y4}
-      Z
-    `.trim();
-  }
-
-  // Donut slice
-  return `
-    M ${x1},${y1}
-    A ${clampedOuterRadius},${clampedOuterRadius} 0 ${largeArcFlag},1 ${x2},${y2}
-    L ${x3},${y3}
-    A ${clampedInnerRadius},${clampedInnerRadius} 0 ${largeArcFlag},0 ${x4},${y4}
-    Z
-  `.trim();
+  return path ?? '';
 }
 
 /**

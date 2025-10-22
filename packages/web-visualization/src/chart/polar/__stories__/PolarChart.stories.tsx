@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { VStack, HStack } from '@coinbase/cds-web/layout';
+import { HStack, VStack } from '@coinbase/cds-web/layout';
 import { Text } from '@coinbase/cds-web/typography';
 
-import { PieChart } from '../PieChart';
-import { DonutChart } from '../DonutChart';
+import { DonutChart } from '../../pie/DonutChart';
+import { PieChart } from '../../pie/PieChart';
 import type { PolarDataPoint } from '../utils/polar';
 
 export default {
@@ -52,8 +52,48 @@ const revenueData: PolarDataPoint[] = [
   { value: 120, label: 'Other', id: 'other', color: 'var(--color-attention)' },
 ];
 
+// Dominant segment with smaller slices - matches first design
+const dominantSegmentData: PolarDataPoint[] = [
+  { value: 65, label: 'Primary Asset', id: 'primary', color: '#5b7cfa' },
+  { value: 12, label: 'Asset A', id: 'asset-a', color: '#ffc657' },
+  { value: 8, label: 'Asset B', id: 'asset-b', color: '#6fdfbd' },
+  { value: 8, label: 'Asset C', id: 'asset-c', color: '#5bc9e8' },
+  { value: 4, label: 'Asset D', id: 'asset-d', color: '#ff6b8a' },
+  { value: 3, label: 'Asset E', id: 'asset-e', color: '#7dd6a0' },
+];
+
+// Wallet breakdown - matches second design
+const walletBreakdownData: PolarDataPoint[] = [
+  { value: 32, label: 'Card', id: 'card', color: '#5b7cfa' },
+  { value: 38, label: 'Cash', id: 'cash', color: '#6fdfbd' },
+  { value: 18, label: 'Stake', id: 'stake', color: '#ff8b5a' },
+  { value: 12, label: 'Lend', id: 'lend', color: '#5bc9e8' },
+];
+
+// MUI-inspired test data for comparison
+const muiTestData: PolarDataPoint[] = [
+  { value: 30, label: 'Windows', id: 'windows', color: '#5b7cfa' },
+  { value: 25, label: 'MacOS', id: 'macos', color: '#6fdfbd' },
+  { value: 15, label: 'Linux', id: 'linux', color: '#ff8b5a' },
+  { value: 15, label: 'Chrome OS', id: 'chromeos', color: '#5bc9e8' },
+  { value: 15, label: 'Other', id: 'other', color: '#ffc657' },
+];
+
 const BasicPieChart = () => {
   return <PieChart data={sampleData} height={300} label="Portfolio Distribution" width={300} />;
+};
+
+const MUIComparisonChart = () => {
+  return (
+    <DonutChart
+      cornerRadius={5}
+      data={muiTestData}
+      height={300}
+      innerRadiusRatio={0.3}
+      padAngle={0.0872665} // 5 degrees in radians
+      width={300}
+    />
+  );
 };
 
 const BasicDonutChart = () => {
@@ -76,7 +116,6 @@ const InteractivePieChart = () => {
       <PieChart
         data={cryptoPortfolioData}
         height={400}
-        width={400}
         onArcClick={(data, index, event) => {
           setSelectedSlice(data);
         }}
@@ -86,6 +125,7 @@ const InteractivePieChart = () => {
         onArcMouseLeave={(data, index, event) => {
           // Optional: remove hover effects
         }}
+        width={400}
       />
       {selectedSlice && (
         <Text font="body">
@@ -136,8 +176,8 @@ const CustomStyling = () => {
         width={300}
       />
       <DonutChart
-        data={sampleData}
         cornerRadius={4}
+        data={sampleData}
         height={300}
         innerRadiusRatio={0.5}
         padAngle={0.05}
@@ -242,9 +282,54 @@ const ResponsiveCharts = () => {
   );
 };
 
+const DominantSegmentChart = () => {
+  return (
+    <DonutChart
+      cornerRadius={50}
+      data={dominantSegmentData}
+      height={400}
+      innerRadiusRatio={0.55}
+      padAngle={0.03}
+      width={400}
+    />
+  );
+};
+
+const WalletBreakdownChart = () => {
+  return (
+    <DonutChart
+      cornerRadius={100}
+      data={walletBreakdownData}
+      height={350}
+      innerRadiusRatio={0.7}
+      padAngle={0.05}
+      width={350}
+    >
+      <text
+        dominantBaseline="middle"
+        fill="var(--color-fgPrimary)"
+        fontSize="28"
+        fontWeight="600"
+        textAnchor="middle"
+        x="50%"
+        y="50%"
+      >
+        Wallet
+      </text>
+    </DonutChart>
+  );
+};
+
 export const All = () => {
   return (
     <VStack gap={6}>
+      <Example
+        description="Donut chart matching MUI X Charts defaults for direct comparison. Uses d3-shape's arc generator with cornerRadius=5 and paddingAngle=5°."
+        title="MUI X Charts Comparison"
+      >
+        <MUIComparisonChart />
+      </Example>
+
       <Example
         description="A simple pie chart showing portfolio distribution."
         title="Basic Pie Chart"
@@ -296,6 +381,20 @@ export const All = () => {
         title="Custom Angles"
       >
         <CustomAngles />
+      </Example>
+
+      <Example
+        description="Showcases prominent padding angles (gaps between segments) and rounded corners for a modern look. Features one dominant segment with smaller slices."
+        title="Dominant Segment Layout"
+      >
+        <DominantSegmentChart />
+      </Example>
+
+      <Example
+        description="Demonstrates larger inner radius (thinner ring), rounded corners, and generous padding between segments for a clean, modern appearance."
+        title="Wallet Breakdown"
+      >
+        <WalletBreakdownChart />
       </Example>
 
       <Example

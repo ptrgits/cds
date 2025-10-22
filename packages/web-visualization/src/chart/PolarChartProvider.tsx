@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import type { PolarChartContextValue } from './utils/context';
+import type { PolarChartContextValue } from './polar/utils/context';
 
 const PolarChartContext = createContext<PolarChartContextValue | undefined>(undefined);
 

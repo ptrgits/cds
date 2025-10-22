@@ -1,8 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import { m as motion } from 'framer-motion';
 
-import { type ArcData, createArcPath } from './utils/polar';
-import { usePolarChartContext } from './PolarChartProvider';
+import { type ArcData, createArcPath, usePolarChartContext } from '../polar';
 
 export type ArcBaseProps = {
   /**

@@ -1,8 +1,9 @@
 import { forwardRef, memo, useMemo } from 'react';
 
-import { PolarChart, type PolarChartProps } from './PolarChart';
+import { PolarChart, type PolarChartProps } from '../polar';
+import type { PolarDataPoint, PolarSeries } from '../polar/utils/polar';
+
 import { PiePlot, type PiePlotProps } from './PiePlot';
-import type { PolarDataPoint, PolarSeries } from './utils/polar';
 
 export type DonutChartBaseProps = Omit<PolarChartProps, 'series'> &
   Pick<
@@ -70,11 +71,11 @@ export const DonutChart = memo(
             ArcComponent={ArcComponent}
             cornerRadius={cornerRadius}
             fillOpacity={fillOpacity}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
             onArcClick={onArcClick}
             onArcMouseEnter={onArcMouseEnter}
             onArcMouseLeave={onArcMouseLeave}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
           />
           {children}
         </PolarChart>

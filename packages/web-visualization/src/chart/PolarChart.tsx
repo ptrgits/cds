@@ -5,8 +5,8 @@ import { useDimensions } from '@coinbase/cds-web/hooks/useDimensions';
 import { Box, type BoxBaseProps, type BoxProps } from '@coinbase/cds-web/layout';
 import { css } from '@linaria/core';
 
+import type { PolarChartContextValue, PolarSeries } from './polar/utils';
 import { PolarChartProvider } from './PolarChartProvider';
-import type { PolarChartContextValue, PolarSeries } from './utils';
 
 const focusStylesCss = css`
   &:focus {

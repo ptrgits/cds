@@ -1,8 +1,14 @@
 import React, { memo, useMemo } from 'react';
 
-import { usePolarChartContext } from './PolarChartProvider';
+import { usePolarChartContext } from '../polar';
+import {
+  type ArcData,
+  calculateArcData,
+  getPolarColor,
+  type PolarDataPoint,
+} from '../polar/utils/polar';
+
 import { Arc, type ArcProps } from './Arc';
-import { calculateArcData, getPolarColor, type ArcData, type PolarDataPoint } from './utils/polar';
 
 export type PiePlotBaseProps = {
   /**
@@ -117,8 +123,6 @@ export const PiePlot = memo<PiePlotProps>(
               cornerRadius={cornerRadius}
               fill={fill}
               fillOpacity={fillOpacity}
-              stroke={stroke}
-              strokeWidth={strokeWidth}
               onClick={
                 onArcClick ? (data, event) => onArcClick(data.data, data.index, event) : undefined
               }
@@ -132,6 +136,8 @@ export const PiePlot = memo<PiePlotProps>(
                   ? (data, event) => onArcMouseLeave(data.data, data.index, event)
                   : undefined
               }
+              stroke={stroke}
+              strokeWidth={strokeWidth}
             />
           );
         })}
