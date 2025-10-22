@@ -567,7 +567,7 @@ export const Select = memo(forwardRef(SelectInner)) as <
 
 const SelectBase = memo(
   forwardRef(
-    <Type extends SelectType = 'single', T extends string = string>(
+    <Type extends SelectType = 'single', SelectOptionValue extends string = string>(
       {
         value,
         type = 'single' as Type,
@@ -607,7 +607,7 @@ const SelectBase = memo(
         accessibilityRoles,
         testID,
         ...props
-      }: SelectProps<Type, T>,
+      }: SelectProps<Type, SelectOptionValue>,
       ref: React.Ref<SelectRef>,
     ) => {
       const [openInternal, setOpenInternal] = useState(defaultOpen ?? false);
