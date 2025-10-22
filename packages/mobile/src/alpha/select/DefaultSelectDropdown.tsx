@@ -435,13 +435,7 @@ const DefaultSelectDropdownComponent = memo(
             onPress={toggleSelectAll}
             selected={isAllOptionsSelected}
             style={styles?.option}
-            styles={{
-              optionCell: styles?.optionCell,
-              optionContent: styles?.optionContent,
-              optionLabel: styles?.optionLabel,
-              optionDescription: styles?.optionDescription,
-              selectAllDivider: styles?.selectAllDivider,
-            }}
+            styles={optionStyles}
             type={type}
             value="select-all"
           />
@@ -452,11 +446,6 @@ const DefaultSelectDropdownComponent = memo(
           accessory,
           styles?.optionBlendStyles,
           styles?.option,
-          styles?.optionCell,
-          styles?.optionContent,
-          styles?.optionLabel,
-          styles?.optionDescription,
-          styles?.selectAllDivider,
           compact,
           detail,
           handleClearAll,
@@ -469,6 +458,7 @@ const DefaultSelectDropdownComponent = memo(
           isAllOptionsSelected,
           isSomeOptionsSelected,
           toggleSelectAll,
+          optionStyles,
           type,
         ],
       );
