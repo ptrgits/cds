@@ -162,9 +162,9 @@ const DefaultComboboxControlComponent = <T extends string = string>(
   const handleInputClick = useCallback(
     (event: React.MouseEvent) => {
       event.stopPropagation();
-      setOpen(!open);
+      setOpen(true);
     },
-    [open, setOpen],
+    [setOpen],
   );
 
   const handleInputChange = useCallback(
@@ -348,6 +348,7 @@ const DefaultComboboxControlComponent = <T extends string = string>(
       disabled,
       handleInputChange,
       handleInputClick,
+      handleInputKeyDown,
       placeholder,
       testID,
       searchText,
