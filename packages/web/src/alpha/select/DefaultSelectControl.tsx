@@ -213,6 +213,19 @@ const DefaultSelectControlComponent = memo(
         [isMultiSelect, blendStyles],
       );
 
+      const interactableBlendStyles = useMemo(
+        () =>
+          isMultiSelect
+            ? {
+                hoveredBackground: 'rgba(0, 0, 0, 0)',
+                hoveredOpacity: 1,
+                pressedBackground: 'rgba(0, 0, 0, 0)',
+                ...blendStyles,
+              }
+            : blendStyles,
+        [isMultiSelect, blendStyles],
+      );
+
       const helperTextNode = useMemo(
         () =>
           typeof helperText === 'string' ? (

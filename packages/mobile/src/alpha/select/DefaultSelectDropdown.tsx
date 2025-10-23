@@ -411,14 +411,14 @@ const DefaultSelectDropdownComponent = memo(
             accessory={accessory}
             blendStyles={styles?.optionBlendStyles}
             compact={compact}
-            detail={
-              detail ?? (
-                <Button compact transparent onPress={handleClearAll} role="option">
+            disabled={disabled}
+            end={
+              end ?? (
+                <Button compact transparent accessibilityRole="menuitem" onPress={handleClearAll}>
                   {clearAllLabel}
                 </Button>
               )
             }
-            disabled={disabled}
             indeterminate={indeterminate}
             label={String(
               selectAllLabel + ' (' + options.filter((o) => o.value !== null).length + ')',
@@ -447,7 +447,7 @@ const DefaultSelectDropdownComponent = memo(
           styles?.optionBlendStyles,
           styles?.option,
           compact,
-          detail,
+          end,
           handleClearAll,
           clearAllLabel,
           disabled,

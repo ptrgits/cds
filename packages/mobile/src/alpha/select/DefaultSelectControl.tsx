@@ -46,8 +46,6 @@ export const DefaultSelectControlComponent = memo(
         setOpen,
         variant,
         helperText,
-        hiddenSelectedOptionsLabel = 'more',
-        removeSelectedOptionAccessibilityLabel = 'Remove',
         label,
         labelVariant,
         startNode,
