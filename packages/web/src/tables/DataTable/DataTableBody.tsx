@@ -317,7 +317,7 @@ export const DataTableBody = ({
       typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 5,
+    overscan: 10,
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
