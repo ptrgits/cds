@@ -1,4 +1,6 @@
 import React from 'react';
+import type { UniqueIdentifier } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import type { Meta } from '@storybook/react';
 import {
   type ColumnDef,
@@ -43,6 +45,8 @@ export const DataTableExample = () => {
     return rows;
   });
 
+  const dataIds = React.useMemo<UniqueIdentifier[]>(() => data?.map(({ rowId }) => rowId), [data]);
+
   const table = useReactTable<RowData>({
     data,
     columns,
@@ -59,14 +63,13 @@ export const DataTableExample = () => {
         // With TanStack, users would call table.setColumnOrder(ids)
         table.setColumnOrder(ids);
       }}
-      onRowChange={({ ids }) => {
+      onRowChange={({ activeId, overId }) => {
         // Reorder data to match the new ids order
         // ids correspond to row.rowId values
-        setData((prev: RowData[]) => {
-          const byId = new Map<string, RowData>(prev.map((row) => [row.rowId, row] as const));
-          return ids
-            .map((id) => byId.get(String(id)))
-            .filter((row): row is RowData => Boolean(row));
+        setData((data: RowData[]) => {
+          const oldIndex = dataIds.indexOf(activeId);
+          const newIndex = dataIds.indexOf(overId);
+          return arrayMove(data, oldIndex, newIndex); //this is just a splice util
         });
       }}
       table={table}
