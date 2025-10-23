@@ -193,7 +193,10 @@ export const ComponentHeader = memo(
               <Text font="label1">Peer dependencies</Text>
               <Text font="label2">
                 {dependencies.map((dependency, index) => (
-                  <React.Fragment key={dependency.name}>
+                  <span
+                    key={dependency.name}
+                    style={{ display: 'inline-block', whiteSpace: 'pre-wrap' }}
+                  >
                     {dependency.url ? (
                       <Link as={DocusaurusLink} target="_blank" to={dependency.url}>
                         {dependency.name}
@@ -203,7 +206,7 @@ export const ComponentHeader = memo(
                     )}
                     {dependency.version && <span>{`: ${dependency.version}`}</span>}
                     {index < dependencies.length - 1 && ', '}
-                  </React.Fragment>
+                  </span>
                 ))}
               </Text>
             </VStack>
@@ -217,12 +220,15 @@ export const ComponentHeader = memo(
               <Text font="label1">Related components</Text>
               <Text font="label2">
                 {relatedComponents.map((component, index) => (
-                  <React.Fragment key={component.url}>
+                  <span
+                    key={component.url}
+                    style={{ display: 'inline-block', whiteSpace: 'pre-wrap' }}
+                  >
                     <Link as={DocusaurusLink} to={component.url}>
                       {component.label}
                     </Link>
                     {index < relatedComponents.length - 1 && ', '}
-                  </React.Fragment>
+                  </span>
                 ))}
               </Text>
             </VStack>
