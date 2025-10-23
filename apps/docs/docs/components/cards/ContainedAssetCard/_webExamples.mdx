@@ -23,7 +23,7 @@ function Example() {
   return (
     <HStack minHeight={300} padding={2} alignItems="center" justifyContent="center" gap={2}>
       {cards.map((card) => (
-        <ContainedAssetCard {...card} />
+        <ContainedAssetCard key={card.title} {...card} />
       ))}
     </HStack>
   );
@@ -56,7 +56,7 @@ function Example() {
   return (
     <HStack minHeight={300} padding={2} alignItems="center" justifyContent="center" gap={2}>
       {cards.map((card) => (
-        <ContainedAssetCard {...card} />
+        <ContainedAssetCard key={card.title} {...card} />
       ))}
     </HStack>
   );
@@ -76,7 +76,7 @@ function Example() {
     {
       title: 'Oct 12',
       subtitle: 'Next pay day',
-      onPress: NoopFn,
+      onClick: NoopFn,
       header: (
         <Box
           bordered
@@ -92,7 +92,7 @@ function Example() {
     {
       title: '+ $24.02',
       subtitle: 'Sept earnings',
-      onPress: NoopFn,
+      onClick: NoopFn,
       header: (
         <Box bordered dangerouslySetBackground="rgb(var(--gray100))" borderRadius={400} padding={1}>
           <Icon active color="bg" name="chartBar" size="s" />
@@ -103,7 +103,7 @@ function Example() {
   return (
     <HStack minHeight={300} padding={2} alignItems="center" justifyContent="center" gap={2}>
       {cards.map((card) => (
-        <ContainedAssetCard {...card} />
+        <ContainedAssetCard key={card.title} {...card} />
       ))}
     </HStack>
   );

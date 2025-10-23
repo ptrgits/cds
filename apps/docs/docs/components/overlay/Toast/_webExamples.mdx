@@ -19,7 +19,7 @@ function ToastExample() {
 
     const handleShowToast = useCallback(() => {
       toast.show(toastText, {
-        action: { label: 'Action', onClick: () => console.log('action pressed') },
+        action: { label: 'Action', onPress: () => console.log('action pressed') },
         onWillHide: () => {
           console.log('toast hiding');
         },

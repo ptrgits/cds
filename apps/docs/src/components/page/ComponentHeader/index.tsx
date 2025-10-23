@@ -191,32 +191,21 @@ export const ComponentHeader = memo(
             <Divider />
             <VStack gap={{ base: 1, phone: 0 }} paddingX={{ base: 4, phone: 2 }} paddingY={2}>
               <Text font="label1">Peer dependencies</Text>
-              <HStack
-                as="ul"
-                flexWrap="wrap"
-                gap={{ base: 1, phone: 0 }}
-                margin={0}
-                padding={0}
-                style={{
-                  listStyleType: 'none',
-                }}
-              >
+              <Text font="label2">
                 {dependencies.map((dependency, index) => (
-                  <li key={dependency.name}>
-                    <Text font="label2">
-                      {dependency.url ? (
-                        <Link as={DocusaurusLink} target="_blank" to={dependency.url}>
-                          {dependency.name}
-                        </Link>
-                      ) : (
-                        dependency.name
-                      )}
-                      {dependency.version && <span>{`: ${dependency.version}`}</span>}
-                      {index < dependencies.length - 1 && ', '}
-                    </Text>
-                  </li>
+                  <React.Fragment key={dependency.name}>
+                    {dependency.url ? (
+                      <Link as={DocusaurusLink} target="_blank" to={dependency.url}>
+                        {dependency.name}
+                      </Link>
+                    ) : (
+                      dependency.name
+                    )}
+                    {dependency.version && <span>{`: ${dependency.version}`}</span>}
+                    {index < dependencies.length - 1 && ', '}
+                  </React.Fragment>
                 ))}
-              </HStack>
+              </Text>
             </VStack>
           </>
         )}
@@ -226,27 +215,16 @@ export const ComponentHeader = memo(
             <Divider />
             <VStack gap={{ base: 1, phone: 0 }} paddingX={{ base: 4, phone: 2 }} paddingY={2}>
               <Text font="label1">Related components</Text>
-              <HStack
-                as="ul"
-                flexWrap="wrap"
-                gap={{ base: 1, phone: 0 }}
-                margin={0}
-                padding={0}
-                style={{
-                  listStyleType: 'none',
-                }}
-              >
+              <Text font="label2">
                 {relatedComponents.map((component, index) => (
-                  <li key={component.url}>
-                    <Text font="label2">
-                      <Link as={DocusaurusLink} to={component.url}>
-                        {component.label}
-                      </Link>
-                      {index < relatedComponents.length - 1 && ', '}
-                    </Text>
-                  </li>
+                  <React.Fragment key={component.url}>
+                    <Link as={DocusaurusLink} to={component.url}>
+                      {component.label}
+                    </Link>
+                    {index < relatedComponents.length - 1 && ', '}
+                  </React.Fragment>
                 ))}
-              </HStack>
+              </Text>
             </VStack>
           </>
         )}
