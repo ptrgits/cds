@@ -25,7 +25,6 @@ export const DataTableExample = () => {
       cols.push({
         accessorKey: key,
         header: `Col ${c}`,
-        size: 120,
         cell: (info) => info.getValue<number>(),
       });
     }
@@ -56,6 +55,10 @@ export const DataTableExample = () => {
 
   return (
     <DataTable
+      onColumnChange={({ ids }) => {
+        // With TanStack, users would call table.setColumnOrder(ids)
+        table.setColumnOrder(ids);
+      }}
       onRowChange={({ ids }) => {
         // Reorder data to match the new ids order
         // ids correspond to row.rowId values

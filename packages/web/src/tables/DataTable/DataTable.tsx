@@ -3,13 +3,14 @@ import {
   closestCenter,
   DndContext,
   type DragEndEvent,
+  type DragOverEvent,
+  DragOverlay,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { Table } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -31,10 +32,21 @@ export type DataTableProps = React.HTMLAttributes<HTMLTableElement> & {
     newIndex: number;
     ids: string[];
   }) => void;
+  /**
+   * Called when a center column reorder is completed via drag and drop. Consumers should
+   * update their table column order (e.g., TanStack's columnOrder) accordingly.
+   */
+  onColumnChange?: (args: {
+    activeId: string;
+    overId: string;
+    oldIndex: number;
+    newIndex: number;
+    ids: string[];
+  }) => void;
 };
 
 export const DataTable = forwardRef<HTMLTableElement, DataTableProps>(
-  ({ table, onRowChange, ...props }, ref) => {
+  ({ table, onRowChange, onColumnChange, ...props }, ref) => {
     // Only virtualize the center (unpinned) columns. Left/Right pinned columns
     // are rendered outside of the virtualized range to support sticky pinning.
     const centerColumns = table.getVisibleLeafColumns().filter((col) => !col.getIsPinned());
@@ -80,25 +92,67 @@ export const DataTable = forwardRef<HTMLTableElement, DataTableProps>(
       useSensor(KeyboardSensor, {}),
     );
 
+    const [dragColActive, setDragColActive] = React.useState<string | null>(null);
+    const [dragColOver, setDragColOver] = React.useState<string | null>(null);
+
     const handleDragEnd = React.useCallback(
       (event: DragEndEvent) => {
         const { active, over } = event;
         if (!active || !over || active.id === over.id) return;
-        const current = centerRowIds;
-        const oldIndex = current.indexOf(String(active.id));
-        const newIndex = current.indexOf(String(over.id));
-        if (oldIndex === -1 || newIndex === -1) return;
-        const ids = arrayMove(current, oldIndex, newIndex);
-        onRowChange?.({
-          activeId: String(active.id),
-          overId: String(over.id),
-          oldIndex,
-          newIndex,
-          ids,
-        });
+        const activeId = String(active.id);
+        const overId = String(over.id);
+
+        // Row reorder (center rows only)
+        if (activeId.startsWith('row:') && overId.startsWith('row:')) {
+          const current = centerRowIds.map((id) => `row:${id}`);
+          const oldIndex = current.indexOf(activeId);
+          const newIndex = current.indexOf(overId);
+          if (oldIndex === -1 || newIndex === -1) return;
+          const next = arrayMove(current, oldIndex, newIndex);
+          const ids = next.map((rid) => rid.replace(/^row:/, ''));
+          onRowChange?.({
+            activeId: activeId.replace(/^row:/, ''),
+            overId: overId.replace(/^row:/, ''),
+            oldIndex,
+            newIndex,
+            ids,
+          });
+          return;
+        }
+
+        // Column reorder (center columns only)
+        if (activeId.startsWith('col:') && overId.startsWith('col:')) {
+          const centerColumnIds = centerColumns.map((c) => c.id);
+          const current = centerColumnIds.map((id) => `col:${id}`);
+          const oldIndex = current.indexOf(activeId);
+          const newIndex = current.indexOf(overId);
+          if (oldIndex === -1 || newIndex === -1) return;
+          const next = arrayMove(current, oldIndex, newIndex);
+          const ids = next.map((cid) => cid.replace(/^col:/, ''));
+          onColumnChange?.({
+            activeId: activeId.replace(/^col:/, ''),
+            overId: overId.replace(/^col:/, ''),
+            oldIndex,
+            newIndex,
+            ids,
+          });
+          setDragColActive(null);
+          setDragColOver(null);
+          return;
+        }
       },
-      [centerRowIds, onRowChange],
+      [centerRowIds, centerColumns, onRowChange, onColumnChange],
     );
+
+    const handleDragOver = React.useCallback((event: DragOverEvent) => {
+      const { active, over } = event;
+      const a = active ? String(active.id) : null;
+      const o = over ? String(over.id) : null;
+      if (a && a.startsWith('col:')) {
+        setDragColActive(a.replace(/^col:/, ''));
+        setDragColOver(o && o.startsWith('col:') ? o.replace(/^col:/, '') : null);
+      }
+    }, []);
 
     return (
       <div
@@ -111,14 +165,16 @@ export const DataTable = forwardRef<HTMLTableElement, DataTableProps>(
       >
         <DndContext
           collisionDetection={closestCenter}
-          modifiers={[restrictToVerticalAxis]}
           onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
           sensors={sensors}
         >
           {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
           <table ref={ref} style={{ display: 'grid' }} {...props}>
             <DataTableHead
               columnVirtualizer={columnVirtualizer}
+              dragActiveColId={dragColActive ?? undefined}
+              dragOverColId={dragColOver ?? undefined}
               isSticky={hasTopPinnedRows}
               onHeightChange={setHeaderHeight}
               table={table}
@@ -127,6 +183,8 @@ export const DataTable = forwardRef<HTMLTableElement, DataTableProps>(
             />
             <DataTableBody
               columnVirtualizer={columnVirtualizer}
+              dragActiveColId={dragColActive ?? undefined}
+              dragOverColId={dragColOver ?? undefined}
               headerOffsetTop={hasTopPinnedRows ? headerHeight : 0}
               table={table}
               tableContainerRef={tableContainerRef}
@@ -134,6 +192,20 @@ export const DataTable = forwardRef<HTMLTableElement, DataTableProps>(
               virtualPaddingRight={virtualPaddingRight}
             />
           </table>
+          <DragOverlay>
+            {dragColActive ? (
+              <th
+                style={{
+                  backgroundColor: 'gray',
+                  color: 'white',
+                  opacity: 0.9,
+                  padding: 8,
+                }}
+              >
+                {dragColActive}
+              </th>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </div>
     );
