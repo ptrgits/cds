@@ -257,10 +257,11 @@ const DefaultComboboxControlComponent = <T extends string = string>(
             accessibilityLabel={`${removeSelectedOptionAccessibilityLabel} ${option.label ?? option.description ?? option.value ?? ''}`}
             disabled={option.disabled}
             invertColorScheme={false}
-            label={option.label ?? option.description ?? option.value ?? ''}
             maxWidth={200}
             onClick={(event) => handleUnselectValue(event, index)}
-          />
+          >
+            {option.label ?? option.description ?? option.value ?? ''}
+          </InputChip>
         ))}
         {value.length - maxSelectedOptionsToShow > 0 && (
           <Chip>{`+${value.length - maxSelectedOptionsToShow} ${hiddenSelectedOptionsLabel}`}</Chip>

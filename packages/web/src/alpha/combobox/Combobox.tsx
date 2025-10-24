@@ -37,7 +37,7 @@ export type ComboboxBaseProps<T extends string = string> = Pick<
     | 'labelVariant'
     | 'endNode'
   > &
-  Pick<SelectDropdownProps<'multi', T>, 'accessory' | 'media' | 'detail'> &
+  Pick<SelectDropdownProps<'multi', T>, 'accessory' | 'media' | 'end'> &
   Pick<
     SelectDropdownProps<'multi'>,
     | 'selectAllLabel'
@@ -211,7 +211,7 @@ const ComboboxBase = memo(
         maxSelectedOptionsToShow,
         accessory,
         media,
-        detail,
+        end,
         searchText: searchTextProp,
         onSearch: onSearchProp,
         defaultSearchText = '',
@@ -310,10 +310,10 @@ const ComboboxBase = memo(
             clearAllLabel={clearAllLabel}
             compact={compact}
             defaultOpen={defaultOpen}
-            detail={detail}
             disableClickOutsideClose={disableClickOutsideClose}
             disabled={disabled}
             emptyOptionsLabel={emptyOptionsLabel}
+            end={end}
             endNode={endNode}
             helperText={helperText}
             hiddenSelectedOptionsLabel={hiddenSelectedOptionsLabel}
@@ -322,7 +322,7 @@ const ComboboxBase = memo(
             labelVariant={labelVariant}
             maxSelectedOptionsToShow={maxSelectedOptionsToShow}
             media={media}
-            onChange={onChange}
+            onChange={(value) => onChange?.(value as T | T[])}
             open={open}
             options={filteredOptions}
             placeholder={placeholder}
