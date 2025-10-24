@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, HStack, VStack } from '@coinbase/cds-web/layout';
 import { Text } from '@coinbase/cds-web/typography';
 
@@ -41,9 +41,6 @@ const sampleData: PolarDataPoint[] = [
 ];
 
 const CoinbaseOneRewardsChart = () => {
-  // State for progress percentage (0-100)
-  const [progress, setProgress] = useState(60);
-
   // Chart parameters
   const radius = 100;
   const innerRadiusRatio = 0.75;
@@ -66,7 +63,7 @@ const CoinbaseOneRewardsChart = () => {
 
   // Calculate progress angle based on percentage
   const totalChartAngle = endAngleDegrees - startAngleDegrees;
-  const progressAngle = startAngleDegrees + (totalChartAngle * progress) / 100;
+  const progressAngle = 0;
 
   // Background: full ring
   const backgroundData = [
@@ -157,7 +154,6 @@ const CoinbaseOneRewardsChart = () => {
             />
           </g>
           <PiePlot
-            animate={false}
             clipPathId="background-clip"
             cornerRadius={100}
             endAngle={progressAngle}
@@ -167,23 +163,6 @@ const CoinbaseOneRewardsChart = () => {
           />
         </PolarChart>
       </Box>
-
-      {/* Progress Controls */}
-      <VStack gap={2} style={{ width: '100%', maxWidth: 400 }}>
-        <HStack gap={2} style={{ width: '100%', alignItems: 'center' }}>
-          <Text style={{ minWidth: 80 }}>Progress:</Text>
-          <input
-            max="100"
-            min="0"
-            onChange={(e) => setProgress(Number(e.target.value))}
-            step="1"
-            style={{ flex: 1 }}
-            type="range"
-            value={progress}
-          />
-          <Text style={{ minWidth: 60, textAlign: 'right', fontWeight: 600 }}>{progress}%</Text>
-        </HStack>
-      </VStack>
     </VStack>
   );
 };
@@ -197,32 +176,36 @@ const WalletBreakdownChart = () => {
   ];
 
   return (
-    <VStack gap={4} style={{ alignItems: 'center' }}>
-      <DonutChart
-        animate
-        cornerRadius={100}
-        data={walletData}
-        height={200}
-        innerRadiusRatio={0.8}
-        paddingAngle={3}
-        width={200}
-      />
-      <HStack gap={6} style={{ justifyContent: 'center', flexWrap: 'wrap' }}>
-        {walletData.map((item) => (
-          <HStack key={item.id} gap={2} style={{ alignItems: 'center' }}>
-            <Box
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: '50%',
-                backgroundColor: item.color,
-              }}
-            />
-            <Text font="label2">{item.label}</Text>
-          </HStack>
-        ))}
-      </HStack>
-    </VStack>
+    <DonutChart
+      animate
+      cornerRadius={100}
+      data={walletData}
+      height={200}
+      innerRadiusRatio={0.8}
+      paddingAngle={3}
+      width={200}
+    />
+  );
+};
+
+const WalletBreakdownPieChart = () => {
+  const walletData: PolarDataPoint[] = [
+    { value: 15, label: 'Card', id: 'card', color: '#5B8DEF' },
+    { value: 45, label: 'Cash', id: 'cash', color: '#4CAF93' },
+    { value: 12, label: 'Stake', id: 'stake', color: '#E67C5C' },
+    { value: 18, label: 'Lend', id: 'lend', color: '#6DD4E0' },
+  ];
+
+  return (
+    <PieChart
+      animate
+      data={walletData}
+      height={200}
+      overflow="visible"
+      stroke="var(--color-bg)"
+      strokeWidth={1}
+      width={200}
+    />
   );
 };
 
@@ -234,6 +217,9 @@ export const All = () => {
       </Example>
       <Example title="Wallet Breakdown">
         <WalletBreakdownChart />
+      </Example>
+      <Example title="Wallet Breakdown">
+        <WalletBreakdownPieChart />
       </Example>
     </VStack>
   );

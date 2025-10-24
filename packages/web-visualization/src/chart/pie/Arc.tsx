@@ -81,8 +81,9 @@ export const Arc = memo<ArcProps>(
   }) => {
     const { animate, centerX, centerY, startAngle: chartStartAngle } = usePolarChartContext();
 
-    // Animate both start and end angles from the chart's startAngle
-    // This creates both rotation and growth effects like Recharts
+    // Animate both angles from the chart's global startAngle to their respective positions
+    // This creates a sweeping effect while ensuring segments positioned later stay ahead
+    // and never get passed by earlier segments
     const animatedStartAngle = useMotionValue(chartStartAngle);
     const animatedEndAngle = useMotionValue(chartStartAngle);
 
@@ -103,14 +104,12 @@ export const Arc = memo<ArcProps>(
     React.useEffect(() => {
       if (animate) {
         const startControls = frameAnimate(animatedStartAngle, arcData.startAngle, {
-          duration: 3, // 3 seconds for debugging
+          duration: 1,
           ease: 'easeOut',
-          delay: arcData.index * 0.2,
         });
         const endControls = frameAnimate(animatedEndAngle, arcData.endAngle, {
-          duration: 3, // 3 seconds for debugging
+          duration: 1,
           ease: 'easeOut',
-          delay: arcData.index * 0.2,
         });
         return () => {
           startControls.stop();
