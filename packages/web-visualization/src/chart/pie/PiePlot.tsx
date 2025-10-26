@@ -2,12 +2,16 @@ import React, { memo, useMemo } from 'react';
 
 import { PolarChartProvider, usePolarChartContext } from '../polar';
 import {
+  type AngularAxisConfig,
   type ArcData,
   calculateArcData,
-  degreesToRadians,
+  getAngularAxisRadians,
   getPolarColor,
+  getRadialAxisPixels,
+  type PolarChartContextValue,
   type PolarDataPoint,
-} from '../polar/utils/polar';
+  type RadialAxisConfig,
+} from '../polar/utils';
 import { getArcPath } from '../utils/path';
 
 import { Arc, type ArcProps } from './Arc';
@@ -26,21 +30,23 @@ export type PiePlotBaseProps = {
    */
   animate?: boolean;
   /**
-   * Start angle in degrees. Overrides the chart-level startAngle.
+   * Angular axis configuration. Overrides the chart-level angularAxis.
+   *
+   * @example
+   * ```tsx
+   * <PiePlot angularAxis={{ range: { min: 0, max: 180 } }} />
+   * ```
    */
-  startAngle?: number;
+  angularAxis?: AngularAxisConfig;
   /**
-   * End angle in degrees. Overrides the chart-level endAngle.
+   * Radial axis configuration. Overrides the chart-level radialAxis.
+   *
+   * @example
+   * ```tsx
+   * <PiePlot radialAxis={{ range: { min: 0.5, max: 1 } }} />
+   * ```
    */
-  endAngle?: number;
-  /**
-   * Inner radius as a ratio of the outer radius (0-1). Overrides the chart-level innerRadiusRatio.
-   */
-  innerRadiusRatio?: number;
-  /**
-   * Padding angle between slices in degrees. Overrides the chart-level paddingAngle.
-   */
-  paddingAngle?: number;
+  radialAxis?: RadialAxisConfig;
   /**
    * ID of another series to use as a clipping mask. The current series will only be visible
    * where it overlaps with the specified series.
@@ -107,10 +113,8 @@ export const PiePlot = memo<PiePlotProps>(
     seriesId,
     ArcComponent = Arc,
     animate: animateOverride,
-    startAngle: startAngleOverride,
-    endAngle: endAngleOverride,
-    innerRadiusRatio: innerRadiusRatioOverride,
-    paddingAngle: paddingAngleOverride,
+    angularAxis: angularAxisOverride,
+    radialAxis: radialAxisOverride,
     clipToSeriesId,
     clipPathId: customClipPathId,
     fillOpacity,
@@ -125,7 +129,7 @@ export const PiePlot = memo<PiePlotProps>(
       series,
       getSeries,
       innerRadius: contextInnerRadius,
-      outerRadius,
+      outerRadius: contextOuterRadius,
       padAngle: contextPadAngle,
       startAngle: contextStartAngle,
       endAngle: contextEndAngle,
@@ -135,26 +139,39 @@ export const PiePlot = memo<PiePlotProps>(
       width,
       height,
       maxRadius,
+      angularAxis: contextAngularAxis,
+      radialAxis: contextRadialAxis,
     } = usePolarChartContext();
 
     // Use overrides if provided, otherwise use context values
     const shouldAnimate = animateOverride !== undefined ? animateOverride : contextAnimate;
 
-    // Convert angles from degrees to radians for overrides
-    const startAngleRadians =
-      startAngleOverride !== undefined ? degreesToRadians(startAngleOverride) : contextStartAngle;
-    const endAngleRadians =
-      endAngleOverride !== undefined ? degreesToRadians(endAngleOverride) : contextEndAngle;
+    // Calculate angular axis with overrides
+    const {
+      startAngle: startAngleRadians,
+      endAngle: endAngleRadians,
+      padAngle,
+    } = useMemo(() => {
+      if (angularAxisOverride) {
+        return getAngularAxisRadians(angularAxisOverride);
+      }
+      return {
+        startAngle: contextStartAngle,
+        endAngle: contextEndAngle,
+        padAngle: contextPadAngle,
+      };
+    }, [angularAxisOverride, contextStartAngle, contextEndAngle, contextPadAngle]);
 
-    // Calculate inner radius from ratio override
-    const innerRadius =
-      innerRadiusRatioOverride !== undefined
-        ? outerRadius * Math.max(0, Math.min(1, innerRadiusRatioOverride))
-        : contextInnerRadius;
-
-    // Convert padding angle from degrees to radians for override
-    const padAngle =
-      paddingAngleOverride !== undefined ? degreesToRadians(paddingAngleOverride) : contextPadAngle;
+    // Calculate radial axis with overrides
+    const { innerRadius, outerRadius } = useMemo(() => {
+      if (radialAxisOverride) {
+        return getRadialAxisPixels(maxRadius, radialAxisOverride);
+      }
+      return {
+        innerRadius: contextInnerRadius,
+        outerRadius: contextOuterRadius,
+      };
+    }, [maxRadius, radialAxisOverride, contextInnerRadius, contextOuterRadius]);
 
     const targetSeries = useMemo(() => {
       if (seriesId) {
@@ -269,13 +286,11 @@ export const PiePlot = memo<PiePlotProps>(
     // If any values are overridden, wrap in a new context provider
     const hasOverrides =
       animateOverride !== undefined ||
-      startAngleOverride !== undefined ||
-      endAngleOverride !== undefined ||
-      innerRadiusRatioOverride !== undefined ||
-      paddingAngleOverride !== undefined;
+      angularAxisOverride !== undefined ||
+      radialAxisOverride !== undefined;
 
     if (hasOverrides) {
-      const overriddenContext = {
+      const overriddenContext: PolarChartContextValue = {
         series,
         getSeries,
         animate: shouldAnimate,
@@ -289,6 +304,8 @@ export const PiePlot = memo<PiePlotProps>(
         padAngle,
         startAngle: startAngleRadians,
         endAngle: endAngleRadians,
+        angularAxis: angularAxisOverride || contextAngularAxis,
+        radialAxis: radialAxisOverride || contextRadialAxis,
       };
 
       return <PolarChartProvider value={overriddenContext}>{content}</PolarChartProvider>;

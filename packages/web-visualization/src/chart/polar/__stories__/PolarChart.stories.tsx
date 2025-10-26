@@ -5,8 +5,8 @@ import { Text } from '@coinbase/cds-web/typography';
 import { DonutChart } from '../../pie/DonutChart';
 import { PieChart } from '../../pie/PieChart';
 import { PiePlot } from '../../pie/PiePlot';
+import { PolarChart } from '../../PolarChart';
 import { getArcPath } from '../../utils/path';
-import { PolarChart } from '../PolarChart';
 import type { PolarDataPoint } from '../utils/polar';
 
 export default {
@@ -31,14 +31,6 @@ const Example: React.FC<
     </VStack>
   );
 };
-
-const sampleData: PolarDataPoint[] = [
-  { value: 30, label: 'Bitcoin', id: 'btc', color: 'var(--color-accentBoldOrange)' },
-  { value: 20, label: 'Ethereum', id: 'eth', color: 'var(--color-accentBoldBlue)' },
-  { value: 15, label: 'USDC', id: 'usdc', color: 'var(--color-accentBoldGreen)' },
-  { value: 25, label: 'Others', id: 'others', color: 'var(--color-accentBoldPurple)' },
-  { value: 10, label: 'Cash', id: 'cash', color: 'var(--color-accentBoldYellow)' },
-];
 
 const CoinbaseOneRewardsChart = () => {
   // Chart parameters
@@ -72,7 +64,7 @@ const CoinbaseOneRewardsChart = () => {
 
   // Foreground: single arc that fills based on progress
   const foregroundData = [
-    { value: 100, label: 'Progress', id: 'progress', color: 'var(--color-positive)' },
+    { value: 100, label: 'Progress', id: 'progress', color: 'var(--color-fg)' },
   ];
 
   return (
@@ -154,12 +146,11 @@ const CoinbaseOneRewardsChart = () => {
             />
           </g>
           <PiePlot
+            angularAxis={{ range: { min: startAngleDegrees, max: progressAngle } }}
             clipPathId="background-clip"
             cornerRadius={100}
-            endAngle={progressAngle}
-            innerRadiusRatio={innerRadiusRatio}
+            radialAxis={{ range: ({ max }) => ({ min: innerRadiusRatio * max, max }) }}
             seriesId="foreground"
-            startAngle={startAngleDegrees}
           />
         </PolarChart>
       </Box>
@@ -178,11 +169,11 @@ const WalletBreakdownChart = () => {
   return (
     <DonutChart
       animate
+      angularAxis={{ paddingAngle: 3 }}
       cornerRadius={100}
       data={walletData}
       height={200}
       innerRadiusRatio={0.8}
-      paddingAngle={3}
       width={200}
     />
   );
@@ -209,16 +200,81 @@ const WalletBreakdownPieChart = () => {
   );
 };
 
+const NestedWalletBreakdown = () => {
+  // Inner pie chart - main categories
+  const categoryData: PolarDataPoint[] = [
+    { value: 35, label: 'Crypto', id: 'crypto', color: '#5B8DEF' },
+    { value: 45, label: 'Fiat', id: 'fiat', color: '#4CAF93' },
+    { value: 20, label: 'Rewards', id: 'rewards', color: '#E67C5C' },
+  ];
+
+  // Outer donut chart - detailed breakdown
+  const detailData: PolarDataPoint[] = [
+    // Crypto breakdown (35% of total)
+    { value: 15, label: 'Bitcoin', id: 'btc', color: '#7FA8F5' },
+    { value: 12, label: 'Ethereum', id: 'eth', color: '#95B8F7' },
+    { value: 8, label: 'Other', id: 'other-crypto', color: '#ABC8F9' },
+
+    // Fiat breakdown (45% of total)
+    { value: 30, label: 'USD', id: 'usd', color: '#6BC9A9' },
+    { value: 15, label: 'EUR', id: 'eur', color: '#8DD9BC' },
+
+    // Rewards breakdown (20% of total)
+    { value: 12, label: 'Cash Back', id: 'cashback', color: '#ED9274' },
+    { value: 8, label: 'Points', id: 'points', color: '#F2AB91' },
+  ];
+
+  return (
+    <PolarChart
+      animate
+      height={300}
+      overflow="visible"
+      series={[
+        { id: 'categories', data: categoryData, label: 'Categories' },
+        { id: 'details', data: detailData, label: 'Details' },
+      ]}
+      width={300}
+    >
+      {/* Inner pie chart - uses ~60% of radius */}
+      <PiePlot
+        cornerRadius={4}
+        radialAxis={{
+          range: ({ max }) => ({ min: 0, max: max - 16 }),
+        }}
+        seriesId="categories"
+        stroke="var(--color-bg)"
+        strokeWidth={2}
+      />
+      {/* Outer donut ring - from 65% to 100% of radius */}
+      <PiePlot
+        cornerRadius={4}
+        radialAxis={{
+          range: ({ max }) => ({ min: max - 16, max }),
+        }}
+        seriesId="details"
+        stroke="var(--color-bg)"
+        strokeWidth={2}
+      />
+    </PolarChart>
+  );
+};
+
 export const All = () => {
   return (
     <VStack gap={6}>
+      <Example
+        description="A nested visualization showing main categories in the center pie chart with detailed breakdowns in the surrounding donut chart."
+        title="Nested Wallet Breakdown"
+      >
+        <NestedWalletBreakdown />
+      </Example>
       <Example title="Coinbase One Rewards">
         <CoinbaseOneRewardsChart />
       </Example>
-      <Example title="Wallet Breakdown">
+      <Example title="Wallet Breakdown - Donut">
         <WalletBreakdownChart />
       </Example>
-      <Example title="Wallet Breakdown">
+      <Example title="Wallet Breakdown - Pie">
         <WalletBreakdownPieChart />
       </Example>
     </VStack>

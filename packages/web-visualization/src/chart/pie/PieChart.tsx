@@ -1,11 +1,11 @@
 import { forwardRef, memo, useMemo } from 'react';
 
-import { PolarChart, type PolarChartProps } from '../polar';
 import type { PolarDataPoint, PolarSeries } from '../polar/utils/polar';
+import { PolarChart, type PolarChartProps } from '../PolarChart';
 
 import { PiePlot, type PiePlotProps } from './PiePlot';
 
-export type PieChartBaseProps = Omit<PolarChartProps, 'series' | 'innerRadiusRatio'> &
+export type PieChartBaseProps = Omit<PolarChartProps, 'series'> &
   Pick<
     PiePlotProps,
     | 'ArcComponent'
@@ -32,6 +32,8 @@ export type PieChartProps = PieChartBaseProps;
 /**
  * A pie chart component for visualizing proportional data.
  * Each slice represents a data point's value as a proportion of the total.
+ *
+ * By default, uses the full radius (radialAxis: { range: { min: 0, max: [radius in pixels] } }).
  */
 export const PieChart = memo(
   forwardRef<SVGSVGElement, PieChartProps>(
@@ -63,8 +65,10 @@ export const PieChart = memo(
         ];
       }, [data, label]);
 
+      // For pie chart, use the default radial axis (full radius: min: 0, max: maxRadius in pixels)
+      // Only override if user explicitly provides radialAxis
       return (
-        <PolarChart {...chartProps} ref={ref} innerRadiusRatio={0} series={series}>
+        <PolarChart ref={ref} {...chartProps} radialAxis={chartProps.radialAxis} series={series}>
           <PiePlot
             ArcComponent={ArcComponent}
             cornerRadius={cornerRadius}

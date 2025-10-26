@@ -1,3 +1,4 @@
+import type { AngularAxisConfig, RadialAxisConfig } from './axis';
 import type { PolarSeries } from './polar';
 
 /**
@@ -57,4 +58,12 @@ export type PolarChartContextValue = {
    * End angle in radians.
    */
   endAngle: number;
+  /**
+   * Angular axis configuration.
+   */
+  angularAxis?: AngularAxisConfig;
+  /**
+   * Radial axis configuration.
+   */
+  radialAxis?: RadialAxisConfig;
 };

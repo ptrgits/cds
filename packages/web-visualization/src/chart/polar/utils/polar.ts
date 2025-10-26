@@ -113,32 +113,6 @@ export function calculateArcData(
 }
 
 /**
- * Converts degrees to radians.
- *
- * @example
- * ```typescript
- * const radians = degreesToRadians(180); // Math.PI
- * const radians = degreesToRadians(90);  // Math.PI / 2
- * ```
- */
-export const degreesToRadians = (degrees: number): number => {
-  return (degrees * Math.PI) / 180;
-};
-
-/**
- * Converts radians to degrees.
- *
- * @example
- * ```typescript
- * const degrees = radiansToDegrees(Math.PI);     // 180
- * const degrees = radiansToDegrees(Math.PI / 2); // 90
- * ```
- */
-export const radiansToDegrees = (radians: number): number => {
-  return (radians * 180) / Math.PI;
-};
-
-/**
  * Calculates the centroid of an arc for label positioning.
  */
 export function getArcCentroid(

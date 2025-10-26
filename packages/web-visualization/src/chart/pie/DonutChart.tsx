@@ -1,7 +1,7 @@
 import { forwardRef, memo, useMemo } from 'react';
 
-import { PolarChart, type PolarChartProps } from '../polar';
 import type { PolarDataPoint, PolarSeries } from '../polar/utils/polar';
+import { PolarChart, type PolarChartProps } from '../PolarChart';
 
 import { PiePlot, type PiePlotProps } from './PiePlot';
 
@@ -25,6 +25,14 @@ export type DonutChartBaseProps = Omit<PolarChartProps, 'series'> &
      * Optional label for the donut chart.
      */
     label?: string;
+    /**
+     * Inner radius as a ratio of the outer radius (0-1).
+     * This sets the default radial axis to: `range: ({ max }) => ({ min: max * innerRadiusRatio, max })`
+     *
+     * **Note**: If you provide a custom `radialAxis` prop, this will be ignored.
+     * @default 0.5
+     */
+    innerRadiusRatio?: number;
   };
 
 export type DonutChartProps = DonutChartBaseProps;
@@ -65,8 +73,24 @@ export const DonutChart = memo(
         ];
       }, [data, label]);
 
+      // Set default radial axis for donut chart
+      const defaultRadialAxis = useMemo(
+        () => ({
+          range: ({ min, max }: { min: number; max: number }) => ({
+            min: max * innerRadiusRatio,
+            max,
+          }),
+        }),
+        [innerRadiusRatio],
+      );
+
       return (
-        <PolarChart {...chartProps} ref={ref} innerRadiusRatio={innerRadiusRatio} series={series}>
+        <PolarChart
+          ref={ref}
+          {...chartProps}
+          radialAxis={chartProps.radialAxis || defaultRadialAxis}
+          series={series}
+        >
           <PiePlot
             ArcComponent={ArcComponent}
             cornerRadius={cornerRadius}
