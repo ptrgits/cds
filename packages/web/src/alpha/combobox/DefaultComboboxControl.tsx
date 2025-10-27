@@ -129,12 +129,12 @@ const DefaultComboboxControlComponent = <T extends string = string>(
     maxSelectedOptionsToShow = 6,
     hiddenSelectedOptionsLabel = 'more',
     removeSelectedOptionAccessibilityLabel = 'Remove',
-    ariaHaspopup,
     searchText,
     onSearch,
     styles,
     classNames,
     accessibilityLabel,
+    ariaHaspopup,
     testID,
     ...props
   }: ComboboxControlProps<T>,

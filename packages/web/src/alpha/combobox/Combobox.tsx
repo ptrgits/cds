@@ -36,6 +36,7 @@ export type ComboboxBaseProps<T extends string = string> = Pick<
     | 'disabled'
     | 'labelVariant'
     | 'endNode'
+    | 'ariaHaspopup'
   > &
   Pick<SelectDropdownProps<'multi', T>, 'accessory' | 'media' | 'end'> &
   Pick<
@@ -200,6 +201,7 @@ const ComboboxBase = memo(
         labelVariant,
         accessibilityLabel,
         accessibilityRoles = defaultAccessibilityRoles,
+        ariaHaspopup = 'listbox',
         selectAllLabel,
         emptyOptionsLabel,
         clearAllLabel,
@@ -272,7 +274,7 @@ const ComboboxBase = memo(
           <DefaultComboboxControl
             ref={controlRef.current?.refs.setReference}
             accessibilityLabel={accessibilityLabel}
-            // ariaHaspopup={ariaHaspopup}
+            ariaHaspopup={ariaHaspopup}
             classNames={classNames}
             compact={compact}
             disabled={disabled}
