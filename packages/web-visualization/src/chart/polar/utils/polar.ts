@@ -29,13 +29,19 @@ export type PolarSeries = {
    */
   id: string;
   /**
-   * Data points for the series.
+   * Data for the series.
+   * - Single number for pie/donut charts (each series = one slice)
+   * - Array of numbers for radar/radial bar charts (each series = multiple points)
    */
-  data: PolarDataPoint[];
+  data: number | Array<number | null>;
   /**
    * Optional label for the series.
    */
   label?: string;
+  /**
+   * Optional color for the series.
+   */
+  color?: string;
   /**
    * ID of the angular axis this series should use.
    * If not specified, uses the default angular axis.

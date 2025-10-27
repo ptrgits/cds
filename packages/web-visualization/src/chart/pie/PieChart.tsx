@@ -1,9 +1,19 @@
-import { forwardRef, memo, useMemo } from 'react';
+import { forwardRef, memo } from 'react';
 
-import type { PolarDataPoint, PolarSeries } from '../polar/utils/polar';
+import type { PolarSeries } from '../polar/utils/polar';
 import { PolarChart, type PolarChartProps } from '../PolarChart';
 
 import { PiePlot, type PiePlotProps } from './PiePlot';
+
+/**
+ * Series type for PieChart - enforces single number data values.
+ */
+export type PieSeries = Omit<PolarSeries, 'data'> & {
+  /**
+   * Single numeric value for this slice.
+   */
+  data: number;
+};
 
 export type PieChartBaseProps = Omit<PolarChartProps, 'series'> &
   Pick<
@@ -18,29 +28,38 @@ export type PieChartBaseProps = Omit<PolarChartProps, 'series'> &
     | 'onArcMouseLeave'
   > & {
     /**
-     * Data points for the pie chart.
+     * Array of series, where each series represents one slice.
+     * Each series must have a single numeric value.
      */
-    data?: PolarDataPoint[];
-    /**
-     * Optional label for the pie chart.
-     */
-    label?: string;
+    series?: PieSeries[];
   };
 
 export type PieChartProps = PieChartBaseProps;
 
 /**
  * A pie chart component for visualizing proportional data.
- * Each slice represents a data point's value as a proportion of the total.
+ * Each series represents one slice, with its value as a proportion of the total.
  *
  * By default, uses the full radius (radialAxis: { range: { min: 0, max: [radius in pixels] } }).
+ *
+ * @example
+ * ```tsx
+ * <PieChart
+ *   series={[
+ *     { id: 'a', data: 30, label: 'Category A', color: '#5B8DEF' },
+ *     { id: 'b', data: 50, label: 'Category B', color: '#4CAF93' },
+ *     { id: 'c', data: 20, label: 'Category C', color: '#E67C5C' },
+ *   ]}
+ *   width={200}
+ *   height={200}
+ * />
+ * ```
  */
 export const PieChart = memo(
   forwardRef<SVGSVGElement, PieChartProps>(
     (
       {
-        data = [],
-        label,
+        series = [],
         children,
         ArcComponent,
         fillOpacity,
@@ -54,21 +73,9 @@ export const PieChart = memo(
       },
       ref,
     ) => {
-      const series: PolarSeries[] = useMemo(() => {
-        if (!data.length) return [];
-        return [
-          {
-            id: 'pie-series',
-            data,
-            label,
-          },
-        ];
-      }, [data, label]);
-
-      // For pie chart, use the default radial axis (full radius: min: 0, max: maxRadius in pixels)
-      // Only override if user explicitly provides radialAxis
+      // PiePlot will automatically aggregate all series on the default radial axis
       return (
-        <PolarChart ref={ref} {...chartProps} radialAxis={chartProps.radialAxis} series={series}>
+        <PolarChart ref={ref} {...chartProps} series={series as PolarSeries[]}>
           <PiePlot
             ArcComponent={ArcComponent}
             cornerRadius={cornerRadius}

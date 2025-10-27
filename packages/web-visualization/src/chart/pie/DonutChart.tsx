@@ -1,9 +1,15 @@
 import { forwardRef, memo, useMemo } from 'react';
 
-import type { PolarDataPoint, PolarSeries } from '../polar/utils/polar';
+import type { PolarSeries } from '../polar/utils/polar';
 import { PolarChart, type PolarChartProps } from '../PolarChart';
 
+import { type PieSeries } from './PieChart';
 import { PiePlot, type PiePlotProps } from './PiePlot';
+
+/**
+ * Series type for DonutChart - same as PieSeries (enforces single number data values).
+ */
+export type DonutSeries = PieSeries;
 
 export type DonutChartBaseProps = Omit<PolarChartProps, 'series'> &
   Pick<
@@ -18,13 +24,10 @@ export type DonutChartBaseProps = Omit<PolarChartProps, 'series'> &
     | 'onArcMouseLeave'
   > & {
     /**
-     * Data points for the donut chart.
+     * Array of series, where each series represents one slice.
+     * Each series must have a single numeric value.
      */
-    data?: PolarDataPoint[];
-    /**
-     * Optional label for the donut chart.
-     */
-    label?: string;
+    series?: DonutSeries[];
     /**
      * Inner radius as a ratio of the outer radius (0-1).
      * This sets the default radial axis to: `range: ({ max }) => ({ min: max * innerRadiusRatio, max })`
@@ -39,15 +42,28 @@ export type DonutChartProps = DonutChartBaseProps;
 
 /**
  * A donut chart component for visualizing proportional data with a hollow center.
- * Each slice represents a data point's value as a proportion of the total.
+ * Each series represents one slice, with its value as a proportion of the total.
  * The hollow center can be used for displaying additional information.
+ *
+ * @example
+ * ```tsx
+ * <DonutChart
+ *   series={[
+ *     { id: 'a', data: 30, label: 'Category A', color: '#5B8DEF' },
+ *     { id: 'b', data: 50, label: 'Category B', color: '#4CAF93' },
+ *     { id: 'c', data: 20, label: 'Category C', color: '#E67C5C' },
+ *   ]}
+ *   innerRadiusRatio={0.6}
+ *   width={200}
+ *   height={200}
+ * />
+ * ```
  */
 export const DonutChart = memo(
   forwardRef<SVGSVGElement, DonutChartProps>(
     (
       {
-        data = [],
-        label,
+        series = [],
         children,
         innerRadiusRatio = 0.5,
         ArcComponent,
@@ -62,17 +78,6 @@ export const DonutChart = memo(
       },
       ref,
     ) => {
-      const series: PolarSeries[] = useMemo(() => {
-        if (!data.length) return [];
-        return [
-          {
-            id: 'donut-series',
-            data,
-            label,
-          },
-        ];
-      }, [data, label]);
-
       // Set default radial axis for donut chart
       const defaultRadialAxis = useMemo(
         () => ({
@@ -89,7 +94,7 @@ export const DonutChart = memo(
           ref={ref}
           {...chartProps}
           radialAxis={chartProps.radialAxis || defaultRadialAxis}
-          series={series}
+          series={series as PolarSeries[]}
         >
           <PiePlot
             ArcComponent={ArcComponent}

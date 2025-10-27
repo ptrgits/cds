@@ -8,7 +8,6 @@ import { PiePlot } from '../../pie/PiePlot';
 import { PolarChart } from '../../PolarChart';
 import { getArcPath } from '../../utils/path';
 import { usePolarChartContext } from '../PolarChartProvider';
-import type { PolarDataPoint } from '../utils/polar';
 
 export default {
   title: 'Components/Chart/PolarChart',
@@ -167,16 +166,6 @@ const CoinbaseOneRewardsChart = () => {
 
   const progressAngle = 0;
 
-  // Background: full ring
-  const backgroundData = [
-    { value: 100, label: 'Background', id: 'bg', color: 'var(--color-fgMuted)' },
-  ];
-
-  // Foreground: single arc that fills based on progress
-  const foregroundData = [
-    { value: 100, label: 'Progress', id: 'progress', color: 'var(--color-fg)' },
-  ];
-
   return (
     <VStack gap={4}>
       <Box style={{ width: 100, height: 100, position: 'relative' }}>
@@ -186,8 +175,8 @@ const CoinbaseOneRewardsChart = () => {
           inset={0}
           radialAxis={{ range: ({ max }) => ({ min: innerRadiusRatio * max, max }) }}
           series={[
-            { id: 'background', data: backgroundData },
-            { id: 'foreground', data: foregroundData },
+            // Foreground: single slice that fills based on progress
+            { id: 'progress', data: 100, label: 'Progress', color: 'var(--color-fg)' },
           ]}
           style={{ position: 'absolute', inset: 0 }}
         >
@@ -200,7 +189,7 @@ const CoinbaseOneRewardsChart = () => {
             thirdSectionEnd={thirdSectionEnd}
             thirdSectionStart={thirdSectionStart}
           />
-          <PiePlot clipPathId="background-clip" cornerRadius={100} seriesId="foreground" />
+          <PiePlot clipPathId="background-clip" cornerRadius={100} />
         </PolarChart>
       </Box>
     </VStack>
@@ -208,43 +197,47 @@ const CoinbaseOneRewardsChart = () => {
 };
 
 const WalletBreakdownChart = () => {
-  const walletData: PolarDataPoint[] = [
-    { value: 15, label: 'Card', id: 'card', color: '#5B8DEF' },
-    { value: 45, label: 'Cash', id: 'cash', color: '#4CAF93' },
-    { value: 12, label: 'Stake', id: 'stake', color: '#E67C5C' },
-    { value: 18, label: 'Lend', id: 'lend', color: '#6DD4E0' },
-  ];
-
   return (
     <DonutChart
       animate
       angularAxis={{ paddingAngle: 3 }}
       cornerRadius={100}
-      data={walletData}
       height={100}
       innerRadiusRatio={0.8}
       inset={0}
+      series={[
+        { id: 'card', data: 15, label: 'Card', color: '#5B8DEF' },
+        { id: 'cash', data: 45, label: 'Cash', color: '#4CAF93' },
+        { id: 'stake', data: 12, label: 'Stake', color: '#E67C5C' },
+        { id: 'lend', data: 18, label: 'Lend', color: '#6DD4E0' },
+      ]}
       width={100}
     />
   );
 };
 
 const WalletBreakdownPieChart = () => {
-  const walletData: PolarDataPoint[] = [
-    { value: 15, label: 'Card', id: 'card', color: '#5B8DEF' },
-    { value: 45, label: 'Cash', id: 'cash', color: '#4CAF93' },
-    { value: 12, label: 'Stake', id: 'stake', color: '#E67C5C' },
-    { value: 18, label: 'Lend', id: 'lend', color: '#6DD4E0' },
-  ];
-
-  return <PieChart animate data={walletData} height={100} inset={0} width={100} />;
+  return (
+    <PieChart
+      animate
+      height={100}
+      inset={0}
+      series={[
+        { id: 'card', data: 15, label: 'Card', color: '#5B8DEF' },
+        { id: 'cash', data: 45, label: 'Cash', color: '#4CAF93' },
+        { id: 'stake', data: 12, label: 'Stake', color: '#E67C5C' },
+        { id: 'lend', data: 18, label: 'Lend', color: '#6DD4E0' },
+      ]}
+      width={100}
+    />
+  );
 };
 
 const DrawingAreaVisualization = () => {
-  const data: PolarDataPoint[] = [
-    { value: 30, label: 'A', id: 'a', color: 'var(--color-accentBoldPurple)' },
-    { value: 40, label: 'B', id: 'b', color: 'var(--color-accentBoldBlue)' },
-    { value: 30, label: 'C', id: 'c', color: 'var(--color-accentBoldGreen)' },
+  const series = [
+    { id: 'a', data: 30, label: 'A', color: 'var(--color-accentBoldPurple)' },
+    { id: 'b', data: 40, label: 'B', color: 'var(--color-accentBoldBlue)' },
+    { id: 'c', data: 30, label: 'C', color: 'var(--color-accentBoldGreen)' },
   ];
 
   return (
@@ -255,7 +248,7 @@ const DrawingAreaVisualization = () => {
           animate
           height={100}
           inset={0}
-          series={[{ id: 'series', data }]}
+          series={series}
           style={{ backgroundColor: 'var(--color-bgAccent)' }}
           width={100}
         >
@@ -271,7 +264,7 @@ const DrawingAreaVisualization = () => {
           animate
           height={100}
           inset={20}
-          series={[{ id: 'series', data }]}
+          series={series}
           style={{ backgroundColor: 'var(--color-bgAccent)' }}
           width={100}
         >
@@ -287,7 +280,7 @@ const DrawingAreaVisualization = () => {
           animate
           height={100}
           inset={{ top: 10, right: 30, bottom: 10, left: 30 }}
-          series={[{ id: 'series', data }]}
+          series={series}
           style={{ backgroundColor: 'var(--color-bgAccent)' }}
           width={100}
         >
@@ -300,29 +293,6 @@ const DrawingAreaVisualization = () => {
 };
 
 const NestedWalletBreakdown = () => {
-  // Inner pie chart - main categories
-  const categoryData: PolarDataPoint[] = [
-    { value: 35, label: 'Crypto', id: 'crypto', color: '#5B8DEF' },
-    { value: 45, label: 'Fiat', id: 'fiat', color: '#4CAF93' },
-    { value: 20, label: 'Rewards', id: 'rewards', color: '#E67C5C' },
-  ];
-
-  // Outer donut chart - detailed breakdown
-  const detailData: PolarDataPoint[] = [
-    // Crypto breakdown (35% of total)
-    { value: 15, label: 'Bitcoin', id: 'btc', color: '#7FA8F5' },
-    { value: 12, label: 'Ethereum', id: 'eth', color: '#95B8F7' },
-    { value: 8, label: 'Other', id: 'other-crypto', color: '#ABC8F9' },
-
-    // Fiat breakdown (45% of total)
-    { value: 30, label: 'USD', id: 'usd', color: '#6BC9A9' },
-    { value: 15, label: 'EUR', id: 'eur', color: '#8DD9BC' },
-
-    // Rewards breakdown (20% of total)
-    { value: 12, label: 'Cash Back', id: 'cashback', color: '#ED9274' },
-    { value: 8, label: 'Points', id: 'points', color: '#F2AB91' },
-  ];
-
   return (
     <PolarChart
       animate
@@ -333,13 +303,23 @@ const NestedWalletBreakdown = () => {
         { id: 'outer', range: ({ max }) => ({ min: max - 8, max }) },
       ]}
       series={[
-        { id: 'categories', data: categoryData, label: 'Categories', radialAxisId: 'inner' },
-        { id: 'details', data: detailData, label: 'Details', radialAxisId: 'outer' },
+        // Inner pie - main categories
+        { id: 'crypto', data: 35, label: 'Crypto', color: '#5B8DEF', radialAxisId: 'inner' },
+        { id: 'fiat', data: 45, label: 'Fiat', color: '#4CAF93', radialAxisId: 'inner' },
+        { id: 'rewards', data: 20, label: 'Rewards', color: '#E67C5C', radialAxisId: 'inner' },
+        // Outer ring - detailed breakdown
+        { id: 'btc', data: 15, label: 'Bitcoin', color: '#7FA8F5', radialAxisId: 'outer' },
+        { id: 'eth', data: 12, label: 'Ethereum', color: '#95B8F7', radialAxisId: 'outer' },
+        { id: 'other-crypto', data: 8, label: 'Other', color: '#ABC8F9', radialAxisId: 'outer' },
+        { id: 'usd', data: 30, label: 'USD', color: '#6BC9A9', radialAxisId: 'outer' },
+        { id: 'eur', data: 15, label: 'EUR', color: '#8DD9BC', radialAxisId: 'outer' },
+        { id: 'cashback', data: 12, label: 'Cash Back', color: '#ED9274', radialAxisId: 'outer' },
+        { id: 'points', data: 8, label: 'Points', color: '#F2AB91', radialAxisId: 'outer' },
       ]}
       width={100}
     >
-      <PiePlot seriesId="categories" strokeWidth={2} />
-      <PiePlot cornerRadius={4} seriesId="details" strokeWidth={2} />
+      <PiePlot radialAxisId="inner" strokeWidth={2} />
+      <PiePlot cornerRadius={4} radialAxisId="outer" strokeWidth={2} />
     </PolarChart>
   );
 };
@@ -349,38 +329,6 @@ const NestedWalletBreakdown = () => {
  * Demonstrates using multiple angular and radial axes to create complex layouts.
  */
 const MultiAxisSemicircles = () => {
-  // Top semicircle data
-  const topInnerData: PolarDataPoint[] = [
-    { value: 30, label: 'Revenue', id: 'revenue', color: 'pink' },
-    { value: 50, label: 'Profit', id: 'profit', color: 'pink' },
-    { value: 20, label: 'Costs', id: 'costs', color: 'pink' },
-  ];
-
-  const topOuterData: PolarDataPoint[] = [
-    { value: 15, label: 'Q1', id: 'q1', color: 'red' },
-    { value: 15, label: 'Q2', id: 'q2', color: 'red' },
-    { value: 25, label: 'Q3', id: 'q3', color: 'red' },
-    { value: 25, label: 'Q4', id: 'q4', color: 'red' },
-    { value: 10, label: 'Adj', id: 'adj', color: 'red' },
-    { value: 10, label: 'Other', id: 'other', color: 'red' },
-  ];
-
-  // Bottom semicircle data
-  const bottomInnerData: PolarDataPoint[] = [
-    { value: 40, label: 'Users', id: 'users', color: 'pink' },
-    { value: 35, label: 'Sessions', id: 'sessions', color: 'pink' },
-    { value: 25, label: 'Conversions', id: 'conversions', color: 'pink' },
-  ];
-
-  const bottomOuterData: PolarDataPoint[] = [
-    { value: 20, label: 'Desktop', id: 'desktop', color: 'red' },
-    { value: 20, label: 'Mobile', id: 'mobile', color: 'red' },
-    { value: 17, label: 'Direct', id: 'direct', color: 'red' },
-    { value: 18, label: 'Organic', id: 'organic', color: 'red' },
-    { value: 13, label: 'Paid', id: 'paid', color: 'red' },
-    { value: 12, label: 'Social', id: 'social', color: 'red' },
-  ];
-
   return (
     <PolarChart
       animate
@@ -397,27 +345,161 @@ const MultiAxisSemicircles = () => {
         { id: 'bottomOuter', range: ({ max }) => ({ min: max * 0.9, max: max }) },
       ]}
       series={[
-        { id: 'topInner', data: topInnerData, angularAxisId: 'top', radialAxisId: 'topInner' },
-        { id: 'topOuter', data: topOuterData, angularAxisId: 'top', radialAxisId: 'topOuter' },
+        // Top semicircle - inner
         {
-          id: 'bottomInner',
-          data: bottomInnerData,
+          id: 'revenue',
+          data: 30,
+          label: 'Revenue',
+          color: 'pink',
+          angularAxisId: 'top',
+          radialAxisId: 'topInner',
+        },
+        {
+          id: 'profit',
+          data: 50,
+          label: 'Profit',
+          color: 'pink',
+          angularAxisId: 'top',
+          radialAxisId: 'topInner',
+        },
+        {
+          id: 'costs',
+          data: 20,
+          label: 'Costs',
+          color: 'pink',
+          angularAxisId: 'top',
+          radialAxisId: 'topInner',
+        },
+        // Top semicircle - outer
+        {
+          id: 'q1',
+          data: 15,
+          label: 'Q1',
+          color: 'red',
+          angularAxisId: 'top',
+          radialAxisId: 'topOuter',
+        },
+        {
+          id: 'q2',
+          data: 15,
+          label: 'Q2',
+          color: 'red',
+          angularAxisId: 'top',
+          radialAxisId: 'topOuter',
+        },
+        {
+          id: 'q3',
+          data: 25,
+          label: 'Q3',
+          color: 'red',
+          angularAxisId: 'top',
+          radialAxisId: 'topOuter',
+        },
+        {
+          id: 'q4',
+          data: 25,
+          label: 'Q4',
+          color: 'red',
+          angularAxisId: 'top',
+          radialAxisId: 'topOuter',
+        },
+        {
+          id: 'adj',
+          data: 10,
+          label: 'Adj',
+          color: 'red',
+          angularAxisId: 'top',
+          radialAxisId: 'topOuter',
+        },
+        {
+          id: 'other-top',
+          data: 10,
+          label: 'Other',
+          color: 'red',
+          angularAxisId: 'top',
+          radialAxisId: 'topOuter',
+        },
+        // Bottom semicircle - inner
+        {
+          id: 'users',
+          data: 40,
+          label: 'Users',
+          color: 'pink',
           angularAxisId: 'bottom',
           radialAxisId: 'bottomInner',
         },
         {
-          id: 'bottomOuter',
-          data: bottomOuterData,
+          id: 'sessions',
+          data: 35,
+          label: 'Sessions',
+          color: 'pink',
+          angularAxisId: 'bottom',
+          radialAxisId: 'bottomInner',
+        },
+        {
+          id: 'conversions',
+          data: 25,
+          label: 'Conversions',
+          color: 'pink',
+          angularAxisId: 'bottom',
+          radialAxisId: 'bottomInner',
+        },
+        // Bottom semicircle - outer
+        {
+          id: 'desktop',
+          data: 20,
+          label: 'Desktop',
+          color: 'red',
+          angularAxisId: 'bottom',
+          radialAxisId: 'bottomOuter',
+        },
+        {
+          id: 'mobile',
+          data: 20,
+          label: 'Mobile',
+          color: 'red',
+          angularAxisId: 'bottom',
+          radialAxisId: 'bottomOuter',
+        },
+        {
+          id: 'direct',
+          data: 17,
+          label: 'Direct',
+          color: 'red',
+          angularAxisId: 'bottom',
+          radialAxisId: 'bottomOuter',
+        },
+        {
+          id: 'organic',
+          data: 18,
+          label: 'Organic',
+          color: 'red',
+          angularAxisId: 'bottom',
+          radialAxisId: 'bottomOuter',
+        },
+        {
+          id: 'paid',
+          data: 13,
+          label: 'Paid',
+          color: 'red',
+          angularAxisId: 'bottom',
+          radialAxisId: 'bottomOuter',
+        },
+        {
+          id: 'social',
+          data: 12,
+          label: 'Social',
+          color: 'red',
           angularAxisId: 'bottom',
           radialAxisId: 'bottomOuter',
         },
       ]}
       width={100}
     >
-      <PiePlot cornerRadius={4} seriesId="topInner" strokeWidth={2} />
-      <PiePlot cornerRadius={4} seriesId="topOuter" strokeWidth={2} />
-      <PiePlot cornerRadius={4} seriesId="bottomInner" strokeWidth={2} />
-      <PiePlot cornerRadius={4} seriesId="bottomOuter" strokeWidth={2} />
+      <PiePlot angularAxisId="top" cornerRadius={4} radialAxisId="topInner" strokeWidth={2} />
+      <PiePlot angularAxisId="top" cornerRadius={4} radialAxisId="topOuter" strokeWidth={2} />
+      <PiePlot angularAxisId="bottom" cornerRadius={4} radialAxisId="bottomInner" strokeWidth={2} />
+      <PiePlot angularAxisId="bottom" cornerRadius={4} radialAxisId="bottomOuter" strokeWidth={2} />
     </PolarChart>
   );
 };
@@ -427,30 +509,6 @@ const MultiAxisSemicircles = () => {
  * Demonstrates dividing a circle into four quadrants with independent data.
  */
 const QuadrantChart = () => {
-  const q1Data: PolarDataPoint[] = [
-    { value: 50, label: 'A', id: 'a', color: '#5B8DEF' },
-    { value: 30, label: 'B', id: 'b', color: '#4CAF93' },
-    { value: 20, label: 'C', id: 'c', color: '#E67C5C' },
-  ];
-
-  const q2Data: PolarDataPoint[] = [
-    { value: 40, label: 'D', id: 'd', color: '#9B6DD4' },
-    { value: 35, label: 'E', id: 'e', color: '#F5A623' },
-    { value: 25, label: 'F', id: 'f', color: '#50E3C2' },
-  ];
-
-  const q3Data: PolarDataPoint[] = [
-    { value: 45, label: 'G', id: 'g', color: '#FF6B9D' },
-    { value: 30, label: 'H', id: 'h', color: '#C06C84' },
-    { value: 25, label: 'I', id: 'i', color: '#6C5B7B' },
-  ];
-
-  const q4Data: PolarDataPoint[] = [
-    { value: 35, label: 'J', id: 'j', color: '#FFB6B9' },
-    { value: 40, label: 'K', id: 'k', color: '#FFC9B9' },
-    { value: 25, label: 'L', id: 'l', color: '#FFE5B9' },
-  ];
-
   return (
     <PolarChart
       animate
@@ -464,17 +522,29 @@ const QuadrantChart = () => {
       inset={0}
       overflow="visible"
       series={[
-        { id: 'q1', data: q1Data, angularAxisId: 'q1' },
-        { id: 'q2', data: q2Data, angularAxisId: 'q2' },
-        { id: 'q3', data: q3Data, angularAxisId: 'q3' },
-        { id: 'q4', data: q4Data, angularAxisId: 'q4' },
+        // Quadrant 1 (top-right)
+        { id: 'a', data: 50, label: 'A', color: '#5B8DEF', angularAxisId: 'q1' },
+        { id: 'b', data: 30, label: 'B', color: '#4CAF93', angularAxisId: 'q1' },
+        { id: 'c', data: 20, label: 'C', color: '#E67C5C', angularAxisId: 'q1' },
+        // Quadrant 2 (top-left)
+        { id: 'd', data: 40, label: 'D', color: '#9B6DD4', angularAxisId: 'q2' },
+        { id: 'e', data: 35, label: 'E', color: '#F5A623', angularAxisId: 'q2' },
+        { id: 'f', data: 25, label: 'F', color: '#50E3C2', angularAxisId: 'q2' },
+        // Quadrant 3 (bottom-left)
+        { id: 'g', data: 45, label: 'G', color: '#FF6B9D', angularAxisId: 'q3' },
+        { id: 'h', data: 30, label: 'H', color: '#C06C84', angularAxisId: 'q3' },
+        { id: 'i', data: 25, label: 'I', color: '#6C5B7B', angularAxisId: 'q3' },
+        // Quadrant 4 (bottom-right)
+        { id: 'j', data: 35, label: 'J', color: '#FFB6B9', angularAxisId: 'q4' },
+        { id: 'k', data: 40, label: 'K', color: '#FFC9B9', angularAxisId: 'q4' },
+        { id: 'l', data: 25, label: 'L', color: '#FFE5B9', angularAxisId: 'q4' },
       ]}
       width={100}
     >
-      <PiePlot cornerRadius={6} seriesId="q1" strokeWidth={3} />
-      <PiePlot cornerRadius={6} seriesId="q2" strokeWidth={3} />
-      <PiePlot cornerRadius={6} seriesId="q3" strokeWidth={3} />
-      <PiePlot cornerRadius={6} seriesId="q4" strokeWidth={3} />
+      <PiePlot angularAxisId="q1" cornerRadius={6} strokeWidth={3} />
+      <PiePlot angularAxisId="q2" cornerRadius={6} strokeWidth={3} />
+      <PiePlot angularAxisId="q3" cornerRadius={6} strokeWidth={3} />
+      <PiePlot angularAxisId="q4" cornerRadius={6} strokeWidth={3} />
     </PolarChart>
   );
 };

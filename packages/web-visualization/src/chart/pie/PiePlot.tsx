@@ -16,9 +16,21 @@ import { Arc, type ArcProps } from './Arc';
 
 export type PiePlotBaseProps = {
   /**
-   * ID of the series to render. If not provided, renders the first series.
+   * ID of the series to render.
+   * - If provided: Only renders that specific series
+   * - If not provided: Aggregates all series sharing the same radialAxisId and angularAxisId
    */
   seriesId?: string;
+  /**
+   * ID of the radial axis to filter series by when seriesId is not provided.
+   * Defaults to the default radial axis.
+   */
+  radialAxisId?: string;
+  /**
+   * ID of the angular axis to filter series by when seriesId is not provided.
+   * Defaults to the default angular axis.
+   */
+  angularAxisId?: string;
   /**
    * Custom Arc component to use for rendering slices.
    */
@@ -91,6 +103,8 @@ export type PiePlotProps = PiePlotBaseProps;
 export const PiePlot = memo<PiePlotProps>(
   ({
     seriesId,
+    radialAxisId: radialAxisIdProp,
+    angularAxisId: angularAxisIdProp,
     ArcComponent = Arc,
     animate: animateOverride,
     clipToSeriesId,
@@ -127,24 +141,67 @@ export const PiePlot = memo<PiePlotProps>(
     // Use overrides if provided, otherwise use context values
     const shouldAnimate = animateOverride !== undefined ? animateOverride : contextAnimate;
 
-    const targetSeries = useMemo(() => {
+    // Convert series data to PolarDataPoint[]
+    const convertSeriesToDataPoints = useMemo(() => {
+      return (targetSeries: typeof series) => {
+        const dataPoints: PolarDataPoint[] = [];
+
+        targetSeries.forEach((s) => {
+          // Get the first value from data (single number or first element of array)
+          const value = typeof s.data === 'number' ? s.data : s.data[0];
+
+          if (value !== null && value !== undefined) {
+            dataPoints.push({
+              value,
+              label: s.label,
+              color: s.color,
+              id: s.id,
+            });
+          }
+        });
+
+        return dataPoints;
+      };
+    }, []);
+
+    // Get target series and axis config
+    const { targetSeriesArray, targetRadialAxisId, targetAngularAxisId } = useMemo(() => {
       if (seriesId) {
-        return getSeries(seriesId);
+        // Single series mode
+        const singleSeries = getSeries(seriesId);
+        return {
+          targetSeriesArray: singleSeries ? [singleSeries] : [],
+          targetRadialAxisId: singleSeries?.radialAxisId ?? defaultPolarAxisId,
+          targetAngularAxisId: singleSeries?.angularAxisId ?? defaultPolarAxisId,
+        };
+      } else {
+        // Aggregate mode: get all series with matching radialAxisId AND angularAxisId
+        const filterRadialAxisId = radialAxisIdProp ?? defaultPolarAxisId;
+        const filterAngularAxisId = angularAxisIdProp ?? defaultPolarAxisId;
+
+        const matchingSeries = series.filter(
+          (s) =>
+            (s.radialAxisId ?? defaultPolarAxisId) === filterRadialAxisId &&
+            (s.angularAxisId ?? defaultPolarAxisId) === filterAngularAxisId,
+        );
+
+        return {
+          targetSeriesArray: matchingSeries,
+          targetRadialAxisId: filterRadialAxisId,
+          targetAngularAxisId: filterAngularAxisId,
+        };
       }
-      return series[0];
-    }, [seriesId, getSeries, series]);
+    }, [seriesId, radialAxisIdProp, angularAxisIdProp, getSeries, series]);
 
-    // Get the angular axis for this series
+    // Get the angular axis config
     const angularAxisConfig = useMemo(() => {
-      const axisId = targetSeries?.angularAxisId ?? defaultPolarAxisId;
-      return getAngularAxis(axisId);
-    }, [targetSeries, getAngularAxis]);
+      return getAngularAxis(targetAngularAxisId);
+    }, [targetAngularAxisId, getAngularAxis]);
 
-    // Get the radial axis for this series
+    // Get the radial axis config
     const radialAxisConfig = useMemo(() => {
-      const axisId = targetSeries?.radialAxisId ?? defaultPolarAxisId;
-      return getRadialAxis(axisId);
-    }, [targetSeries, getRadialAxis]);
+      return getRadialAxis(targetRadialAxisId);
+    }, [targetRadialAxisId, getRadialAxis]);
 
     // Calculate angular axis values
     const {
@@ -160,31 +217,49 @@ export const PiePlot = memo<PiePlotProps>(
       return getRadialAxisPixels(maxRadius, radialAxisConfig);
     }, [maxRadius, radialAxisConfig]);
 
+    // Convert series to data points and calculate arcs
     const arcs = useMemo(() => {
-      if (!targetSeries || !targetSeries.data.length) {
+      if (!targetSeriesArray.length) {
+        return [];
+      }
+
+      const dataPoints = convertSeriesToDataPoints(targetSeriesArray);
+
+      if (!dataPoints.length) {
         return [];
       }
 
       return calculateArcData(
-        targetSeries.data,
+        dataPoints,
         innerRadius,
         outerRadius,
         startAngleRadians,
         endAngleRadians,
         padAngle,
       );
-    }, [targetSeries, innerRadius, outerRadius, startAngleRadians, endAngleRadians, padAngle]);
+    }, [
+      targetSeriesArray,
+      convertSeriesToDataPoints,
+      innerRadius,
+      outerRadius,
+      startAngleRadians,
+      endAngleRadians,
+      padAngle,
+    ]);
 
     // Calculate clip path arcs if clipToSeriesId is provided
     const clipArcs = useMemo(() => {
       if (!clipToSeriesId) return null;
 
       const clipSeries = getSeries(clipToSeriesId);
-      if (!clipSeries || !clipSeries.data.length) return null;
+      if (!clipSeries) return null;
+
+      const clipDataPoints = convertSeriesToDataPoints([clipSeries]);
+      if (!clipDataPoints.length) return null;
 
       // Use the same geometry as the arcs we're rendering
       return calculateArcData(
-        clipSeries.data,
+        clipDataPoints,
         innerRadius,
         outerRadius,
         startAngleRadians,
@@ -194,6 +269,7 @@ export const PiePlot = memo<PiePlotProps>(
     }, [
       clipToSeriesId,
       getSeries,
+      convertSeriesToDataPoints,
       innerRadius,
       outerRadius,
       startAngleRadians,
