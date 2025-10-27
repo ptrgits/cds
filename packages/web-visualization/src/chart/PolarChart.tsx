@@ -1,17 +1,19 @@
 import React, { forwardRef, memo, useCallback, useMemo, useRef } from 'react';
+import type { Rect } from '@coinbase/cds-common/types';
 import { cx } from '@coinbase/cds-web';
 import { useDimensions } from '@coinbase/cds-web/hooks/useDimensions';
 import { Box, type BoxProps } from '@coinbase/cds-web/layout';
 import { css } from '@linaria/core';
 
 import { PolarChartProvider } from './polar/PolarChartProvider';
-import type { PolarChartContextValue, PolarSeries } from './polar/utils';
+import type { PolarSeries } from './polar/utils';
 import {
   type AngularAxisConfig,
-  getAngularAxisRadians,
-  getRadialAxisPixels,
+  defaultPolarAxisId,
   type RadialAxisConfig,
 } from './polar/utils/axis';
+import type { PolarChartContextValue } from './utils/context';
+import { type ChartInset, defaultChartInset, getChartInset } from './utils';
 
 const focusStylesCss = css`
   &:focus {
@@ -34,47 +36,68 @@ export type PolarChartBaseProps = {
    */
   animate?: boolean;
   /**
-   * Configuration for the angular axis (controls start/end angles).
+   * Configuration for angular axis/axes (controls start/end angles).
+   * Can be a single axis config or an array of axis configs for multiple angular ranges.
    * Default range: { min: 0, max: 360 } (full circle)
    *
    * @example
+   * Single axis (default):
    * ```tsx
    * // Semicircle
    * <PolarChart angularAxis={{ range: { min: 0, max: 180 } }} />
    *
-   * // Leave 45 degrees on each side
-   * <PolarChart angularAxis={{ range: ({ min, max }) => ({ min: min + 45, max: max - 45 }) }} />
-   *
    * // Add padding between slices
    * <PolarChart angularAxis={{ paddingAngle: 2 }} />
    * ```
+   *
+   * @example
+   * Multiple axes:
+   * ```tsx
+   * <PolarChart
+   *   angularAxis={[
+   *     { id: 'top', range: { min: 0, max: 180 } },
+   *     { id: 'bottom', range: { min: 180, max: 360 } },
+   *   ]}
+   *   series={[
+   *     { id: 'topData', data: [...], angularAxisId: 'top' },
+   *     { id: 'bottomData', data: [...], angularAxisId: 'bottom' },
+   *   ]}
+   * />
+   * ```
    */
-  angularAxis?: AngularAxisConfig;
+  angularAxis?: AngularAxisConfig | AngularAxisConfig[];
   /**
-   * Configuration for the radial axis (controls inner/outer radii).
+   * Configuration for radial axis/axes (controls inner/outer radii).
+   * Can be a single axis config or an array of axis configs for multiple radial ranges.
    * Default range: { min: 0, max: [radius in pixels] } (pie chart using full radius)
    *
    * @example
+   * Single axis (default):
    * ```tsx
    * // Donut chart with 50% inner radius
    * <PolarChart radialAxis={{ range: ({ max }) => ({ min: max * 0.5, max }) }} />
+   * ```
    *
-   * // Ring in the middle (30% to 60% of radius)
-   * <PolarChart radialAxis={{ range: ({ max }) => ({ min: max * 0.3, max: max * 0.6 }) }} />
-   *
-   * // Absolute pixel values (50px to 150px)
-   * <PolarChart radialAxis={{ range: { min: 50, max: 150 } }} />
-   *
-   * // Leave 10px space around the edge
-   * <PolarChart radialAxis={{ range: ({ min, max }) => ({ min, max: max - 10 }) }} />
+   * @example
+   * Multiple axes (nested rings):
+   * ```tsx
+   * <PolarChart
+   *   radialAxis={[
+   *     { id: 'inner', range: ({ max }) => ({ min: 0, max: max * 0.4 }) },
+   *     { id: 'outer', range: ({ max }) => ({ min: max * 0.6, max }) },
+   *   ]}
+   *   series={[
+   *     { id: 'innerData', data: [...], radialAxisId: 'inner' },
+   *     { id: 'outerData', data: [...], radialAxisId: 'outer' },
+   *   ]}
+   * />
    * ```
    */
-  radialAxis?: RadialAxisConfig;
+  radialAxis?: RadialAxisConfig | RadialAxisConfig[];
   /**
-   * Minimum padding around the chart in pixels.
-   * @default 0
+   * Inset around the entire chart (outside the drawing area).
    */
-  padding?: number;
+  inset?: number | Partial<ChartInset>;
 };
 
 export type PolarChartProps = Pick<
@@ -96,7 +119,7 @@ export const PolarChart = memo(
         animate = true,
         angularAxis,
         radialAxis,
-        padding = 0,
+        inset: insetInput,
         width = '100%',
         height = '100%',
         className,
@@ -109,34 +132,88 @@ export const PolarChart = memo(
       const { observe, width: chartWidth, height: chartHeight } = useDimensions();
       const internalSvgRef = useRef<SVGSVGElement>(null);
 
-      // Calculate center and radius
-      const { centerX, centerY, maxRadius } = useMemo(() => {
-        const w = chartWidth - padding * 2;
-        const h = chartHeight - padding * 2;
-        const cx = chartWidth / 2;
-        const cy = chartHeight / 2;
-        const r = Math.min(w, h) / 2;
+      const inset = useMemo(() => {
+        return getChartInset(insetInput, defaultChartInset);
+      }, [insetInput]);
+
+      // Calculate drawing area - always square for polar charts
+      const drawingArea: Rect = useMemo(() => {
+        if (chartWidth <= 0 || chartHeight <= 0) return { x: 0, y: 0, width: 0, height: 0 };
+
+        const availableWidth = chartWidth - inset.left - inset.right;
+        const availableHeight = chartHeight - inset.top - inset.bottom;
+
+        // Use the smaller dimension to create a square drawing area
+        const size = Math.min(
+          availableWidth > 0 ? availableWidth : 0,
+          availableHeight > 0 ? availableHeight : 0,
+        );
+
+        // Center the square drawing area within the available space
+        const offsetX = (availableWidth - size) / 2;
+        const offsetY = (availableHeight - size) / 2;
 
         return {
-          centerX: cx,
-          centerY: cy,
-          maxRadius: Math.max(0, r),
+          x: inset.left + offsetX,
+          y: inset.top + offsetY,
+          width: size,
+          height: size,
         };
-      }, [chartWidth, chartHeight, padding]);
-
-      // Calculate angular axis (angles in radians)
-      const { startAngle, endAngle, padAngle } = useMemo(() => {
-        return getAngularAxisRadians(angularAxis);
-      }, [angularAxis]);
-
-      // Calculate radial axis (radii in pixels)
-      const { innerRadius, outerRadius } = useMemo(() => {
-        return getRadialAxisPixels(maxRadius, radialAxis);
-      }, [maxRadius, radialAxis]);
+      }, [chartWidth, chartHeight, inset]);
 
       const getSeries = useCallback(
         (seriesId?: string) => series.find((s) => s.id === seriesId),
         [series],
+      );
+
+      // Build angular axis map
+      const angularAxes = useMemo(() => {
+        const axesMap = new Map<string, AngularAxisConfig>();
+
+        if (Array.isArray(angularAxis)) {
+          angularAxis.forEach((axis) => {
+            const id = axis.id ?? defaultPolarAxisId;
+            axesMap.set(id, axis);
+          });
+        } else if (angularAxis) {
+          const id = angularAxis.id ?? defaultPolarAxisId;
+          axesMap.set(id, angularAxis);
+        } else {
+          // Default axis
+          axesMap.set(defaultPolarAxisId, {});
+        }
+
+        return axesMap;
+      }, [angularAxis]);
+
+      // Build radial axis map
+      const radialAxes = useMemo(() => {
+        const axesMap = new Map<string, RadialAxisConfig>();
+
+        if (Array.isArray(radialAxis)) {
+          radialAxis.forEach((axis) => {
+            const id = axis.id ?? defaultPolarAxisId;
+            axesMap.set(id, axis);
+          });
+        } else if (radialAxis) {
+          const id = radialAxis.id ?? defaultPolarAxisId;
+          axesMap.set(id, radialAxis);
+        } else {
+          // Default axis
+          axesMap.set(defaultPolarAxisId, {});
+        }
+
+        return axesMap;
+      }, [radialAxis]);
+
+      const getAngularAxis = useCallback(
+        (id?: string) => angularAxes.get(id ?? defaultPolarAxisId),
+        [angularAxes],
+      );
+
+      const getRadialAxis = useCallback(
+        (id?: string) => radialAxes.get(id ?? defaultPolarAxisId),
+        [radialAxes],
       );
 
       const contextValue: PolarChartContextValue = useMemo(
@@ -146,16 +223,11 @@ export const PolarChart = memo(
           animate,
           width: chartWidth,
           height: chartHeight,
-          centerX,
-          centerY,
-          maxRadius,
-          innerRadius,
-          outerRadius,
-          padAngle,
-          startAngle,
-          endAngle,
-          angularAxis,
-          radialAxis,
+          drawingArea,
+          angularAxes,
+          radialAxes,
+          getAngularAxis,
+          getRadialAxis,
         }),
         [
           series,
@@ -163,16 +235,11 @@ export const PolarChart = memo(
           animate,
           chartWidth,
           chartHeight,
-          centerX,
-          centerY,
-          maxRadius,
-          innerRadius,
-          outerRadius,
-          padAngle,
-          startAngle,
-          endAngle,
-          angularAxis,
-          radialAxis,
+          drawingArea,
+          angularAxes,
+          radialAxes,
+          getAngularAxis,
+          getRadialAxis,
         ],
       );
 

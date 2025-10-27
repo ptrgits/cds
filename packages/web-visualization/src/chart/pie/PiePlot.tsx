@@ -1,16 +1,14 @@
 import React, { memo, useMemo } from 'react';
 
-import { PolarChartProvider, usePolarChartContext } from '../polar';
+import { usePolarChartContext } from '../polar';
 import {
-  type AngularAxisConfig,
   type ArcData,
   calculateArcData,
+  defaultPolarAxisId,
   getAngularAxisRadians,
   getPolarColor,
   getRadialAxisPixels,
-  type PolarChartContextValue,
   type PolarDataPoint,
-  type RadialAxisConfig,
 } from '../polar/utils';
 import { getArcPath } from '../utils/path';
 
@@ -29,24 +27,6 @@ export type PiePlotBaseProps = {
    * Whether to animate this plot. Overrides the chart-level animate setting.
    */
   animate?: boolean;
-  /**
-   * Angular axis configuration. Overrides the chart-level angularAxis.
-   *
-   * @example
-   * ```tsx
-   * <PiePlot angularAxis={{ range: { min: 0, max: 180 } }} />
-   * ```
-   */
-  angularAxis?: AngularAxisConfig;
-  /**
-   * Radial axis configuration. Overrides the chart-level radialAxis.
-   *
-   * @example
-   * ```tsx
-   * <PiePlot radialAxis={{ range: { min: 0.5, max: 1 } }} />
-   * ```
-   */
-  radialAxis?: RadialAxisConfig;
   /**
    * ID of another series to use as a clipping mask. The current series will only be visible
    * where it overlaps with the specified series.
@@ -113,13 +93,11 @@ export const PiePlot = memo<PiePlotProps>(
     seriesId,
     ArcComponent = Arc,
     animate: animateOverride,
-    angularAxis: angularAxisOverride,
-    radialAxis: radialAxisOverride,
     clipToSeriesId,
     clipPathId: customClipPathId,
     fillOpacity,
-    stroke,
-    strokeWidth,
+    stroke = 'var(--color-bg)',
+    strokeWidth = 1,
     cornerRadius,
     onArcClick,
     onArcMouseEnter,
@@ -128,50 +106,26 @@ export const PiePlot = memo<PiePlotProps>(
     const {
       series,
       getSeries,
-      innerRadius: contextInnerRadius,
-      outerRadius: contextOuterRadius,
-      padAngle: contextPadAngle,
-      startAngle: contextStartAngle,
-      endAngle: contextEndAngle,
       animate: contextAnimate,
-      centerX,
-      centerY,
-      width,
-      height,
-      maxRadius,
-      angularAxis: contextAngularAxis,
-      radialAxis: contextRadialAxis,
+      drawingArea,
+      getAngularAxis,
+      getRadialAxis,
     } = usePolarChartContext();
+
+    // Calculate center and max radius from drawing area
+    const { centerX, centerY, maxRadius } = useMemo(() => {
+      const cx = drawingArea.x + drawingArea.width / 2;
+      const cy = drawingArea.y + drawingArea.height / 2;
+      const r = Math.min(drawingArea.width, drawingArea.height) / 2;
+      return {
+        centerX: cx,
+        centerY: cy,
+        maxRadius: Math.max(0, r),
+      };
+    }, [drawingArea]);
 
     // Use overrides if provided, otherwise use context values
     const shouldAnimate = animateOverride !== undefined ? animateOverride : contextAnimate;
-
-    // Calculate angular axis with overrides
-    const {
-      startAngle: startAngleRadians,
-      endAngle: endAngleRadians,
-      padAngle,
-    } = useMemo(() => {
-      if (angularAxisOverride) {
-        return getAngularAxisRadians(angularAxisOverride);
-      }
-      return {
-        startAngle: contextStartAngle,
-        endAngle: contextEndAngle,
-        padAngle: contextPadAngle,
-      };
-    }, [angularAxisOverride, contextStartAngle, contextEndAngle, contextPadAngle]);
-
-    // Calculate radial axis with overrides
-    const { innerRadius, outerRadius } = useMemo(() => {
-      if (radialAxisOverride) {
-        return getRadialAxisPixels(maxRadius, radialAxisOverride);
-      }
-      return {
-        innerRadius: contextInnerRadius,
-        outerRadius: contextOuterRadius,
-      };
-    }, [maxRadius, radialAxisOverride, contextInnerRadius, contextOuterRadius]);
 
     const targetSeries = useMemo(() => {
       if (seriesId) {
@@ -179,6 +133,32 @@ export const PiePlot = memo<PiePlotProps>(
       }
       return series[0];
     }, [seriesId, getSeries, series]);
+
+    // Get the angular axis for this series
+    const angularAxisConfig = useMemo(() => {
+      const axisId = targetSeries?.angularAxisId ?? defaultPolarAxisId;
+      return getAngularAxis(axisId);
+    }, [targetSeries, getAngularAxis]);
+
+    // Get the radial axis for this series
+    const radialAxisConfig = useMemo(() => {
+      const axisId = targetSeries?.radialAxisId ?? defaultPolarAxisId;
+      return getRadialAxis(axisId);
+    }, [targetSeries, getRadialAxis]);
+
+    // Calculate angular axis values
+    const {
+      startAngle: startAngleRadians,
+      endAngle: endAngleRadians,
+      padAngle,
+    } = useMemo(() => {
+      return getAngularAxisRadians(angularAxisConfig);
+    }, [angularAxisConfig]);
+
+    // Calculate radial axis values
+    const { innerRadius, outerRadius } = useMemo(() => {
+      return getRadialAxisPixels(maxRadius, radialAxisConfig);
+    }, [maxRadius, radialAxisConfig]);
 
     const arcs = useMemo(() => {
       if (!targetSeries || !targetSeries.data.length) {
@@ -229,7 +209,7 @@ export const PiePlot = memo<PiePlotProps>(
     const clipPathId =
       customClipPathId || (clipToSeriesId ? `clip-${seriesId}-to-${clipToSeriesId}` : undefined);
 
-    const content = (
+    return (
       <>
         {/* Define clip path from series if clipToSeriesId is used - paths are centered at 0,0 */}
         {!customClipPathId && clipArcs && clipPathId && (
@@ -258,6 +238,7 @@ export const PiePlot = memo<PiePlotProps>(
             <ArcComponent
               key={arcData.data.id ?? index}
               arcData={arcData}
+              baselineAngle={startAngleRadians}
               clipPathId={clipPathId}
               cornerRadius={cornerRadius}
               fill={fill}
@@ -282,35 +263,5 @@ export const PiePlot = memo<PiePlotProps>(
         })}
       </>
     );
-
-    // If any values are overridden, wrap in a new context provider
-    const hasOverrides =
-      animateOverride !== undefined ||
-      angularAxisOverride !== undefined ||
-      radialAxisOverride !== undefined;
-
-    if (hasOverrides) {
-      const overriddenContext: PolarChartContextValue = {
-        series,
-        getSeries,
-        animate: shouldAnimate,
-        width,
-        height,
-        centerX,
-        centerY,
-        maxRadius,
-        innerRadius,
-        outerRadius,
-        padAngle,
-        startAngle: startAngleRadians,
-        endAngle: endAngleRadians,
-        angularAxis: angularAxisOverride || contextAngularAxis,
-        radialAxis: radialAxisOverride || contextRadialAxis,
-      };
-
-      return <PolarChartProvider value={overriddenContext}>{content}</PolarChartProvider>;
-    }
-
-    return content;
   },
 );

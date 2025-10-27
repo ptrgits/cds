@@ -37,6 +37,12 @@ export type ArcBaseProps = {
    */
   clipPathId?: string;
   /**
+   * Baseline angle for animation in radians.
+   * Arcs will animate from this angle to their final position.
+   * @default 0
+   */
+  baselineAngle?: number;
+  /**
    * CSS class name.
    */
   className?: string;
@@ -73,19 +79,24 @@ export const Arc = memo<ArcProps>(
     strokeWidth = 0,
     cornerRadius = 0,
     clipPathId,
+    baselineAngle = 0,
     onClick,
     onMouseEnter,
     onMouseLeave,
     className,
     style,
   }) => {
-    const { animate, centerX, centerY, startAngle: chartStartAngle } = usePolarChartContext();
+    const { animate, drawingArea } = usePolarChartContext();
 
-    // Animate both angles from the chart's global startAngle to their respective positions
+    // Calculate center from drawing area
+    const centerX = drawingArea.x + drawingArea.width / 2;
+    const centerY = drawingArea.y + drawingArea.height / 2;
+
+    // Animate both angles from the baseline angle to their respective positions
     // This creates a sweeping effect while ensuring segments positioned later stay ahead
     // and never get passed by earlier segments
-    const animatedStartAngle = useMotionValue(chartStartAngle);
-    const animatedEndAngle = useMotionValue(chartStartAngle);
+    const animatedStartAngle = useMotionValue(baselineAngle);
+    const animatedEndAngle = useMotionValue(baselineAngle);
 
     // Transform the animated angles into an SVG path
     const path = useTransform([animatedStartAngle, animatedEndAngle], (values: number[]) => {

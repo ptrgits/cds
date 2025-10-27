@@ -8,6 +8,11 @@ export type PolarAxisBounds = {
 };
 
 /**
+ * Default axis ID used when no axis ID is specified.
+ */
+export const defaultPolarAxisId = 'default';
+
+/**
  * Configuration for the angular axis (controls start/end angles).
  *
  * The angular axis defines the sweep of the chart in degrees.
@@ -15,6 +20,11 @@ export type PolarAxisBounds = {
  * - Example: { min: -90, max: 90 } (semicircle from bottom to top)
  */
 export type AngularAxisConfig = {
+  /**
+   * Unique identifier for this axis.
+   * If not specified, this is the default angular axis.
+   */
+  id?: string;
   /**
    * The angular range in degrees.
    * Can be a static bounds object or a function that transforms the default bounds.
@@ -49,6 +59,11 @@ export type AngularAxisConfig = {
  * - Example: { min: 0, max: 150 } (pie chart with 150px radius)
  */
 export type RadialAxisConfig = {
+  /**
+   * Unique identifier for this axis.
+   * If not specified, this is the default radial axis.
+   */
+  id?: string;
   /**
    * The radial range in pixels from the center.
    * Can be a static bounds object or a function that transforms the default bounds.

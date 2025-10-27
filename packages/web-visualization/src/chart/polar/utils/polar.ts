@@ -36,6 +36,16 @@ export type PolarSeries = {
    * Optional label for the series.
    */
   label?: string;
+  /**
+   * ID of the angular axis this series should use.
+   * If not specified, uses the default angular axis.
+   */
+  angularAxisId?: string;
+  /**
+   * ID of the radial axis this series should use.
+   * If not specified, uses the default radial axis.
+   */
+  radialAxisId?: string;
 };
 
 export type ArcData = {
