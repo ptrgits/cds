@@ -84,7 +84,7 @@ const customDropdownCss = css`
 `;
 
 export const BasicUsage = () => {
-  const { value, onChange } = useMultiSelect({ initialValue: [] });
+  const { value, onChange } = useMultiSelect({ initialValue: ['apple', 'banana'] });
 
   return (
     <VStack gap={4}>
