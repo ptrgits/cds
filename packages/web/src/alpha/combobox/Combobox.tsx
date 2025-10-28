@@ -230,7 +230,7 @@ const ComboboxBase = memo(
         testID,
         ...props
       }: ComboboxProps<T>,
-      ref: React.Ref<ComboboxRef>,
+      ref: React.Ref<HTMLDivElement>,
     ) => {
       const controlRef = useRef<SelectRef>(null);
 
@@ -270,7 +270,7 @@ const ComboboxBase = memo(
       }, [filterFunction, fuse, options, searchText]);
 
       return (
-        <div>
+        <div ref={ref}>
           <DefaultComboboxControl
             ref={controlRef.current?.refs.setReference}
             accessibilityLabel={accessibilityLabel}
