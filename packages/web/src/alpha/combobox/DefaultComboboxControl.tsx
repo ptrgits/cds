@@ -98,7 +98,6 @@ const DefaultComboboxControlComponent = <T extends string = string>(
 
   const handleInputChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      event.stopPropagation();
       onSearch(event.target.value);
     },
     [onSearch],
@@ -109,6 +108,10 @@ const DefaultComboboxControlComponent = <T extends string = string>(
       event.stopPropagation();
       if (event.key === 'Enter') {
         setOpen(!open);
+      }
+      // Edge case where FocusTrap behavior would cause focus to shift out of the combobox rather than on the last item
+      if (event.shiftKey && event.key === 'Tab' && open) {
+        event.preventDefault();
       }
     },
     [open, setOpen],
@@ -188,6 +191,7 @@ const DefaultComboboxControlComponent = <T extends string = string>(
             invertColorScheme={false}
             maxWidth={200}
             onClick={(event) => handleUnselectValue(event, index)}
+            tabIndex={open ? -1 : 0}
           >
             {option.label ?? option.description ?? option.value ?? ''}
           </InputChip>
@@ -199,14 +203,15 @@ const DefaultComboboxControlComponent = <T extends string = string>(
     );
   }, [
     hasValue,
-    options,
     value,
     maxSelectedOptionsToShow,
-    hiddenSelectedOptionsLabel,
-    removeSelectedOptionAccessibilityLabel,
-    handleUnselectValue,
     classNames?.controlValueNode,
     styles?.controlValueNode,
+    hiddenSelectedOptionsLabel,
+    options,
+    removeSelectedOptionAccessibilityLabel,
+    open,
+    handleUnselectValue,
   ]);
 
   const inputNode = useMemo(
