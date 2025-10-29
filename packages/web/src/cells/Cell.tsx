@@ -1,6 +1,6 @@
 import React, { forwardRef, memo, useMemo } from 'react';
-import type { CellPriority } from '@coinbase/cds-common/types';
-import { hasCellPriority } from '@coinbase/cds-common/utils/cell';
+import type { CellPriority, CellSection } from '@coinbase/cds-common/types';
+import { mapCellPriorityToSection } from '@coinbase/cds-common/utils/cell';
 import { css } from '@linaria/core';
 
 import type { Polymorphic } from '../core/polymorphism';
@@ -123,7 +123,11 @@ export type CellBaseProps = Polymorphic.ExtendableProps<
     detailWidth?: number | string;
     /** Is the cell disabled? Will apply opacity and disable interaction. */
     disabled?: boolean;
-    /** Which piece of content has the highest priority in regards to text truncation, growing, and shrinking. */
+    /** Sections that should not shrink (flex-shrink: 0) when the cell width is reduced.
+     * @default ['start', 'accessory']
+     */
+    nonShrinkingSections?: CellSection[];
+    /** @deprecated Use `nonShrinkingSections` instead. `priority` will be removed in a future major release. */
     priority?: CellPriority | CellPriority[];
     /** Is the cell selected? Will apply a background and selected accessory. */
     selected?: boolean;
@@ -231,6 +235,11 @@ export const Cell: CellComponent = memo(
         outerSpacing: outerSpacingProp,
         bottomContent: bottom,
         background = 'bgAlternate',
+        nonShrinkingSections = [
+          'start',
+          'accessory',
+          ...(priority ? mapCellPriorityToSection(priority) : []),
+        ],
         ...props
       }: CellProps<AsComponent>,
       ref?: Polymorphic.Ref<AsComponent>,
@@ -279,7 +288,7 @@ export const Cell: CellComponent = memo(
               <Box
                 className={cx(classNames?.media, classNames?.start)}
                 flexGrow={0}
-                flexShrink={0}
+                flexShrink={nonShrinkingSections.includes('start') ? 0 : 1}
                 style={styles?.start ?? styles?.media}
               >
                 {startNode}
@@ -289,7 +298,7 @@ export const Cell: CellComponent = memo(
             <Box
               className={contentTruncationStyle}
               flexGrow={1}
-              flexShrink={hasCellPriority('start', priority) ? 0 : 1}
+              flexShrink={nonShrinkingSections.includes('middle') ? 0 : 1}
               justifyContent="flex-start"
             >
               {children}
@@ -299,7 +308,7 @@ export const Cell: CellComponent = memo(
               <Box
                 className={cx(contentTruncationStyle, classNames?.intermediary)}
                 flexGrow={0}
-                flexShrink={hasCellPriority('middle', priority) ? 0 : 1}
+                flexShrink={nonShrinkingSections.includes('intermediary') ? 0 : 1}
                 justifyContent="center"
                 style={styles?.intermediary}
               >
@@ -313,7 +322,7 @@ export const Cell: CellComponent = memo(
                 className={cx(contentTruncationStyle, classNames?.end)}
                 flexDirection="column"
                 flexGrow={endWidth ? undefined : 1}
-                flexShrink={endWidth ? undefined : hasCellPriority('end', priority) ? 0 : 1}
+                flexShrink={endWidth ? undefined : nonShrinkingSections.includes('end') ? 0 : 1}
                 justifyContent="flex-end"
                 style={styles?.end}
                 width={detailWidth}
@@ -326,7 +335,7 @@ export const Cell: CellComponent = memo(
               <Box
                 className={classNames?.accessory}
                 flexGrow={0}
-                flexShrink={0}
+                flexShrink={nonShrinkingSections.includes('accessory') ? 0 : 1}
                 style={styles?.accessory}
               >
                 {accessoryNode ?? accessory}
@@ -376,26 +385,26 @@ export const Cell: CellComponent = memo(
         innerSpacing,
         styles?.contentContainer,
         styles?.topContent,
-        styles?.media,
-        styles?.start,
-        styles?.intermediary,
         styles?.end,
+        styles?.start,
+        styles?.media,
+        styles?.intermediary,
         styles?.accessory,
         styles?.bottomContent,
         alignItems,
         columnGap,
         gap,
+        detailWidth,
         start,
         media,
+        nonShrinkingSections,
         contentTruncationStyle,
-        priority,
         children,
         intermediary,
         end,
         detail,
-        detailWidth,
-        accessory,
         accessoryNode,
+        accessory,
         bottom,
         rowGap,
       ]);
