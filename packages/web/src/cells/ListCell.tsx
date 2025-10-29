@@ -96,7 +96,11 @@ export type ListCellBaseProps = Polymorphic.ExtendableProps<
     helperText?: React.ReactNode;
     /** For internal use only. */
     intermediary?: React.ReactNode;
-    /* Media (icon, asset, image, etc) to display at the start of the cell. */
+    /** Content to display at the start of the cell (icon, asset, image, etc). */
+    start?: React.ReactElement;
+    /**
+     * @deprecated Use `start` instead. `media` will be removed in a future major release.
+     */
     media?: React.ReactElement;
     /** Allow the description to span multiple lines. This *will* break fixed height requirements, so should not be used in a `FlatList`. */
     multiline?: boolean;
@@ -107,6 +111,10 @@ export type ListCellBaseProps = Polymorphic.ExtendableProps<
     /** Class names for the components */
     classNames?: {
       root?: string;
+      start?: string;
+      /**
+       * @deprecated Use `classNames.start` instead. `classNames.media` will be removed in a future major release.
+       */
       media?: string;
       intermediary?: string;
       end?: string;
@@ -121,6 +129,10 @@ export type ListCellBaseProps = Polymorphic.ExtendableProps<
     /** Styles for the components */
     styles?: {
       root?: React.CSSProperties;
+      start?: React.CSSProperties;
+      /**
+       * @deprecated Use `styles.start` instead. `styles.media` will be removed in a future major release.
+       */
       media?: React.CSSProperties;
       intermediary?: React.CSSProperties;
       end?: React.CSSProperties;
@@ -165,6 +177,7 @@ export const ListCell: ListCellComponent = memo(
         disableMultilineTitle = false,
         disableSelectionAccessory,
         helperText,
+        start,
         media,
         multiline,
         selected,
@@ -232,15 +245,16 @@ export const ListCell: ListCellComponent = memo(
             innerSpacing ?? (spacingVariant === 'condensed' ? condensedInnerSpacing : undefined)
           }
           intermediary={intermediary}
-          media={media}
           minHeight={minHeight}
           outerSpacing={
             outerSpacing ?? (spacingVariant === 'condensed' ? condensedOuterSpacing : undefined)
           }
           priority={priority}
           selected={selected}
+          start={start ?? media}
           style={{ ...style, ...styles?.root }}
           styles={{
+            start: styles?.start,
             media: styles?.media,
             intermediary: styles?.intermediary,
             end: styles?.end,

@@ -101,7 +101,11 @@ export type CellBaseProps = Polymorphic.ExtendableProps<
     detail?: React.ReactNode;
     /** Middle content between main content and detail. */
     intermediary?: React.ReactNode;
-    /** Media rendered at the start of the cell (icon, avatar, image, etc). */
+    /** Content rendered at the start of the cell (icon, avatar, image, etc). */
+    start?: React.ReactElement;
+    /**
+     * @deprecated Use `start` instead. `media` will be removed in a future major release.
+     */
     media?: React.ReactElement;
     /**
      * @deprecated Use `shouldTruncate` instead. `shouldOverflow` will be removed in a future release.
@@ -136,6 +140,10 @@ export type CellBaseProps = Polymorphic.ExtendableProps<
       topContent?: React.CSSProperties;
       bottomContent?: React.CSSProperties;
       pressable?: React.CSSProperties;
+      start?: React.CSSProperties;
+      /**
+       * @deprecated Use `styles.start` instead. `styles.media` will be removed in a future major release.
+       */
       media?: React.CSSProperties;
       intermediary?: React.CSSProperties;
       /** Applied to the container of detail or action */
@@ -149,6 +157,10 @@ export type CellBaseProps = Polymorphic.ExtendableProps<
       topContent?: string;
       bottomContent?: string;
       pressable?: string;
+      start?: string;
+      /**
+       * @deprecated Use `classNames.start` instead. `classNames.media` will be removed in a future major release.
+       */
       media?: string;
       intermediary?: string;
       /** Applied to the container of detail or action */
@@ -191,6 +203,7 @@ export const Cell: CellComponent = memo(
         columnGap,
         rowGap = 1,
         intermediary,
+        start,
         media,
         minHeight,
         maxHeight,
@@ -258,11 +271,18 @@ export const Cell: CellComponent = memo(
         const endWidth = styles?.end?.width ?? detailWidth;
 
         // content that is displayed horizontally above the bottom content
+        const startNode = start ?? media;
+
         const topContent = (
           <>
-            {media && (
-              <Box className={classNames?.media} flexGrow={0} flexShrink={0} style={styles?.media}>
-                {media}
+            {startNode && (
+              <Box
+                className={cx(classNames?.media, classNames?.start)}
+                flexGrow={0}
+                flexShrink={0}
+                style={styles?.start ?? styles?.media}
+              >
+                {startNode}
               </Box>
             )}
 
@@ -343,6 +363,7 @@ export const Cell: CellComponent = memo(
         classNames?.contentContainer,
         classNames?.topContent,
         classNames?.media,
+        classNames?.start,
         classNames?.intermediary,
         classNames?.end,
         classNames?.accessory,
@@ -356,6 +377,7 @@ export const Cell: CellComponent = memo(
         styles?.contentContainer,
         styles?.topContent,
         styles?.media,
+        styles?.start,
         styles?.intermediary,
         styles?.end,
         styles?.accessory,
@@ -363,6 +385,7 @@ export const Cell: CellComponent = memo(
         alignItems,
         columnGap,
         gap,
+        start,
         media,
         contentTruncationStyle,
         priority,
