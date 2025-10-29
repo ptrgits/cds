@@ -13,6 +13,8 @@ export type DataTableHeadProps = {
   virtualPaddingRight?: number;
   isSticky?: boolean;
   onHeightChange?: (px: number) => void;
+  /** Whether to virtualize center columns rendering */
+  virtualizeColumns?: boolean;
 };
 
 export type TableHeadRowProps = {
@@ -20,6 +22,7 @@ export type TableHeadRowProps = {
   headerGroup: HeaderGroup<any>;
   virtualPaddingLeft?: number;
   virtualPaddingRight?: number;
+  virtualizeColumns?: boolean;
 };
 
 export type TableHeadCellProps = HTMLAttributes<HTMLTableCellElement> & {
@@ -99,8 +102,8 @@ export const TableHeadRow = ({
   headerGroup,
   virtualPaddingLeft,
   virtualPaddingRight,
+  virtualizeColumns,
 }: TableHeadRowProps) => {
-  const virtualColumns = columnVirtualizer.getVirtualItems();
   const leftHeaders = headerGroup.headers.filter((h) => h.column.getIsPinned() === 'left');
   const centerHeaders = headerGroup.headers.filter((h) => !h.column.getIsPinned());
   const rightHeaders = headerGroup.headers.filter((h) => h.column.getIsPinned() === 'right');
@@ -128,16 +131,18 @@ export const TableHeadRow = ({
           style={{ zIndex: 3 }}
         />
       ))}
-      {virtualPaddingLeft ? (
+      {virtualizeColumns && virtualPaddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingLeft }} />
       ) : null}
-      {virtualColumns.map((virtualColumn) => {
-        const header = centerHeaders[virtualColumn.index];
-        if (!header) return null;
-        return <TableHeadCell key={header.id} header={header} />;
-      })}
-      {virtualPaddingRight ? (
+      {virtualizeColumns
+        ? columnVirtualizer.getVirtualItems().map((virtualColumn) => {
+            const header = centerHeaders[virtualColumn.index];
+            if (!header) return null;
+            return <TableHeadCell key={header.id} header={header} />;
+          })
+        : centerHeaders.map((header) => <TableHeadCell key={header.id} header={header} />)}
+      {virtualizeColumns && virtualPaddingRight ? (
         //fake empty column to the right for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingRight }} />
       ) : null}
@@ -156,6 +161,7 @@ export const DataTableHead = ({
   virtualPaddingRight,
   isSticky,
   onHeightChange,
+  virtualizeColumns,
 }: DataTableHeadProps) => {
   return (
     <thead
@@ -177,6 +183,7 @@ export const DataTableHead = ({
           headerGroup={headerGroup}
           virtualPaddingLeft={virtualPaddingLeft}
           virtualPaddingRight={virtualPaddingRight}
+          virtualizeColumns={virtualizeColumns}
         />
       ))}
     </thead>

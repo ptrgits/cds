@@ -44,10 +44,27 @@ export type DataTableProps<TData> = React.HTMLAttributes<HTMLTableElement> & {
     newIndex: number;
     ids: string[];
   }) => void;
+  /**
+   * Enable/disable column virtualization for the center (unpinned) columns.
+   * Defaults to true to preserve existing behavior.
+   */
+  virtualizeColumns?: boolean;
+  /**
+   * Enable/disable row virtualization for center (unpinned) rows.
+   * Defaults to true to preserve existing behavior.
+   */
+  virtualizeRows?: boolean;
 };
 
 const DataTableInner = <TData,>(
-  { tableOptions, onRowChange, onColumnChange, ...props }: DataTableProps<TData>,
+  {
+    tableOptions,
+    onRowChange,
+    onColumnChange,
+    virtualizeColumns,
+    virtualizeRows,
+    ...props
+  }: DataTableProps<TData>,
   ref: React.Ref<HTMLTableElement>,
 ) => {
   const table = useReactTable({
@@ -77,10 +94,11 @@ const DataTableInner = <TData,>(
   let virtualPaddingLeft: number | undefined;
   let virtualPaddingRight: number | undefined;
 
-  if (columnVirtualizer && virtualColumns?.length) {
-    virtualPaddingLeft = virtualColumns[0]?.start ?? 0;
-    virtualPaddingRight =
-      columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
+  if (virtualizeColumns && columnVirtualizer && virtualColumns?.length) {
+    virtualPaddingLeft = virtualizeColumns ? (virtualColumns[0]?.start ?? 0) : undefined;
+    virtualPaddingRight = virtualizeColumns
+      ? columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - 1]?.end ?? 0)
+      : undefined;
   }
 
   // determine if there are top pinned rows to layer header above them
@@ -112,6 +130,7 @@ const DataTableInner = <TData,>(
           table={table}
           virtualPaddingLeft={virtualPaddingLeft}
           virtualPaddingRight={virtualPaddingRight}
+          virtualizeColumns={virtualizeColumns}
         />
         <DataTableBody
           columnVirtualizer={columnVirtualizer}
@@ -120,6 +139,8 @@ const DataTableInner = <TData,>(
           tableContainerRef={tableContainerRef}
           virtualPaddingLeft={virtualPaddingLeft}
           virtualPaddingRight={virtualPaddingRight}
+          virtualizeColumns={virtualizeColumns}
+          virtualizeRows={virtualizeRows}
         />
       </table>
     </div>

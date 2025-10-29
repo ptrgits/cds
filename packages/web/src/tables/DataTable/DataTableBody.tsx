@@ -11,16 +11,21 @@ export type DataTableBodyProps = {
   virtualPaddingLeft: number | undefined;
   virtualPaddingRight: number | undefined;
   headerOffsetTop?: number;
+  /** Whether to virtualize center columns rendering */
+  virtualizeColumns?: boolean;
+  /** Whether to virtualize center rows rendering */
+  virtualizeRows?: boolean;
 };
 
 export type DataTableBodyRowProps = {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
   row: Row<any>;
-  rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
+  rowVirtualizer?: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
   virtualPaddingLeft: number | undefined;
   virtualPaddingRight: number | undefined;
-  virtualRow: VirtualItem;
+  virtualRow?: VirtualItem;
   staticPosition?: boolean;
+  virtualizeColumns?: boolean;
 };
 
 export type DataTableBodyCellProps = HTMLAttributes<HTMLTableCellElement> & {
@@ -53,17 +58,21 @@ export const DataTableBodyRow = ({
   virtualPaddingRight,
   virtualRow,
   staticPosition = false,
+  virtualizeColumns,
 }: DataTableBodyRowProps) => {
   const visibleCells = row.getVisibleCells();
-  const virtualColumns = columnVirtualizer.getVirtualItems();
   const leftCells = visibleCells.filter((c) => c.column.getIsPinned() === 'left');
   const centerCells = visibleCells.filter((c) => !c.column.getIsPinned());
   const rightCells = visibleCells.filter((c) => c.column.getIsPinned() === 'right');
   return (
     <tr
       key={row.id}
-      ref={staticPosition ? undefined : (node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-      data-index={staticPosition ? undefined : virtualRow.index} //needed for dynamic row height measurement
+      ref={
+        staticPosition || !rowVirtualizer
+          ? undefined
+          : (node) => rowVirtualizer.measureElement(node)
+      } //measure dynamic row height
+      data-index={staticPosition || !virtualRow ? undefined : virtualRow.index} //needed for dynamic row height measurement
       style={{
         display: 'flex',
         width: '100%',
@@ -110,16 +119,18 @@ export const DataTableBodyRow = ({
       {leftCells.map((cell) => (
         <DataTableBodyCell key={cell.id} cell={cell} leftOffset={actionsColumnWidth} />
       ))}
-      {virtualPaddingLeft ? (
+      {virtualizeColumns && virtualPaddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
         <td style={{ display: 'flex', width: virtualPaddingLeft }} />
       ) : null}
-      {virtualColumns.map((virtualColumn) => {
-        const cell = centerCells[virtualColumn.index];
-        if (!cell) return null;
-        return <DataTableBodyCell key={cell.id} cell={cell} />;
-      })}
-      {virtualPaddingRight ? (
+      {virtualizeColumns
+        ? columnVirtualizer.getVirtualItems().map((virtualColumn) => {
+            const cell = centerCells[virtualColumn.index];
+            if (!cell) return null;
+            return <DataTableBodyCell key={cell.id} cell={cell} />;
+          })
+        : centerCells.map((cell) => <DataTableBodyCell key={cell.id} cell={cell} />)}
+      {virtualizeColumns && virtualPaddingRight ? (
         //fake empty column to the right for virtualization scroll padding
         <td style={{ display: 'flex', width: virtualPaddingRight }} />
       ) : null}
@@ -138,6 +149,8 @@ export const DataTableBody = ({
   virtualPaddingLeft,
   virtualPaddingRight,
   headerOffsetTop = 0,
+  virtualizeColumns,
+  virtualizeRows,
 }: DataTableBodyProps) => {
   const { rows } = table.getRowModel();
   const topRows = rows.filter((r) => r.getIsPinned?.() === 'top');
@@ -157,14 +170,14 @@ export const DataTableBody = ({
     overscan: 10,
   });
 
-  const virtualRows = rowVirtualizer.getVirtualItems();
+  const virtualRowsItems = rowVirtualizer.getVirtualItems();
   let virtualPaddingTop: number | undefined;
   let virtualPaddingBottom: number | undefined;
 
-  if (rowVirtualizer && virtualRows?.length) {
-    virtualPaddingTop = virtualRows[0]?.start ?? 0;
+  if (virtualizeRows && rowVirtualizer && virtualRowsItems?.length) {
+    virtualPaddingTop = virtualRowsItems[0]?.start ?? 0;
     virtualPaddingBottom =
-      rowVirtualizer.getTotalSize() - (virtualRows[virtualRows.length - 1]?.end ?? 0);
+      rowVirtualizer.getTotalSize() - (virtualRowsItems[virtualRowsItems.length - 1]?.end ?? 0);
   }
 
   return (
@@ -186,48 +199,74 @@ export const DataTableBody = ({
               staticPosition
               columnVirtualizer={columnVirtualizer}
               row={row}
-              rowVirtualizer={rowVirtualizer}
+              rowVirtualizer={virtualizeRows ? rowVirtualizer : undefined}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
-              virtualRow={{ index: i, key: i, start: 0, size: 0 } as unknown as VirtualItem}
+              virtualRow={
+                virtualizeRows
+                  ? ({ index: i, key: i, start: 0, size: 0 } as unknown as VirtualItem)
+                  : undefined
+              }
+              virtualizeColumns={virtualizeColumns}
             />
           ))}
         </tbody>
       )}
 
-      {/* Center virtualized rows */}
-      <tbody
-        style={{
-          display: 'grid',
-        }}
-      >
-        {virtualPaddingTop ? (
-          //fake empty row at the top for virtualization scroll padding
-          <tr style={{ display: 'flex', width: '100%', height: virtualPaddingTop }}>
-            <td style={{ display: 'flex', height: virtualPaddingTop, width: '100%' }} />
-          </tr>
-        ) : null}
-        {virtualRows.map((virtualRow) => {
-          const row = centerRows[virtualRow.index] as Row<any>;
-          return (
+      {/* Center rows */}
+      {virtualizeRows ? (
+        <tbody
+          style={{
+            display: 'grid',
+          }}
+        >
+          {virtualPaddingTop ? (
+            //fake empty row at the top for virtualization scroll padding
+            <tr style={{ display: 'flex', width: '100%', height: virtualPaddingTop }}>
+              <td style={{ display: 'flex', height: virtualPaddingTop, width: '100%' }} />
+            </tr>
+          ) : null}
+          {virtualRowsItems.map((virtualRow) => {
+            const row = centerRows[virtualRow.index] as Row<any>;
+            return (
+              <DataTableBodyRow
+                key={row.id}
+                columnVirtualizer={columnVirtualizer}
+                row={row}
+                rowVirtualizer={rowVirtualizer}
+                virtualPaddingLeft={virtualPaddingLeft}
+                virtualPaddingRight={virtualPaddingRight}
+                virtualRow={virtualRow}
+                virtualizeColumns={virtualizeColumns}
+              />
+            );
+          })}
+          {virtualPaddingBottom ? (
+            //fake empty row at the bottom for virtualization scroll padding
+            <tr style={{ display: 'flex', width: '100%', height: virtualPaddingBottom }}>
+              <td style={{ display: 'flex', height: virtualPaddingBottom, width: '100%' }} />
+            </tr>
+          ) : null}
+        </tbody>
+      ) : (
+        <tbody
+          style={{
+            display: 'grid',
+          }}
+        >
+          {centerRows.map((row) => (
             <DataTableBodyRow
               key={row.id}
+              staticPosition
               columnVirtualizer={columnVirtualizer}
               row={row}
-              rowVirtualizer={rowVirtualizer}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
-              virtualRow={virtualRow}
+              virtualizeColumns={virtualizeColumns}
             />
-          );
-        })}
-        {virtualPaddingBottom ? (
-          //fake empty row at the bottom for virtualization scroll padding
-          <tr style={{ display: 'flex', width: '100%', height: virtualPaddingBottom }}>
-            <td style={{ display: 'flex', height: virtualPaddingBottom, width: '100%' }} />
-          </tr>
-        ) : null}
-      </tbody>
+          ))}
+        </tbody>
+      )}
 
       {/* Bottom pinned rows */}
       {bottomRows.length > 0 && (
@@ -246,10 +285,15 @@ export const DataTableBody = ({
               staticPosition
               columnVirtualizer={columnVirtualizer}
               row={row}
-              rowVirtualizer={rowVirtualizer}
+              rowVirtualizer={virtualizeRows ? rowVirtualizer : undefined}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
-              virtualRow={{ index: i, key: i, start: 0, size: 0 } as unknown as VirtualItem}
+              virtualRow={
+                virtualizeRows
+                  ? ({ index: i, key: i, start: 0, size: 0 } as unknown as VirtualItem)
+                  : undefined
+              }
+              virtualizeColumns={virtualizeColumns}
             />
           ))}
         </tbody>
