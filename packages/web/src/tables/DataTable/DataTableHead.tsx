@@ -1,3 +1,4 @@
+import { type Ref } from 'react';
 import { type Table } from '@tanstack/react-table';
 import type { Virtualizer } from '@tanstack/react-virtual';
 
@@ -9,9 +10,9 @@ export type DataTableHeadProps = {
   virtualPaddingLeft?: number;
   virtualPaddingRight?: number;
   isSticky?: boolean;
-  onHeightChange?: (px: number) => void;
   /** Whether to virtualize center columns rendering */
   virtualizeColumns?: boolean;
+  sectionRef?: Ref<HTMLTableSectionElement>;
 };
 
 export const DataTableHead = ({
@@ -20,14 +21,12 @@ export const DataTableHead = ({
   virtualPaddingLeft,
   virtualPaddingRight,
   isSticky,
-  onHeightChange,
   virtualizeColumns,
+  sectionRef,
 }: DataTableHeadProps) => {
   return (
     <thead
-      ref={(node) => {
-        if (node && onHeightChange) onHeightChange(node.getBoundingClientRect().height);
-      }}
+      ref={sectionRef}
       style={{
         display: 'grid',
         position: isSticky ? 'sticky' : 'relative',

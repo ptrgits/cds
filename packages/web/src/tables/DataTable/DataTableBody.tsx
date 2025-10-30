@@ -1,6 +1,7 @@
 import { type Row, type Table } from '@tanstack/react-table';
 import { useVirtualizer, type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
 
+import { defaultVirtualRowsOverscan } from './DataTable';
 import { DataTableBodyRow } from './DataTableBodyRow';
 
 export type DataTableBodyProps = {
@@ -41,7 +42,7 @@ export const DataTableBody = ({
       typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 10,
+    overscan: defaultVirtualRowsOverscan,
   });
 
   const virtualRowsItems = rowVirtualizer.getVirtualItems();

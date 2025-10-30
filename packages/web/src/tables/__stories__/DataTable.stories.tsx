@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Meta } from '@storybook/react';
 
+import { Checkbox } from '../../controls';
+import { HStack, VStack } from '../../layout';
 import type { ColumnDef, SortingState } from '../DataTable';
 import { DataTable } from '../DataTable/DataTable';
 
@@ -15,6 +17,7 @@ export const DataTableExample = () => {
   const [columnOrder, setColumnOrder] = React.useState<string[]>([]);
   const [virtualizeRows, setVirtualizeRows] = React.useState(true);
   const [virtualizeColumns, setVirtualizeColumns] = React.useState(true);
+  const [stickyHeader, setStickyHeader] = React.useState(true);
   const columns = React.useMemo<ColumnDef<RowData>[]>(() => {
     const cols: ColumnDef<RowData>[] = [];
     for (let c = 0; c < 1000; c += 1) {
@@ -41,29 +44,26 @@ export const DataTableExample = () => {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', gap: 16 }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input
-            checked={virtualizeRows}
-            onChange={(e) => setVirtualizeRows(e.target.checked)}
-            type="checkbox"
-          />
+    <VStack gap={3}>
+      <HStack alignItems="center" gap={4}>
+        <Checkbox checked={virtualizeRows} onChange={() => setVirtualizeRows((value) => !value)}>
           Virtualize Rows
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input
-            checked={virtualizeColumns}
-            onChange={(e) => setVirtualizeColumns(e.target.checked)}
-            type="checkbox"
-          />
+        </Checkbox>
+        <Checkbox
+          checked={virtualizeColumns}
+          onChange={() => setVirtualizeColumns((value) => !value)}
+        >
           Virtualize Columns
-        </label>
-      </div>
+        </Checkbox>
+        <Checkbox checked={stickyHeader} onChange={() => setStickyHeader((value) => !value)}>
+          Sticky Header
+        </Checkbox>
+      </HStack>
       <DataTable
         onColumnChange={({ ids }) => {
           setColumnOrder(ids);
         }}
+        stickyHeader={stickyHeader}
         tableOptions={{
           data,
           columns,
@@ -75,6 +75,6 @@ export const DataTableExample = () => {
         virtualizeColumns={virtualizeColumns}
         virtualizeRows={virtualizeRows}
       />
-    </div>
+    </VStack>
   );
 };

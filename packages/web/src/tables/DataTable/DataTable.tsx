@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useLayoutEffect } from 'react';
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -10,10 +10,14 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { DataTableBody } from './DataTableBody';
 import { DataTableHead } from './DataTableHead';
 
-type OptionalBuiltins<TData> = Omit<TableOptions<TData>, 'getCoreRowModel' | 'getSortedRowModel'> &
-  Partial<Pick<TableOptions<TData>, 'getCoreRowModel' | 'getSortedRowModel'>>;
+export const defaultVirtualColumnsOverscan = 5;
+export const defaultVirtualRowsOverscan = 10;
 
-export type DataTableOptions<TData> = OptionalBuiltins<TData>;
+export type DataTableOptions<TData> = Omit<
+  TableOptions<TData>,
+  // these are imported internally so we don't need users to pass in
+  'getCoreRowModel' | 'getSortedRowModel'
+>;
 
 export type DataTableProps<TData> = React.HTMLAttributes<HTMLTableElement> & {
   /**
@@ -54,22 +58,28 @@ export type DataTableProps<TData> = React.HTMLAttributes<HTMLTableElement> & {
    * Defaults to true to preserve existing behavior.
    */
   virtualizeRows?: boolean;
+  /**
+   * Enable/disable sticky header for the table.
+   * Defaults to true to preserve existing behavior.
+   */
+  stickyHeader?: boolean;
 };
 
-const DataTableInner = <TData,>(
+const DataTableBase = <TData,>(
   {
     tableOptions,
     onRowChange,
     onColumnChange,
     virtualizeColumns,
     virtualizeRows,
+    stickyHeader = true,
     ...props
   }: DataTableProps<TData>,
   ref: React.Ref<HTMLTableElement>,
 ) => {
   const table = useReactTable({
-    getCoreRowModel: tableOptions.getCoreRowModel ?? getCoreRowModel(),
-    getSortedRowModel: tableOptions.getSortedRowModel ?? getSortedRowModel(),
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     ...tableOptions,
   });
   // Only virtualize the center (unpinned) columns. Left/Right pinned columns
@@ -85,7 +95,7 @@ const DataTableInner = <TData,>(
     estimateSize: (index) => centerColumns[index].getSize(), //estimate width of each center column for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     horizontal: true,
-    overscan: 3, //how many columns to render on each side off screen each way (adjust this for performance)
+    overscan: defaultVirtualColumnsOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
   });
 
   const virtualColumns = columnVirtualizer.getVirtualItems();
@@ -101,16 +111,42 @@ const DataTableInner = <TData,>(
       : undefined;
   }
 
-  // determine if there are top pinned rows to layer header above them
-  const hasTopPinnedRows = table.getRowModel().rows.some((r) => r.getIsPinned?.() === 'top');
+  const headerRef = React.useRef<HTMLTableSectionElement | null>(null);
   const [headerHeight, setHeaderHeight] = React.useState(0);
 
-  // Current center row ids from table rows (source of truth is external data)
-  const allRows = table.getRowModel().rows;
-  const centerRowIds = React.useMemo(
-    () => allRows.filter((r) => !r.getIsPinned?.()).map((r) => r.id),
-    [allRows],
-  );
+  // Track the rendered header height so pinned sections can position themselves without overlaps.
+  useLayoutEffect(() => {
+    // Disable offset bookkeeping entirely when the sticky header feature is turned off.
+    if (!stickyHeader) {
+      setHeaderHeight(0);
+      return;
+    }
+
+    // Bail out during SSR; measurements require a browser environment.
+    if (typeof window === 'undefined') return;
+
+    const node = headerRef.current;
+    if (!node) return;
+
+    // Measure once immediately in case the header already has content-driven height.
+    const measure = () => {
+      const nextHeight = node.getBoundingClientRect().height;
+      setHeaderHeight((prev) => (prev !== nextHeight ? nextHeight : prev));
+    };
+
+    measure();
+
+    // React to future size changes (filters, column configuration, responsive wraps, etc.).
+    const observer = new ResizeObserver(() => {
+      measure();
+    });
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [stickyHeader]);
 
   return (
     <div
@@ -125,8 +161,8 @@ const DataTableInner = <TData,>(
       <table ref={ref} style={{ display: 'grid' }} {...props}>
         <DataTableHead
           columnVirtualizer={columnVirtualizer}
-          isSticky={hasTopPinnedRows}
-          onHeightChange={setHeaderHeight}
+          isSticky={stickyHeader}
+          sectionRef={headerRef}
           table={table}
           virtualPaddingLeft={virtualPaddingLeft}
           virtualPaddingRight={virtualPaddingRight}
@@ -134,7 +170,7 @@ const DataTableInner = <TData,>(
         />
         <DataTableBody
           columnVirtualizer={columnVirtualizer}
-          headerOffsetTop={hasTopPinnedRows ? headerHeight : 0}
+          headerOffsetTop={stickyHeader ? headerHeight : 0}
           table={table}
           tableContainerRef={tableContainerRef}
           virtualPaddingLeft={virtualPaddingLeft}
@@ -147,6 +183,6 @@ const DataTableInner = <TData,>(
   );
 };
 
-export const DataTable = forwardRef(DataTableInner) as <TData>(
+export const DataTable = forwardRef(DataTableBase) as <TData>(
   props: DataTableProps<TData> & { ref?: React.Ref<HTMLTableElement> },
 ) => React.ReactElement;
