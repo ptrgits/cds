@@ -1,8 +1,35 @@
+import { css } from '@linaria/core';
 import { type Row, type Table } from '@tanstack/react-table';
 import { useVirtualizer, type Virtualizer } from '@tanstack/react-virtual';
 
+import { cx } from '../../cx';
+
 import { defaultVirtualRowsOverscan } from './DataTable';
 import { DataTableBodyRow } from './DataTableBodyRow';
+
+const pinnedSectionCss = css`
+  background: var(--color-bg);
+  display: grid;
+  z-index: 3;
+`;
+
+const stickyTopSectionCss = css`
+  position: sticky;
+`;
+
+const stickyBottomSectionCss = css`
+  bottom: 0;
+  position: sticky;
+`;
+
+const virtualizedCenterSectionCss = css`
+  display: grid;
+  position: relative;
+`;
+
+const staticCenterSectionCss = css`
+  display: grid;
+`;
 
 export type DataTableBodyProps = {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
@@ -62,13 +89,8 @@ export const DataTableBody = ({
       {/* Top pinned rows */}
       {topRows.length > 0 && (
         <tbody
-          style={{
-            background: 'white',
-            display: 'grid',
-            position: 'sticky',
-            top: headerOffsetTop,
-            zIndex: 3,
-          }}
+          className={cx(pinnedSectionCss, stickyTopSectionCss)}
+          style={{ top: headerOffsetTop }}
         >
           {topRows.map((row, i) => (
             <DataTableBodyRow
@@ -87,11 +109,8 @@ export const DataTableBody = ({
       {/* Center rows */}
       {virtualizeRows ? (
         <tbody
-          style={{
-            display: 'grid',
-            height: `${virtualRowsTotalSize}px`,
-            position: 'relative',
-          }}
+          className={virtualizedCenterSectionCss}
+          style={{ height: `${virtualRowsTotalSize}px` }}
         >
           {virtualRowsItems.map((virtualRow) => {
             const row = centerRows[virtualRow.index] as Row<any>;
@@ -110,11 +129,7 @@ export const DataTableBody = ({
           })}
         </tbody>
       ) : (
-        <tbody
-          style={{
-            display: 'grid',
-          }}
-        >
+        <tbody className={staticCenterSectionCss}>
           {centerRows.map((row) => (
             <DataTableBodyRow
               key={row.id}
@@ -131,15 +146,7 @@ export const DataTableBody = ({
 
       {/* Bottom pinned rows */}
       {bottomRows.length > 0 && (
-        <tbody
-          style={{
-            background: 'white',
-            display: 'grid',
-            position: 'sticky',
-            bottom: 0,
-            zIndex: 3,
-          }}
-        >
+        <tbody className={cx(pinnedSectionCss, stickyBottomSectionCss)}>
           {bottomRows.map((row, i) => (
             <DataTableBodyRow
               key={row.id}

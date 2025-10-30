@@ -1,7 +1,14 @@
 import type { HTMLAttributes } from 'react';
+import { css } from '@linaria/core';
 import { type Cell, flexRender } from '@tanstack/react-table';
 
 import { getColumnPinningStyles } from './getColumnPinningStyles';
+
+const bodyCellCss = css`
+  align-items: center;
+  background-color: var(--color-bg);
+  display: flex;
+`;
 
 export type DataTableBodyCellProps = HTMLAttributes<HTMLTableCellElement> & {
   cell: Cell<any, unknown>;
@@ -13,10 +20,9 @@ export const DataTableBodyCell = ({ cell, leftOffset, ...props }: DataTableBodyC
     <td
       key={cell.id}
       {...props}
+      className={bodyCellCss}
       style={{
-        display: 'flex',
         width: cell.column.getSize(),
-        backgroundColor: 'white',
         ...getColumnPinningStyles(cell.column, leftOffset),
       }}
     >
@@ -24,4 +30,3 @@ export const DataTableBodyCell = ({ cell, leftOffset, ...props }: DataTableBodyC
     </td>
   );
 };
-

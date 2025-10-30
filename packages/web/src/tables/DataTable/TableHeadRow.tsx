@@ -1,5 +1,8 @@
+import { css } from '@linaria/core';
 import { type HeaderGroup } from '@tanstack/react-table';
 import type { Virtualizer } from '@tanstack/react-virtual';
+
+import { cx } from '../../cx';
 
 import { actionsColumnWidth } from './getColumnPinningStyles';
 import { TableHeadCell } from './TableHeadCell';
@@ -11,6 +14,29 @@ export type TableHeadRowProps = {
   virtualPaddingRight?: number;
   virtualizeColumns?: boolean;
 };
+
+const rowCss = css`
+  display: flex;
+  width: 100%;
+`;
+
+// TODO turn actionsColumnWidth to be dynamically measured
+const actionsHeaderCellCss = css`
+  background-color: var(--color-bg);
+  display: flex;
+  left: 0;
+  position: sticky;
+  width: ${actionsColumnWidth}px;
+  z-index: 3;
+`;
+
+const spacerCellCss = css`
+  display: flex;
+`;
+
+const pinnedHeaderCellCss = css`
+  z-index: 3;
+`;
 
 export const TableHeadRow = ({
   columnVirtualizer,
@@ -24,32 +50,21 @@ export const TableHeadRow = ({
   const rightHeaders = headerGroup.headers.filter((h) => h.column.getIsPinned() === 'right');
 
   return (
-    <tr key={headerGroup.id} style={{ display: 'flex', width: '100%' }}>
+    <tr key={headerGroup.id} className={rowCss}>
       {/* Row actions sticky column header */}
-      <th
-        style={{
-          backgroundColor: 'white',
-          display: 'flex',
-          left: 0,
-          position: 'sticky',
-          width: actionsColumnWidth,
-          zIndex: 3,
-        }}
-      >
-        Row
-      </th>
+      <th className={actionsHeaderCellCss}>Row</th>
       {/* Left pinned */}
       {leftHeaders.map((header) => (
         <TableHeadCell
           key={header.id}
+          className={cx(spacerCellCss, pinnedHeaderCellCss)}
           header={header}
           leftOffset={actionsColumnWidth}
-          style={{ zIndex: 3 }}
         />
       ))}
       {virtualizeColumns && virtualPaddingLeft ? (
         // fake empty column to the left for virtualization scroll padding
-        <th style={{ display: 'flex', width: virtualPaddingLeft }} />
+        <th className={spacerCellCss} style={{ width: virtualPaddingLeft }} />
       ) : null}
       {virtualizeColumns
         ? columnVirtualizer.getVirtualItems().map((virtualColumn) => {
@@ -60,7 +75,7 @@ export const TableHeadRow = ({
         : centerHeaders.map((header) => <TableHeadCell key={header.id} header={header} />)}
       {virtualizeColumns && virtualPaddingRight ? (
         // fake empty column to the right for virtualization scroll padding
-        <th style={{ display: 'flex', width: virtualPaddingRight }} />
+        <th className={spacerCellCss} style={{ width: virtualPaddingRight }} />
       ) : null}
       {/* Right pinned */}
       {rightHeaders.map((header) => (
@@ -69,4 +84,3 @@ export const TableHeadRow = ({
     </tr>
   );
 };
-

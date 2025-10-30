@@ -1,4 +1,5 @@
 import React, { forwardRef, useLayoutEffect } from 'react';
+import { css } from '@linaria/core';
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -81,6 +82,15 @@ export type DataTableProps<TData> = React.HTMLAttributes<HTMLTableElement> & {
    */
   style?: React.CSSProperties;
 };
+
+const tableContainerCss = css`
+  overflow: auto;
+  position: relative;
+`;
+
+const dataTableCss = css`
+  display: grid;
+`;
 
 const DataTableBase = <TData,>(
   {
@@ -169,16 +179,9 @@ const DataTableBase = <TData,>(
   }, [stickyHeader]);
 
   return (
-    <Box
-      ref={tableContainerRef}
-      style={{
-        overflow: 'auto', //our scrollable table container
-        position: 'relative', //needed for sticky header
-        ...style,
-      }}
-    >
+    <Box ref={tableContainerRef} className={tableContainerCss} style={style}>
       {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
-      <table ref={ref} style={{ display: 'grid' }} {...props}>
+      <table ref={ref} className={dataTableCss} {...props}>
         <DataTableHead
           columnVirtualizer={columnVirtualizer}
           isSticky={stickyHeader}

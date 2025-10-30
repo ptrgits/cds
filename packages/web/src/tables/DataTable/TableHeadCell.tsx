@@ -1,9 +1,41 @@
 import type { HTMLAttributes } from 'react';
+import { css } from '@linaria/core';
 import { flexRender, type Header } from '@tanstack/react-table';
 
+import { cx } from '../../cx';
 import { Box } from '../../layout';
 
 import { getColumnPinningStyles } from './getColumnPinningStyles';
+
+const tableHeadCellCss = css`
+  align-items: center;
+  background-color: var(--color-bg);
+  display: flex;
+`;
+
+const headCellContentCss = css`
+  align-items: center;
+  display: inline-flex;
+`;
+
+const sortableHeadCellCss = css`
+  cursor: pointer;
+  user-select: none;
+`;
+
+const pinControlsCss = css`
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-inline-start: 8px;
+`;
+
+const pinButtonCss = css`
+  background: none;
+  border: 1px solid var(--color-borderSubtle);
+  border-radius: 4px;
+  padding-inline: 8px;
+`;
 
 export type TableHeadCellProps = HTMLAttributes<HTMLTableCellElement> & {
   header: Header<any, unknown>;
@@ -22,16 +54,15 @@ export const TableHeadCell = ({
     <th
       key={header.id}
       {...props}
+      className={tableHeadCellCss}
       style={{
-        display: 'flex',
         width: header.getSize(),
-        backgroundColor: 'white',
         ...getColumnPinningStyles(header.column, leftOffset),
         ...styleProp,
       }}
     >
       <Box
-        className={header.column.getCanSort() ? 'cursor-pointer select-none' : ''}
+        className={cx(headCellContentCss, header.column.getCanSort() && sortableHeadCellCss)}
         onClick={header.column.getToggleSortingHandler()}
       >
         {flexRender(header.column.columnDef.header, header.getContext())}
@@ -41,40 +72,42 @@ export const TableHeadCell = ({
         }[header.column.getIsSorted() as string] ?? null}
       </Box>
       {!header.isPlaceholder && header.column.getCanPin() && (
-        <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginInlineStart: 8 }}>
+        <Box className={pinControlsCss}>
           {isPinned !== 'left' ? (
             <button
+              className={pinButtonCss}
               onClick={() => {
                 header.column.pin('left');
               }}
-              style={{ border: '1px solid', borderRadius: 4, paddingInline: 8 }}
+              type="button"
             >
               {'<='}
             </button>
           ) : null}
           {isPinned ? (
             <button
+              className={pinButtonCss}
               onClick={() => {
                 header.column.pin(false);
               }}
-              style={{ border: '1px solid', borderRadius: 4, paddingInline: 8 }}
+              type="button"
             >
               X
             </button>
           ) : null}
           {isPinned !== 'right' ? (
             <button
+              className={pinButtonCss}
               onClick={() => {
                 header.column.pin('right');
               }}
-              style={{ border: '1px solid', borderRadius: 4, paddingInline: 8 }}
+              type="button"
             >
               {'=>'}
             </button>
           ) : null}
-        </div>
+        </Box>
       )}
     </th>
   );
 };
-

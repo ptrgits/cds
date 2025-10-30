@@ -1,6 +1,9 @@
-import { type Ref } from 'react';
+import type { Ref } from 'react';
+import { css } from '@linaria/core';
 import { type Table } from '@tanstack/react-table';
 import type { Virtualizer } from '@tanstack/react-virtual';
+
+import { cx } from '../../cx';
 
 import { TableHeadRow } from './TableHeadRow';
 
@@ -15,6 +18,21 @@ export type DataTableHeadProps = {
   sectionRef?: Ref<HTMLTableSectionElement>;
 };
 
+const tableHeadBaseCss = css`
+  display: grid;
+`;
+
+const stickyHeadCss = css`
+  background: var(--color-bg);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+`;
+
+const nonStickyHeadCss = css`
+  position: relative;
+`;
+
 export const DataTableHead = ({
   columnVirtualizer,
   table,
@@ -27,13 +45,7 @@ export const DataTableHead = ({
   return (
     <thead
       ref={sectionRef}
-      style={{
-        display: 'grid',
-        position: isSticky ? 'sticky' : 'relative',
-        top: isSticky ? 0 : undefined,
-        zIndex: isSticky ? 3 : 1,
-        background: isSticky ? 'white' : undefined,
-      }}
+      className={cx(tableHeadBaseCss, isSticky ? stickyHeadCss : nonStickyHeadCss)}
     >
       {table.getHeaderGroups().map((headerGroup) => (
         <TableHeadRow
