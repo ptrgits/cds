@@ -1,8 +1,8 @@
 import { type Row } from '@tanstack/react-table';
 import { type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
 
-import { actionsColumnWidth } from './getColumnPinningStyles';
 import { DataTableBodyCell } from './DataTableBodyCell';
+import { actionsColumnWidth } from './getColumnPinningStyles';
 
 export type DataTableBodyRowProps = {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
@@ -34,7 +34,7 @@ export const DataTableBodyRow = ({
     <tr
       key={row.id}
       ref={
-        staticPosition || !rowVirtualizer
+        staticPosition || !rowVirtualizer || !virtualRow
           ? undefined
           : (node) => rowVirtualizer.measureElement(node)
       }
@@ -42,6 +42,14 @@ export const DataTableBodyRow = ({
       style={{
         display: 'flex',
         width: '100%',
+        ...(staticPosition || !virtualRow
+          ? {}
+          : {
+              left: 0,
+              position: 'absolute' as const,
+              top: 0,
+              transform: `translateY(${virtualRow.start}px)`,
+            }),
       }}
     >
       {/* Row actions sticky column */}
@@ -107,4 +115,3 @@ export const DataTableBodyRow = ({
     </tr>
   );
 };
-
