@@ -12,15 +12,11 @@ const pinnedSectionCss = css`
   background: var(--color-bg);
   display: grid;
   z-index: 3;
-`;
-
-const stickyTopSectionCss = css`
   position: sticky;
 `;
 
 const stickyBottomSectionCss = css`
   bottom: 0;
-  position: sticky;
 `;
 
 const virtualizedCenterSectionCss = css`
@@ -93,10 +89,7 @@ export const DataTableBody = ({
     <>
       {/* Top pinned rows */}
       {topRows.length > 0 && (
-        <tbody
-          className={cx(pinnedSectionCss, stickyTopSectionCss)}
-          style={{ top: headerOffsetTop }}
-        >
+        <tbody className={cx(pinnedSectionCss)} style={{ top: headerOffsetTop }}>
           {topRows.map((row, i) => (
             <DataTableBodyRow
               key={row.id}
