@@ -7,6 +7,8 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
+import { Box } from '../../layout/Box';
+
 import { DataTableBody } from './DataTableBody';
 import { DataTableHead } from './DataTableHead';
 
@@ -56,13 +58,28 @@ export type DataTableProps<TData> = React.HTMLAttributes<HTMLTableElement> & {
   /**
    * Enable/disable row virtualization for center (unpinned) rows.
    * Defaults to true to preserve existing behavior.
+   * When you set this to true, please set a fixed height to the table container through the `style` prop, otherwise it will still render all rows.
    */
   virtualizeRows?: boolean;
+  /**
+   * Estimate the size of a virtual column.
+   * @default (index) => centerColumns[index].getSize()
+   */
+  estimateVirtualColumnWidth?: (index: number) => number;
+  /**
+   * Estimate the height of a virtual row.
+   * @default () => 33
+   */
+  estimateVirtualRowHeight?: (index: number) => number;
   /**
    * Enable/disable sticky header for the table.
    * Defaults to true to preserve existing behavior.
    */
   stickyHeader?: boolean;
+  /**
+   * Style the table container.
+   */
+  style?: React.CSSProperties;
 };
 
 const DataTableBase = <TData,>(
@@ -73,6 +90,9 @@ const DataTableBase = <TData,>(
     virtualizeColumns,
     virtualizeRows,
     stickyHeader = true,
+    estimateVirtualColumnWidth,
+    estimateVirtualRowHeight,
+    style,
     ...props
   }: DataTableProps<TData>,
   ref: React.Ref<HTMLTableElement>,
@@ -92,23 +112,23 @@ const DataTableBase = <TData,>(
   //we are using a slightly different virtualization strategy for columns (compared to virtual rows) in order to support dynamic row heights
   const columnVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableCellElement>({
     count: centerColumns.length,
-    estimateSize: (index) => centerColumns[index].getSize(), //estimate width of each center column for accurate scrollbar dragging
+    enabled: virtualizeColumns ?? true,
+    estimateSize: estimateVirtualColumnWidth ?? ((index) => centerColumns[index].getSize()), //estimate width of each center column for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     horizontal: true,
     overscan: defaultVirtualColumnsOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
   });
 
-  const virtualColumns = columnVirtualizer.getVirtualItems();
+  const virtualColumns = virtualizeColumns ? columnVirtualizer.getVirtualItems() : [];
 
   //different virtualization strategy for columns - instead of absolute and translateY, we add empty columns to the left and right
   let virtualPaddingLeft: number | undefined;
   let virtualPaddingRight: number | undefined;
 
   if (virtualizeColumns && columnVirtualizer && virtualColumns?.length) {
-    virtualPaddingLeft = virtualizeColumns ? (virtualColumns[0]?.start ?? 0) : undefined;
-    virtualPaddingRight = virtualizeColumns
-      ? columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - 1]?.end ?? 0)
-      : undefined;
+    virtualPaddingLeft = virtualColumns[0]?.start ?? 0;
+    virtualPaddingRight =
+      columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
   }
 
   const headerRef = React.useRef<HTMLTableSectionElement | null>(null);
@@ -149,12 +169,12 @@ const DataTableBase = <TData,>(
   }, [stickyHeader]);
 
   return (
-    <div
+    <Box
       ref={tableContainerRef}
       style={{
         overflow: 'auto', //our scrollable table container
         position: 'relative', //needed for sticky header
-        height: '500px', //should be a fixed height
+        ...style,
       }}
     >
       {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
@@ -170,6 +190,7 @@ const DataTableBase = <TData,>(
         />
         <DataTableBody
           columnVirtualizer={columnVirtualizer}
+          estimateVirtualRowHeight={estimateVirtualRowHeight}
           headerOffsetTop={stickyHeader ? headerHeight : 0}
           table={table}
           tableContainerRef={tableContainerRef}
@@ -179,7 +200,7 @@ const DataTableBase = <TData,>(
           virtualizeRows={virtualizeRows}
         />
       </table>
-    </div>
+    </Box>
   );
 };
 

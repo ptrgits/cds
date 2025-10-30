@@ -15,10 +15,16 @@ export type DataTableBodyProps = {
   virtualizeColumns?: boolean;
   /** Whether to virtualize center rows rendering */
   virtualizeRows?: boolean;
+  /**
+   * Estimate the height of a virtual row.
+   * @default () => 33
+   */
+  estimateVirtualRowHeight?: (index: number) => number;
 };
 
 export const DataTableBody = ({
   columnVirtualizer,
+  estimateVirtualRowHeight,
   table,
   tableContainerRef,
   virtualPaddingLeft,
@@ -35,7 +41,8 @@ export const DataTableBody = ({
   //dynamic row height virtualization - alternatively you could use a simpler fixed row height strategy without the need for `measureElement`
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: centerRows.length,
-    estimateSize: () => 33, //estimate row height for accurate scrollbar dragging
+    enabled: virtualizeRows,
+    estimateSize: estimateVirtualRowHeight ?? (() => 33), //estimate row height for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:

@@ -64,6 +64,7 @@ export const DataTableExample = () => {
           setColumnOrder(ids);
         }}
         stickyHeader={stickyHeader}
+        style={{ height: '400px' }}
         tableOptions={{
           data,
           columns,
