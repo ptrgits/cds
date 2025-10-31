@@ -8,6 +8,23 @@ All notable changes to this project will be documented in this file.
 
 <!-- template-start -->
 
+## 8.20.0 (10/30/2025 PST)
+
+#### 🚀 Updates
+
+- Added Calendar component to Mobile. [[#139](https://github.com/coinbase/cds/pull/139)]
+- Integrated Calendar into DatePicker. [[#139](https://github.com/coinbase/cds/pull/139)]
+
+#### 🐞 Fixes
+
+- Added "triggerDisabled" prop for Tooltip for accessibility. [[#139](https://github.com/coinbase/cds/pull/139)]
+- Removed react-native-date-picker dependencies. [[#139](https://github.com/coinbase/cds/pull/139)]
+
+#### 📘 Misc
+
+- Added unit and a11y tests for Calendar and DatePicker. [[#139](https://github.com/coinbase/cds/pull/139)]
+- Added Mobile docs for Calendar, updated mobile docs for DatePicker and Tooltip. [[#139](https://github.com/coinbase/cds/pull/139)]
+
 ## 8.19.0 (10/29/2025 PST)
 
 #### 🚀 Updates
