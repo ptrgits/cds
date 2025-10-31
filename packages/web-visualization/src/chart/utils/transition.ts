@@ -20,32 +20,6 @@ export const defaultTransition: Transition = {
   mass: 4,
 };
 
-export type UsePathTransitionParams = {
-  /**
-   * Current target path to animate to.
-   */
-  currentPath: string;
-  /**
-   * Initial path for enter animation.
-   * When provided, the first animation will go from initialPath to currentPath.
-   * If not provided, defaults to currentPath (no enter animation).
-   */
-  initialPath?: string;
-  /**
-   * Transition configurations for different animation phases.
-   */
-  transitionConfigs?: {
-    /**
-     * Transition used when the path first enters/mounts.
-     */
-    enter?: Transition;
-    /**
-     * Transition used when the path morphs to new data.
-     */
-    update?: Transition;
-  };
-};
-
 /**
  * Custom hook that manages path animation state and transitions using d3-interpolate-path
  * with framer-motion's transition system (supports springs, tweens, etc.).
@@ -53,7 +27,9 @@ export type UsePathTransitionParams = {
  * This provides smooth path morphing with configurable transition types.
  * When the path changes, the animation will start from the previous completed position to the new path.
  *
- * @param params - Configuration for path transitions
+ * @param currentPath - Current target path to animate to
+ * @param initialPath - Initial path for enter animation. When provided, the first animation will go from initialPath to currentPath. If not provided, defaults to currentPath (no enter animation)
+ * @param transitionConfigs - Transition configurations for different animation phases
  * @returns MotionValue containing the current interpolated path string
  *
  * @example
@@ -80,7 +56,31 @@ export const usePathTransition = ({
   currentPath,
   initialPath,
   transitionConfigs,
-}: UsePathTransitionParams): MotionValue<string> => {
+}: {
+  /**
+   * Current target path to animate to.
+   */
+  currentPath: string;
+  /**
+   * Initial path for enter animation.
+   * When provided, the first animation will go from initialPath to currentPath.
+   * If not provided, defaults to currentPath (no enter animation).
+   */
+  initialPath?: string;
+  /**
+   * Transition configurations for different animation phases.
+   */
+  transitionConfigs?: {
+    /**
+     * Transition used when the path first enters/mounts.
+     */
+    enter?: Transition;
+    /**
+     * Transition used when the path morphs to new data.
+     */
+    update?: Transition;
+  };
+}): MotionValue<string> => {
   const isInitialRender = useRef(true);
   const previousPathRef = useRef(initialPath ?? currentPath);
   const animationRef = useRef<AnimationPlaybackControls | null>(null);

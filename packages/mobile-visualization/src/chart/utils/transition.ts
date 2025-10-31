@@ -162,8 +162,7 @@ export const buildTransition = (targetValue: number, config: TransitionConfig): 
  * @param currentPath - Current target path to animate to
  * @param initialPath - Initial path for enter animation. When provided, the first animation will go from initialPath to currentPath. If not provided, defaults to currentPath (no enter animation)
  * @param animate - Whether to animate path transitions (default: true)
- * @param transitionConfig - Transition configuration for path updates (default: defaultTransition)
- * @param initialTransitionConfig - Transition configuration specifically for the initial/enter animation. If provided, this will be used for the first animation only. Subsequent animations will use the regular transitionConfig
+ * @param transitionConfigs - Transition configurations for different animation phases
  * @returns Animated SkPath as a shared value
  *
  * @example
@@ -171,7 +170,9 @@ export const buildTransition = (targetValue: number, config: TransitionConfig): 
  * const path = usePathTransition({
  *   currentPath: d ?? '',
  *   animate: shouldAnimate,
- *   transitionConfig: { type: 'timing', duration: 3000 }
+ *   transitionConfigs: {
+ *     update: { type: 'timing', duration: 3000 }
+ *   }
  * });
  *
  * @example
@@ -180,16 +181,17 @@ export const buildTransition = (targetValue: number, config: TransitionConfig): 
  *   currentPath: targetPath,
  *   initialPath: baselinePath,
  *   animate: true,
- *   transitionConfig: { type: 'timing', duration: 300 },
- *   initialTransitionConfig: { type: 'timing', duration: 1000 }
+ *   transitionConfigs: {
+ *     enter: { type: 'timing', duration: 1000 },
+ *     update: { type: 'timing', duration: 300 }
+ *   }
  * });
  */
 export const usePathTransition = ({
   currentPath,
   initialPath,
   animate = true,
-  transitionConfig = defaultTransition,
-  initialTransitionConfig,
+  transitionConfigs,
 }: {
   /**
    * Current target path to animate to.
@@ -207,16 +209,18 @@ export const usePathTransition = ({
    */
   animate?: boolean;
   /**
-   * Transition configuration for path updates.
-   * @default defaultTransition
+   * Transition configurations for different animation phases.
    */
-  transitionConfig?: TransitionConfig;
-  /**
-   * Transition configuration specifically for the initial/enter animation.
-   * If provided, this will be used for the first animation only.
-   * Subsequent animations will use the regular transitionConfig.
-   */
-  initialTransitionConfig?: TransitionConfig;
+  transitionConfigs?: {
+    /**
+     * Transition used when the path first enters/mounts.
+     */
+    enter?: TransitionConfig;
+    /**
+     * Transition used when the path morphs to new data.
+     */
+    update?: TransitionConfig;
+  };
 }): SharedValue<SkPath> => {
   const isInitialRender = useRef(true);
   const previousPathRef = useRef(initialPath ?? currentPath);
@@ -226,11 +230,11 @@ export const usePathTransition = ({
     if (previousPathRef.current !== currentPath) {
       if (animate) {
         progress.value = 0;
-        // Use initialTransitionConfig for first render if provided, otherwise use regular config
+        // Use enter config for first render if provided, otherwise use update config or default
         const configToUse =
-          isInitialRender.current && initialTransitionConfig
-            ? initialTransitionConfig
-            : transitionConfig;
+          isInitialRender.current && transitionConfigs?.enter
+            ? transitionConfigs.enter
+            : (transitionConfigs?.update ?? defaultTransition);
         progress.value = buildTransition(1, configToUse);
       } else {
         progress.value = 1;
@@ -240,7 +244,7 @@ export const usePathTransition = ({
     }
     // progress is a SharedValue and should not trigger re-renders
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPath, animate, transitionConfig, initialTransitionConfig]);
+  }, [currentPath, animate, transitionConfigs]);
 
   return useD3PathInterpolation(progress, previousPathRef.current, currentPath);
 };
