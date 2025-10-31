@@ -258,8 +258,11 @@ export const usePathTransition = ({
   }, [currentPath, initialPath, progress]);
 
   useEffect(() => {
-    // Only proceed if the target path has actually changed
-    if (targetPathRef.current !== currentPath) {
+    const isPathChange = targetPathRef.current !== currentPath;
+    const isInitialAnimation = isInitialRender.current && initialPath;
+
+    // Trigger animation if path changed OR if this is the initial render with an initialPath
+    if (isPathChange || isInitialAnimation) {
       // Update refs for next render
       previousPathRef.current = fromPath;
       targetPathRef.current = toPath;
@@ -274,7 +277,7 @@ export const usePathTransition = ({
 
       isInitialRender.current = false;
     }
-  }, [currentPath, transitionConfigs, fromPath, toPath, progress]);
+  }, [currentPath, initialPath, transitionConfigs, fromPath, toPath, progress]);
 
   return useD3PathInterpolation(progress, fromPath, toPath);
 };

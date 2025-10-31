@@ -1,10 +1,10 @@
 import { memo, useMemo } from 'react';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
-import { Path as SkiaPath } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
+import { Path } from '../Path';
 import { getBarPath } from '../utils';
-import { type TransitionConfig, usePathTransition } from '../utils/transition';
+import { type TransitionConfig } from '../utils/transition';
 
 import type { BarComponentProps } from './Bar';
 
@@ -97,20 +97,20 @@ export const DefaultBar = memo<DefaultBarProps>(
       );
     }, [x, originY, y, height, width, borderRadius, roundTop, roundBottom]);
 
-    const path = usePathTransition({
-      currentPath: targetPath,
-      initialPath,
-      animate,
-      transitionConfigs,
-    });
-
     return (
-      <SkiaPath
-        color={defaultFill}
-        opacity={fillOpacity}
-        path={path}
+      <Path
+        animate={animate}
+        clipPath={undefined}
+        d={targetPath}
+        fill={stroke ? 'none' : defaultFill}
+        fillOpacity={fillOpacity}
+        initialPath={initialPath}
+        stroke={stroke}
         strokeWidth={strokeWidth}
-        style={stroke ? 'stroke' : 'fill'}
+        transitionConfigs={{
+          enter: transitionConfigs?.enter,
+          update: transitionConfigs?.update,
+        }}
       />
     );
   },

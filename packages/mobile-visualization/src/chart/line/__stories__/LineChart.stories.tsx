@@ -906,10 +906,10 @@ function AnimatedGainLossChart() {
     // Area gradient: combines hard color change with continuous opacity fade
     const areaGradient = {
       stops: ({ min, max }: { min: number; max: number }) => [
-        { offset: min, color: negativeColor, opacity: 0.4 },
+        { offset: min, color: negativeColor, opacity: 1 },
         { offset: 0, color: negativeColor, opacity: 0 },
         { offset: 0, color: positiveColor, opacity: 0 },
-        { offset: max, color: positiveColor, opacity: 0.4 },
+        { offset: max, color: positiveColor, opacity: 1 },
       ],
     };
 
