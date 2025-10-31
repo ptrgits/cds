@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { interpolatePath } from 'd3-interpolate-path';
 import {
-  animate as framerAnimate,
+  animate,
   type AnimationPlaybackControls,
   type MotionValue,
   type Transition,
   useMotionValue,
   useTransform,
+  type ValueAnimationTransition,
 } from 'framer-motion';
 
 /**
@@ -21,11 +22,12 @@ export const defaultTransition: Transition = {
 };
 
 /**
- * Custom hook that manages path animation state and transitions using d3-interpolate-path
+ * Hook that manages path animation state and transitions using d3-interpolate-path
  * with framer-motion's transition system (supports springs, tweens, etc.).
  *
- * This provides smooth path morphing with configurable transition types.
- * When the path changes, the animation will start from the previous completed position to the new path.
+ * This provides smooth path morphing with configurable transition types and automatic
+ * interruption handling. When an animation is interrupted by a new path change, it will
+ * smoothly transition from the current interpolated position to the new target.
  *
  * @param currentPath - Current target path to animate to
  * @param initialPath - Initial path for enter animation. When provided, the first animation will go from initialPath to currentPath. If not provided, defaults to currentPath (no enter animation)
@@ -83,13 +85,9 @@ export const usePathTransition = ({
 }): MotionValue<string> => {
   const isInitialRender = useRef(true);
   const previousPathRef = useRef(initialPath ?? currentPath);
+  const targetPathRef = useRef(currentPath);
   const animationRef = useRef<AnimationPlaybackControls | null>(null);
   const progress = useMotionValue(0);
-  const targetPathRef = useRef(currentPath);
-
-  // Store transition configs in a ref so they don't trigger effect re-runs
-  const transitionConfigsRef = useRef(transitionConfigs);
-  transitionConfigsRef.current = transitionConfigs;
 
   // Derive the interpolated path from progress using useTransform
   const interpolatedPath = useTransform(progress, (latest) => {
@@ -98,67 +96,41 @@ export const usePathTransition = ({
   });
 
   useEffect(() => {
-    console.log('⚡ useEffect triggered', {
-      targetMatchesCurrent: targetPathRef.current === currentPath,
-      hasAnimation: !!animationRef.current,
-    });
-
     // Only proceed if the target path has actually changed
     if (targetPathRef.current !== currentPath) {
       // Cancel any ongoing animation before starting a new one
       const wasAnimating = !!animationRef.current;
       if (animationRef.current) {
-        console.log('🛑 Cancelling existing animation');
         animationRef.current.cancel();
         animationRef.current = null;
       }
 
-      // ALWAYS capture the current interpolated path
-      // This is our source of truth for where we currently are
       const currentInterpolatedPath = interpolatedPath.get();
 
-      console.log('🔄 Path change detected', {
-        wasAnimating,
-        currentTarget: targetPathRef.current.substring(0, 50) + '...',
-        newPath: currentPath.substring(0, 50) + '...',
-        currentInterpolatedPath: currentInterpolatedPath.substring(0, 50) + '...',
-      });
-
-      // If we were animating, the interpolated path is our current position
-      // Use it as the starting point for the next animation
-      if (
-        wasAnimating &&
+      // If we were animating and the interpolated path is different from both start and end,
+      // use it as the starting point for the next animation (smooth interruption)
+      const isInterpolatedPosition =
         currentInterpolatedPath !== previousPathRef.current &&
-        currentInterpolatedPath !== currentPath
-      ) {
-        console.log('⚠️ Animation interrupted! Using interpolated position as start');
+        currentInterpolatedPath !== currentPath;
+
+      if (wasAnimating && isInterpolatedPosition) {
         previousPathRef.current = currentInterpolatedPath;
       }
 
       targetPathRef.current = currentPath;
 
-      // Determine which transition config to use
-      const configs = transitionConfigsRef.current;
       const configToUse =
-        isInitialRender.current && configs?.enter
-          ? configs.enter
-          : (configs?.update ?? defaultTransition);
+        isInitialRender.current && transitionConfigs?.enter
+          ? transitionConfigs.enter
+          : (transitionConfigs?.update ?? defaultTransition);
 
-      console.log('🚀 Starting animation', {
-        configType: isInitialRender.current && configs?.enter ? 'enter' : 'update',
-        fromPath: previousPathRef.current.substring(0, 50) + '...',
-        toPath: targetPathRef.current.substring(0, 50) + '...',
-      });
-
-      // Animate progress from 0 to 1 using framer-motion
       progress.set(0);
-      animationRef.current = framerAnimate(progress, 1, {
-        ...(configToUse as any),
+      animationRef.current = animate(progress, 1, {
+        ...(configToUse as ValueAnimationTransition<number>),
         onComplete: () => {
-          console.log('✨ Animation complete');
           previousPathRef.current = currentPath;
         },
-      } as any);
+      });
 
       isInitialRender.current = false;
     }
@@ -168,11 +140,7 @@ export const usePathTransition = ({
         animationRef.current.cancel();
       }
     };
-    // Note: progress and interpolatedPath are MotionValues with stable references.
-    // Including them would cause this effect to run on every animation frame, breaking interruption logic.
-    // transitionConfigs is stored in a ref to prevent re-runs when its object identity changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPath]);
+  }, [currentPath, transitionConfigs, progress, interpolatedPath]);
 
   return interpolatedPath;
 };
