@@ -254,7 +254,12 @@ describe('DatePicker', () => {
     const mockOnClose = jest.fn();
 
     render(
-      <DatePickerExample label="Date" onCancel={mockOnCancel} onClose={mockOnClose} onOpen={mockOnOpen} />,
+      <DatePickerExample
+        label="Date"
+        onCancel={mockOnCancel}
+        onClose={mockOnClose}
+        onOpen={mockOnOpen}
+      />,
     );
 
     // Open calendar
@@ -534,7 +539,9 @@ describe('DatePicker', () => {
     const seedDate = new Date(2024, 6, 15); // July 15, 2024
     const highlightedDates = [new Date(2024, 6, 10), new Date(2024, 6, 20)];
 
-    render(<DatePickerExample highlightedDates={highlightedDates} label="Date" seedDate={seedDate} />);
+    render(
+      <DatePickerExample highlightedDates={highlightedDates} label="Date" seedDate={seedDate} />,
+    );
 
     // Open calendar
     const calendarButton = screen.getByLabelText('Open calendar');
@@ -609,7 +616,9 @@ describe('DatePicker', () => {
     const mockOnConfirm = jest.fn();
     const mockOnChangeDate = jest.fn();
 
-    render(<DatePickerExample label="Date" onChangeDate={mockOnChangeDate} onConfirm={mockOnConfirm} />);
+    render(
+      <DatePickerExample label="Date" onChangeDate={mockOnChangeDate} onConfirm={mockOnConfirm} />,
+    );
 
     // Open calendar
     const calendarButton = screen.getByLabelText('Open calendar');
@@ -631,4 +640,3 @@ describe('DatePicker', () => {
     expect(mockOnChangeDate).not.toHaveBeenCalled();
   });
 });
-

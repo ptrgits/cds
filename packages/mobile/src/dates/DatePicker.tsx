@@ -127,7 +127,7 @@ export const DatePicker = memo(
         invalidDateError = 'Please enter a valid date',
         disabledDateError = 'Date unavailable',
         label,
-        accessibilityHint = "Enter date or select from calendar using the calendar button.",
+        accessibilityHint = 'Enter date or select from calendar using the calendar button.',
         accessibilityLabel,
         accessibilityLabelledBy,
         calendarIconButtonAccessibilityLabel = 'Open calendar',
@@ -275,7 +275,9 @@ export const DatePicker = memo(
                 <Button
                   block
                   compact
-                  accessibilityHint={!calendarSelectedDate ? confirmButtonDisabledAccessibilityHint : undefined}
+                  accessibilityHint={
+                    !calendarSelectedDate ? confirmButtonDisabledAccessibilityHint : undefined
+                  }
                   accessibilityLabel={confirmButtonAccessibilityLabel}
                   disabled={!calendarSelectedDate}
                   onPress={handleConfirmCalendar}

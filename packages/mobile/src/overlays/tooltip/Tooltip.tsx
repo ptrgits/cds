@@ -66,7 +66,9 @@ export const Tooltip = memo(
 
     const computedAccessibilityHint = useMemo(
       () =>
-        typeof children === 'string' && accessibilityHint === undefined ? children : accessibilityHint,
+        typeof children === 'string' && accessibilityHint === undefined
+          ? children
+          : accessibilityHint,
       [children, accessibilityHint],
     );
 
@@ -119,10 +121,7 @@ export const Tooltip = memo(
 
     return (
       <View ref={subjectRef} collapsable={false} {...accessibilityPropsForWrapper}>
-        <TouchableOpacity
-          {...accessibilityPropsForTrigger}
-          onPress={handlePressSubject}
-        >
+        <TouchableOpacity {...accessibilityPropsForTrigger} onPress={handlePressSubject}>
           {children}
         </TouchableOpacity>
 

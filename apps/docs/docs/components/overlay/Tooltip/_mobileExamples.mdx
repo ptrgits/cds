@@ -44,12 +44,7 @@ function Example() {
       triggerDisabled
       accessibilityLabel="Premium feature. Disabled. This feature is unavailable."
     >
-      <Box
-        background="bg"
-        borderRadius={200}
-        padding={2}
-        opacity={0.4}
-      >
+      <Box background="bg" borderRadius={200} padding={2} opacity={0.4}>
         <Text>Disabled feature</Text>
       </Box>
     </Tooltip>
@@ -83,10 +78,7 @@ By default, tooltips use an inverted color scheme. You can disable this with `in
 ```jsx
 function Example() {
   return (
-    <Tooltip
-      content="This tooltip uses the regular color scheme"
-      invertColorScheme={false}
-    >
+    <Tooltip content="This tooltip uses the regular color scheme" invertColorScheme={false}>
       <Button>Show tooltip</Button>
     </Tooltip>
   );

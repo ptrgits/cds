@@ -6,12 +6,7 @@ A basic Calendar with date selection functionality. The Calendar component is us
 function Example() {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  return (
-    <Calendar
-      selectedDate={selectedDate}
-      onPressDate={setSelectedDate}
-    />
-  );
+  return <Calendar selectedDate={selectedDate} onPressDate={setSelectedDate} />;
 }
 ```
 
@@ -23,12 +18,7 @@ A Calendar without an initially selected date.
 function Example() {
   const [selectedDate, setSelectedDate] = useState(null);
 
-  return (
-    <Calendar
-      selectedDate={selectedDate}
-      onPressDate={setSelectedDate}
-    />
-  );
+  return <Calendar selectedDate={selectedDate} onPressDate={setSelectedDate} />;
 }
 ```
 
@@ -39,17 +29,11 @@ The `seedDate` prop controls which month the Calendar opens to when there is no 
 ```jsx
 function Example() {
   const [selectedDate, setSelectedDate] = useState(null);
-  
+
   const today = new Date(new Date().setHours(0, 0, 0, 0));
   const seedDate = new Date(today.getFullYear(), today.getMonth() + 1, 15);
 
-  return (
-    <Calendar
-      selectedDate={selectedDate}
-      onPressDate={setSelectedDate}
-      seedDate={seedDate}
-    />
-  );
+  return <Calendar selectedDate={selectedDate} onPressDate={setSelectedDate} seedDate={seedDate} />;
 }
 ```
 
@@ -84,7 +68,7 @@ Restrict selection to future dates by setting `minDate` to today.
 ```jsx
 function Example() {
   const [selectedDate, setSelectedDate] = useState(null);
-  
+
   const today = new Date(new Date().setHours(0, 0, 0, 0));
 
   return (
@@ -105,7 +89,7 @@ Use `highlightedDates` to visually emphasize specific dates or date ranges. A nu
 ```jsx
 function Example() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
+
   const today = new Date(new Date().setHours(0, 0, 0, 0));
   const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
   const nextWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
@@ -127,30 +111,30 @@ Use `disabledDates` to prevent selection of specific dates or date ranges. Make 
 ```jsx
 function Example() {
   const [selectedDate, setSelectedDate] = useState(null);
-  
+
   const today = new Date(new Date().setHours(0, 0, 0, 0));
-  
+
   // Disable weekends for demonstration
   const getNextWeekendDates = (centerDate) => {
     const weekends = [];
     const currentDate = new Date(centerDate);
-    
+
     // Find next 4 weekends
     for (let i = 0; i < 4; i++) {
       // Find next Saturday
       const daysUntilSaturday = (6 - currentDate.getDay() + 7) % 7 || 7;
       currentDate.setDate(currentDate.getDate() + daysUntilSaturday);
-      
+
       const saturday = new Date(currentDate);
       const sunday = new Date(currentDate);
       sunday.setDate(sunday.getDate() + 1);
-      
+
       weekends.push([saturday, sunday]);
-      
+
       // Move to next week
       currentDate.setDate(currentDate.getDate() + 7);
     }
-    
+
     return weekends;
   };
 
@@ -172,7 +156,7 @@ Highlight a date range using a tuple `[startDate, endDate]`.
 ```jsx
 function Example() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
+
   const today = new Date(new Date().setHours(0, 0, 0, 0));
   const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
   const nextWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
@@ -194,7 +178,7 @@ Hide the navigation arrows with `hideControls`. This is typically used when `min
 ```jsx
 function Example() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
+
   const today = new Date(new Date().setHours(0, 0, 0, 0));
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -219,12 +203,7 @@ Disable the entire Calendar with the `disabled` prop.
 function Example() {
   const selectedDate = new Date();
 
-  return (
-    <Calendar
-      selectedDate={selectedDate}
-      disabled
-    />
-  );
+  return <Calendar selectedDate={selectedDate} disabled />;
 }
 ```
 
@@ -235,7 +214,7 @@ Always provide accessibility labels for the navigation controls and error messag
 ```jsx
 function Example() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
+
   const today = new Date(new Date().setHours(0, 0, 0, 0));
   const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
 

@@ -103,10 +103,7 @@ describe('Tooltip', () => {
 
   it('sets accessibilityRole to "text" when triggerDisabled is true', () => {
     render(
-      <MockTooltip
-        triggerDisabled
-        accessibilityHint="disabled-date-hint"
-      >
+      <MockTooltip triggerDisabled accessibilityHint="disabled-date-hint">
         <Text>{subjectText}</Text>
       </MockTooltip>,
     );
@@ -117,10 +114,7 @@ describe('Tooltip', () => {
 
   it('sets accessibilityRole to "button" when triggerDisabled is false', () => {
     render(
-      <MockTooltip
-        accessibilityHint="enabled-date-hint"
-        triggerDisabled={false}
-      >
+      <MockTooltip accessibilityHint="enabled-date-hint" triggerDisabled={false}>
         <Text>{subjectText}</Text>
       </MockTooltip>,
     );
@@ -143,7 +137,7 @@ describe('Tooltip', () => {
 
     const wrapper = screen.getByAccessibilityHint('disabled-but-interactive-hint');
     expect(wrapper.props.accessibilityRole).toBe('text');
-    
+
     const touchable = screen.getByText(subjectText);
     fireEvent.press(touchable);
 

@@ -434,12 +434,7 @@ export const Calendar = memo(
           </HStack>
 
           {/* Days of week header */}
-          <HStack
-            aria-hidden={true}
-            gap={1}
-            justifyContent="space-between"
-            paddingBottom={1}
-          >
+          <HStack aria-hidden={true} gap={1} justifyContent="space-between" paddingBottom={1}>
             {daysOfWeek.map((day) => (
               <Box
                 key={day}

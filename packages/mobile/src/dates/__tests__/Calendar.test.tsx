@@ -17,7 +17,7 @@ describe('Calendar', () => {
     const seedDate = new Date(2024, 6, 15);
     const minDate = new Date(2024, 6, 1);
     const maxDate = new Date(2024, 6, 31);
-    
+
     render(<CalendarExample maxDate={maxDate} minDate={minDate} seedDate={seedDate} />);
 
     expect(screen.getByTestId(testID)).toBeAccessible({
@@ -338,4 +338,3 @@ describe('Calendar', () => {
     expect(todayButton).toHaveProp('accessibilityHint', 'Today');
   });
 });
-

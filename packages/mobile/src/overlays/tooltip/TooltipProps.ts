@@ -1,4 +1,10 @@
-import type { AccessibilityRole, AccessibilityState, Animated, LayoutRectangle, ViewProps } from 'react-native';
+import type {
+  AccessibilityRole,
+  AccessibilityState,
+  Animated,
+  LayoutRectangle,
+  ViewProps,
+} from 'react-native';
 import type { ThemeVars } from '@coinbase/cds-common/core/theme';
 import type {
   BaseTooltipPlacement,
