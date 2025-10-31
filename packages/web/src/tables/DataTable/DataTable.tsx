@@ -10,13 +10,6 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { Box } from '../../layout/Box';
 
-import {
-  type ActionColumnBodyComponent,
-  type ActionColumnHeadComponent,
-  DefaultActionColumnBody,
-  DefaultActionColumnHead,
-  defaultActionsColumnWidth,
-} from './ActionColumnComponents';
 import { DataTableBody } from './DataTableBody';
 import { DataTableHead } from './DataTableHead';
 
@@ -30,20 +23,6 @@ export type DataTableOptions<TData> = Omit<
 >;
 
 export type DataTableProps<TData> = React.HTMLAttributes<HTMLTableElement> & {
-  /**
-   * Custom renderer for the sticky actions column body cell. Replace to provide bespoke controls;
-   * ensure it renders with the same width as the corresponding head component.
-   */
-  ActionColumnBodyComponent?: ActionColumnBodyComponent<TData>;
-  /**
-   * Custom renderer for the sticky actions column head cell. Replace to align with custom body
-   * content and maintain a consistent width.
-   */
-  ActionColumnHeadComponent?: ActionColumnHeadComponent<TData>;
-  /**
-   * Width applied to the sticky actions column. Defaults to the design-system standard.
-   */
-  actionsColumnWidth?: number;
   /**
    * Options passed directly to TanStack's useReactTable to construct the table instance.
    * This gives consumers full control over data, columns, state and all table behaviors.
@@ -117,9 +96,6 @@ const dataTableCss = css`
 
 const DataTableBase = <TData,>(
   {
-    ActionColumnBodyComponent = DefaultActionColumnBody,
-    ActionColumnHeadComponent = DefaultActionColumnHead,
-    actionsColumnWidth = defaultActionsColumnWidth,
     tableOptions,
     onRowChange,
     onColumnChange,
@@ -167,9 +143,6 @@ const DataTableBase = <TData,>(
       columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
   }
 
-  const rows = table.getRowModel().rows;
-  const isRowSelectionEnabled = rows.some((row) => row.getCanSelect?.());
-
   const headerRef = useRef<HTMLTableSectionElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -212,10 +185,7 @@ const DataTableBase = <TData,>(
       {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
       <table ref={ref} className={dataTableCss} {...props}>
         <DataTableHead
-          ActionColumnHeadComponent={ActionColumnHeadComponent}
-          actionsColumnWidth={actionsColumnWidth}
           columnVirtualizer={columnVirtualizer}
-          enableRowSelection={isRowSelectionEnabled}
           isSticky={stickyHeader}
           sectionRef={headerRef}
           table={table}
@@ -224,10 +194,7 @@ const DataTableBase = <TData,>(
           virtualizeColumns={virtualizeColumns}
         />
         <DataTableBody
-          ActionColumnBodyComponent={ActionColumnBodyComponent}
-          actionsColumnWidth={actionsColumnWidth}
           columnVirtualizer={columnVirtualizer}
-          enableRowSelection={isRowSelectionEnabled}
           estimateVirtualRowHeight={estimateVirtualRowHeight}
           headerOffsetTop={stickyHeader ? headerHeight : 0}
           table={table}

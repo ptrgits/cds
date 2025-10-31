@@ -1,15 +1,22 @@
 import React from 'react';
+import { css } from '@linaria/core';
 import type { Meta } from '@storybook/react';
+import type { ColumnPinningState } from '@tanstack/react-table';
 
+import { IconButton } from '../../buttons/IconButton';
 import { Checkbox } from '../../controls';
-import { HStack, VStack } from '../../layout';
+import { Box, HStack, VStack } from '../../layout';
 import { Text } from '../../typography/Text';
 import type { ColumnDef, SortingState } from '../DataTable';
-import { DataTable } from '../DataTable/DataTable';
+import { ActionColumnIds, checkColumnConfig, DataTable } from '../DataTable';
 
 export default {
   title: 'Components/Table/DataTable',
 } as Meta;
+
+const actionCellCss = css`
+  padding: var(--space-2);
+`;
 
 type RowData = { rowId: string } & Record<`col${number}`, number>;
 
@@ -20,7 +27,52 @@ export const DataTableExample = () => {
   const [virtualizeColumns, setVirtualizeColumns] = React.useState(true);
   const [stickyHeader, setStickyHeader] = React.useState(true);
   const [rowSelection, setRowSelection] = React.useState({});
-  const columns = React.useMemo<ColumnDef<RowData>[]>(() => {
+  const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>({
+    left: [ActionColumnIds.select, 'pinTop', 'pinBottom'],
+    right: [],
+  });
+  const actionColumns = React.useMemo<ColumnDef<RowData>[]>(
+    () => [
+      checkColumnConfig,
+      {
+        id: 'pinTop',
+        cell: ({ row }) => (
+          <Box className={actionCellCss}>
+            <IconButton
+              compact
+              name={row.getIsPinned?.() === 'top' ? 'close' : 'arrowUp'}
+              onClick={() => {
+                row.pin(row.getIsPinned?.() === 'top' ? false : 'top');
+              }}
+            />
+          </Box>
+        ),
+        enableSorting: false,
+        enablePinning: false,
+        size: 72,
+      },
+      {
+        id: 'pinBottom',
+        cell: ({ row }) => (
+          <Box className={actionCellCss}>
+            <IconButton
+              compact
+              name={row.getIsPinned?.() === 'bottom' ? 'close' : 'arrowDown'}
+              onClick={() => {
+                row.pin(row.getIsPinned?.() === 'bottom' ? false : 'bottom');
+              }}
+            />
+          </Box>
+        ),
+        enableSorting: false,
+        enablePinning: false,
+        size: 72,
+      },
+    ],
+    [],
+  );
+
+  const dataColumns = React.useMemo<ColumnDef<RowData>[]>(() => {
     const cols: ColumnDef<RowData>[] = [];
     for (let c = 0; c < 1000; c += 1) {
       const key = `col${c}`;
@@ -32,6 +84,11 @@ export const DataTableExample = () => {
     }
     return cols;
   }, []);
+
+  const columns = React.useMemo<ColumnDef<RowData>[]>(
+    () => [...actionColumns, ...dataColumns],
+    [actionColumns, dataColumns],
+  );
 
   const [data, setData] = React.useState<RowData[]>(() => {
     const rows: RowData[] = [];
@@ -72,7 +129,8 @@ export const DataTableExample = () => {
           columns,
           enableRowSelection: (row) => Number(row.original.rowId) % 2 === 0,
           onRowSelectionChange: setRowSelection,
-          state: { sorting, columnOrder, rowSelection },
+          onColumnPinningChange: setColumnPinning,
+          state: { sorting, columnOrder, rowSelection, columnPinning },
           onSortingChange: setSorting,
           onColumnOrderChange: setColumnOrder,
           getRowId: (row) => row.rowId,

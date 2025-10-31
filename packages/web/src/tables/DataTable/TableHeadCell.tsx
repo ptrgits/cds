@@ -2,7 +2,7 @@ import type { HTMLAttributes } from 'react';
 import { css } from '@linaria/core';
 import { flexRender, type Header } from '@tanstack/react-table';
 
-import { Button, IconButton } from '../../buttons';
+import { IconButton } from '../../buttons';
 import { cx } from '../../cx';
 import { Box } from '../../layout';
 
@@ -60,11 +60,11 @@ export const TableHeadCell = ({
         onClick={header.column.getToggleSortingHandler()}
       >
         {flexRender(header.column.columnDef.header, header.getContext())}
-        {{
-          asc: ' 🔼',
-          desc: ' 🔽',
-        }[header.column.getIsSorted() as string] ?? null}
       </Box>
+      {{
+        asc: ' 🔼',
+        desc: ' 🔽',
+      }[header.column.getIsSorted() as string] ?? null}
       {!header.isPlaceholder && header.column.getCanPin() && (
         <Box className={pinControlsCss}>
           {isPinned !== 'left' ? (

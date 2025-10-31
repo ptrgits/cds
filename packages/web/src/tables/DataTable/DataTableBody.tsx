@@ -4,7 +4,6 @@ import { useVirtualizer, type Virtualizer } from '@tanstack/react-virtual';
 
 import { cx } from '../../cx';
 
-import { type ActionColumnBodyComponent, DefaultActionColumnBody } from './ActionColumnComponents';
 import { defaultVirtualRowsOverscan } from './DataTable';
 import { DataTableBodyRow } from './DataTableBodyRow';
 
@@ -29,9 +28,6 @@ const staticCenterSectionCss = css`
 `;
 
 export type DataTableBodyProps = {
-  ActionColumnBodyComponent?: ActionColumnBodyComponent<any>;
-  actionsColumnWidth: number;
-  enableRowSelection: boolean;
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
   table: Table<any>;
   tableContainerRef: React.RefObject<HTMLDivElement>;
@@ -50,9 +46,6 @@ export type DataTableBodyProps = {
 };
 
 export const DataTableBody = ({
-  ActionColumnBodyComponent = DefaultActionColumnBody,
-  actionsColumnWidth,
-  enableRowSelection,
   columnVirtualizer,
   estimateVirtualRowHeight,
   table,
@@ -96,10 +89,7 @@ export const DataTableBody = ({
             <DataTableBodyRow
               key={row.id}
               staticPosition
-              ActionColumnBodyComponent={ActionColumnBodyComponent}
-              actionsColumnWidth={actionsColumnWidth}
               columnVirtualizer={columnVirtualizer}
-              enableRowSelection={enableRowSelection}
               row={row}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
@@ -120,10 +110,7 @@ export const DataTableBody = ({
             return (
               <DataTableBodyRow
                 key={row.id}
-                ActionColumnBodyComponent={ActionColumnBodyComponent}
-                actionsColumnWidth={actionsColumnWidth}
                 columnVirtualizer={columnVirtualizer}
-                enableRowSelection={enableRowSelection}
                 row={row}
                 rowVirtualizer={rowVirtualizer}
                 virtualPaddingLeft={virtualPaddingLeft}
@@ -140,10 +127,7 @@ export const DataTableBody = ({
             <DataTableBodyRow
               key={row.id}
               staticPosition
-              ActionColumnBodyComponent={ActionColumnBodyComponent}
-              actionsColumnWidth={actionsColumnWidth}
               columnVirtualizer={columnVirtualizer}
-              enableRowSelection={enableRowSelection}
               row={row}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
@@ -160,10 +144,7 @@ export const DataTableBody = ({
             <DataTableBodyRow
               key={row.id}
               staticPosition
-              ActionColumnBodyComponent={ActionColumnBodyComponent}
-              actionsColumnWidth={actionsColumnWidth}
               columnVirtualizer={columnVirtualizer}
-              enableRowSelection={enableRowSelection}
               row={row}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
