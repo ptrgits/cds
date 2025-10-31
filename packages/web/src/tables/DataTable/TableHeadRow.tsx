@@ -8,8 +8,9 @@ import type { ActionColumnHeadComponent } from './ActionColumnComponents';
 import { TableHeadCell } from './TableHeadCell';
 
 export type TableHeadRowProps = {
-  ActionColumnHeadComponent: ActionColumnHeadComponent;
+  ActionColumnHeadComponent: ActionColumnHeadComponent<any>;
   actionsColumnWidth: number;
+  enableRowSelection: boolean;
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
   headerGroup: HeaderGroup<any>;
   table: Table<any>;
@@ -40,6 +41,7 @@ const pinnedHeaderCellCss = css`
 export const TableHeadRow = ({
   ActionColumnHeadComponent,
   actionsColumnWidth,
+  enableRowSelection,
   columnVirtualizer,
   headerGroup,
   table,
@@ -50,12 +52,13 @@ export const TableHeadRow = ({
   const leftHeaders = headerGroup.headers.filter((h) => h.column.getIsPinned() === 'left');
   const centerHeaders = headerGroup.headers.filter((h) => !h.column.getIsPinned());
   const rightHeaders = headerGroup.headers.filter((h) => h.column.getIsPinned() === 'right');
+  const pinnedLeftOffset = actionsColumnWidth;
 
   return (
     <tr key={headerGroup.id} className={rowCss}>
       {/* Row actions sticky column header */}
       <th className={actionsHeaderCellCss} style={{ width: actionsColumnWidth }}>
-        <ActionColumnHeadComponent table={table} />
+        <ActionColumnHeadComponent enableRowSelection={enableRowSelection} table={table} />
       </th>
       {/* Left pinned */}
       {leftHeaders.map((header) => (
@@ -63,7 +66,7 @@ export const TableHeadRow = ({
           key={header.id}
           className={cx(spacerCellCss, pinnedHeaderCellCss)}
           header={header}
-          leftOffset={actionsColumnWidth}
+          leftOffset={pinnedLeftOffset}
         />
       ))}
       {virtualizeColumns && virtualPaddingLeft ? (

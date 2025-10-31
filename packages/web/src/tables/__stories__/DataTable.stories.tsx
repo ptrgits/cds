@@ -3,6 +3,7 @@ import type { Meta } from '@storybook/react';
 
 import { Checkbox } from '../../controls';
 import { HStack, VStack } from '../../layout';
+import { Text } from '../../typography/Text';
 import type { ColumnDef, SortingState } from '../DataTable';
 import { DataTable } from '../DataTable/DataTable';
 
@@ -18,6 +19,7 @@ export const DataTableExample = () => {
   const [virtualizeRows, setVirtualizeRows] = React.useState(true);
   const [virtualizeColumns, setVirtualizeColumns] = React.useState(true);
   const [stickyHeader, setStickyHeader] = React.useState(true);
+  const [rowSelection, setRowSelection] = React.useState({});
   const columns = React.useMemo<ColumnDef<RowData>[]>(() => {
     const cols: ColumnDef<RowData>[] = [];
     for (let c = 0; c < 1000; c += 1) {
@@ -68,7 +70,9 @@ export const DataTableExample = () => {
         tableOptions={{
           data,
           columns,
-          state: { sorting, columnOrder },
+          enableRowSelection: (row) => Number(row.original.rowId) % 2 === 0,
+          onRowSelectionChange: setRowSelection,
+          state: { sorting, columnOrder, rowSelection },
           onSortingChange: setSorting,
           onColumnOrderChange: setColumnOrder,
           getRowId: (row) => row.rowId,
@@ -76,6 +80,7 @@ export const DataTableExample = () => {
         virtualizeColumns={virtualizeColumns}
         virtualizeRows={virtualizeRows}
       />
+      <Text>{`${Object.keys(rowSelection).length} rows selected`}</Text>
     </VStack>
   );
 };

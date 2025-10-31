@@ -12,16 +12,23 @@ const bodyCellCss = css`
 
 export type DataTableBodyCellProps = HTMLAttributes<HTMLTableCellElement> & {
   cell: Cell<any, unknown>;
+  selected?: boolean;
   leftOffset?: number;
 };
 
-export const DataTableBodyCell = ({ cell, leftOffset, ...props }: DataTableBodyCellProps) => {
+export const DataTableBodyCell = ({
+  cell,
+  selected,
+  leftOffset,
+  ...props
+}: DataTableBodyCellProps) => {
   return (
     <td
       key={cell.id}
       {...props}
       className={bodyCellCss}
       style={{
+        backgroundColor: selected ? 'var(--color-bgAlternate)' : undefined,
         width: cell.column.getSize(),
         ...getColumnPinningStyles(cell.column, leftOffset),
       }}

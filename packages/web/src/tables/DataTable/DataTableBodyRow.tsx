@@ -29,8 +29,9 @@ const spacerCellCss = css`
 `;
 
 export type DataTableBodyRowProps = {
-  ActionColumnBodyComponent: ActionColumnBodyComponent;
+  ActionColumnBodyComponent: ActionColumnBodyComponent<any>;
   actionsColumnWidth: number;
+  enableRowSelection: boolean;
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
   row: Row<any>;
   rowVirtualizer?: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
@@ -44,6 +45,7 @@ export type DataTableBodyRowProps = {
 export const DataTableBodyRow = ({
   ActionColumnBodyComponent,
   actionsColumnWidth,
+  enableRowSelection,
   columnVirtualizer,
   row,
   rowVirtualizer,
@@ -57,6 +59,7 @@ export const DataTableBodyRow = ({
   const leftCells = visibleCells.filter((c) => c.column.getIsPinned() === 'left');
   const centerCells = visibleCells.filter((c) => !c.column.getIsPinned());
   const rightCells = visibleCells.filter((c) => c.column.getIsPinned() === 'right');
+  const pinnedLeftOffset = actionsColumnWidth;
 
   return (
     <tr
@@ -68,21 +71,23 @@ export const DataTableBodyRow = ({
       }
       className={cx(bodyRowCss, !staticPosition && virtualRow && virtualizedRowCss)}
       data-index={staticPosition || !virtualRow ? undefined : virtualRow.index}
-      style={
-        staticPosition || !virtualRow
-          ? undefined
-          : {
-              transform: `translateY(${virtualRow.start}px)`,
-            }
-      }
+      style={{
+        transform: !staticPosition && virtualRow ? `translateY(${virtualRow.start}px)` : undefined,
+        backgroundColor: row.getIsSelected() ? 'var(--color-bgAlternate)' : undefined,
+      }}
     >
       {/* Row actions sticky column */}
       <td className={rowActionsCellCss} style={{ width: actionsColumnWidth }}>
-        <ActionColumnBodyComponent row={row} />
+        <ActionColumnBodyComponent enableRowSelection={enableRowSelection} row={row} />
       </td>
       {/* Left pinned */}
       {leftCells.map((cell) => (
-        <DataTableBodyCell key={cell.id} cell={cell} leftOffset={actionsColumnWidth} />
+        <DataTableBodyCell
+          key={cell.id}
+          cell={cell}
+          leftOffset={pinnedLeftOffset}
+          selected={row.getIsSelected()}
+        />
       ))}
       {virtualizeColumns && virtualPaddingLeft ? (
         // fake empty column to the left for virtualization scroll padding
@@ -92,7 +97,7 @@ export const DataTableBodyRow = ({
         ? columnVirtualizer.getVirtualItems().map((virtualColumn) => {
             const cell = centerCells[virtualColumn.index];
             if (!cell) return null;
-            return <DataTableBodyCell key={cell.id} cell={cell} />;
+            return <DataTableBodyCell key={cell.id} cell={cell} selected={row.getIsSelected()} />;
           })
         : centerCells.map((cell) => <DataTableBodyCell key={cell.id} cell={cell} />)}
       {virtualizeColumns && virtualPaddingRight ? (
@@ -101,7 +106,7 @@ export const DataTableBodyRow = ({
       ) : null}
       {/* Right pinned */}
       {rightCells.map((cell) => (
-        <DataTableBodyCell key={cell.id} cell={cell} />
+        <DataTableBodyCell key={cell.id} cell={cell} selected={row.getIsSelected()} />
       ))}
     </tr>
   );

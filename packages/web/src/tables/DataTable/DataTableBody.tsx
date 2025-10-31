@@ -29,8 +29,9 @@ const staticCenterSectionCss = css`
 `;
 
 export type DataTableBodyProps = {
-  ActionColumnBodyComponent?: ActionColumnBodyComponent;
+  ActionColumnBodyComponent?: ActionColumnBodyComponent<any>;
   actionsColumnWidth: number;
+  enableRowSelection: boolean;
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
   table: Table<any>;
   tableContainerRef: React.RefObject<HTMLDivElement>;
@@ -51,6 +52,7 @@ export type DataTableBodyProps = {
 export const DataTableBody = ({
   ActionColumnBodyComponent = DefaultActionColumnBody,
   actionsColumnWidth,
+  enableRowSelection,
   columnVirtualizer,
   estimateVirtualRowHeight,
   table,
@@ -97,6 +99,7 @@ export const DataTableBody = ({
               ActionColumnBodyComponent={ActionColumnBodyComponent}
               actionsColumnWidth={actionsColumnWidth}
               columnVirtualizer={columnVirtualizer}
+              enableRowSelection={enableRowSelection}
               row={row}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
@@ -120,6 +123,7 @@ export const DataTableBody = ({
                 ActionColumnBodyComponent={ActionColumnBodyComponent}
                 actionsColumnWidth={actionsColumnWidth}
                 columnVirtualizer={columnVirtualizer}
+                enableRowSelection={enableRowSelection}
                 row={row}
                 rowVirtualizer={rowVirtualizer}
                 virtualPaddingLeft={virtualPaddingLeft}
@@ -139,6 +143,7 @@ export const DataTableBody = ({
               ActionColumnBodyComponent={ActionColumnBodyComponent}
               actionsColumnWidth={actionsColumnWidth}
               columnVirtualizer={columnVirtualizer}
+              enableRowSelection={enableRowSelection}
               row={row}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
@@ -158,6 +163,7 @@ export const DataTableBody = ({
               ActionColumnBodyComponent={ActionColumnBodyComponent}
               actionsColumnWidth={actionsColumnWidth}
               columnVirtualizer={columnVirtualizer}
+              enableRowSelection={enableRowSelection}
               row={row}
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}

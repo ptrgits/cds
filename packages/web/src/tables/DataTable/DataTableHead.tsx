@@ -9,9 +9,10 @@ import { type ActionColumnHeadComponent, DefaultActionColumnHead } from './Actio
 import { TableHeadRow } from './TableHeadRow';
 
 export type DataTableHeadProps = {
-  ActionColumnHeadComponent?: ActionColumnHeadComponent;
+  ActionColumnHeadComponent?: ActionColumnHeadComponent<any>;
   actionsColumnWidth: number;
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
+  enableRowSelection: boolean;
   table: Table<any>;
   virtualPaddingLeft?: number;
   virtualPaddingRight?: number;
@@ -40,6 +41,7 @@ export const DataTableHead = ({
   ActionColumnHeadComponent = DefaultActionColumnHead,
   actionsColumnWidth,
   columnVirtualizer,
+  enableRowSelection,
   table,
   virtualPaddingLeft,
   virtualPaddingRight,
@@ -58,6 +60,7 @@ export const DataTableHead = ({
           ActionColumnHeadComponent={ActionColumnHeadComponent}
           actionsColumnWidth={actionsColumnWidth}
           columnVirtualizer={columnVirtualizer}
+          enableRowSelection={enableRowSelection}
           headerGroup={headerGroup}
           table={table}
           virtualPaddingLeft={virtualPaddingLeft}

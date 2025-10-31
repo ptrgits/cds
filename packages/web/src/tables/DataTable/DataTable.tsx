@@ -15,8 +15,8 @@ import {
   type ActionColumnHeadComponent,
   DefaultActionColumnBody,
   DefaultActionColumnHead,
+  defaultActionsColumnWidth,
 } from './ActionColumnComponents';
-import { defaultActionsColumnWidth } from './ActionColumnComponents';
 import { DataTableBody } from './DataTableBody';
 import { DataTableHead } from './DataTableHead';
 
@@ -34,12 +34,12 @@ export type DataTableProps<TData> = React.HTMLAttributes<HTMLTableElement> & {
    * Custom renderer for the sticky actions column body cell. Replace to provide bespoke controls;
    * ensure it renders with the same width as the corresponding head component.
    */
-  ActionColumnBodyComponent?: ActionColumnBodyComponent;
+  ActionColumnBodyComponent?: ActionColumnBodyComponent<TData>;
   /**
    * Custom renderer for the sticky actions column head cell. Replace to align with custom body
    * content and maintain a consistent width.
    */
-  ActionColumnHeadComponent?: ActionColumnHeadComponent;
+  ActionColumnHeadComponent?: ActionColumnHeadComponent<TData>;
   /**
    * Width applied to the sticky actions column. Defaults to the design-system standard.
    */
@@ -167,6 +167,9 @@ const DataTableBase = <TData,>(
       columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
   }
 
+  const rows = table.getRowModel().rows;
+  const isRowSelectionEnabled = rows.some((row) => row.getCanSelect?.());
+
   const headerRef = useRef<HTMLTableSectionElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -212,6 +215,7 @@ const DataTableBase = <TData,>(
           ActionColumnHeadComponent={ActionColumnHeadComponent}
           actionsColumnWidth={actionsColumnWidth}
           columnVirtualizer={columnVirtualizer}
+          enableRowSelection={isRowSelectionEnabled}
           isSticky={stickyHeader}
           sectionRef={headerRef}
           table={table}
@@ -223,6 +227,7 @@ const DataTableBase = <TData,>(
           ActionColumnBodyComponent={ActionColumnBodyComponent}
           actionsColumnWidth={actionsColumnWidth}
           columnVirtualizer={columnVirtualizer}
+          enableRowSelection={isRowSelectionEnabled}
           estimateVirtualRowHeight={estimateVirtualRowHeight}
           headerOffsetTop={stickyHeader ? headerHeight : 0}
           table={table}
