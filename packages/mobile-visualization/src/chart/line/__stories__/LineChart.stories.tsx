@@ -31,7 +31,7 @@ import { TextLabel1 } from '@coinbase/cds-mobile/typography';
 import { Text } from '@coinbase/cds-mobile/typography/Text';
 import { FontWeight, Rect } from '@shopify/react-native-skia';
 
-import { Area, type AreaComponentProps, DottedArea, GradientArea } from '../../area';
+import { Area, type AreaComponentProps, DottedArea, GradientArea, SolidArea } from '../../area';
 import { XAxis, YAxis } from '../../axis';
 import { BarChart } from '../../bar';
 import { CartesianChart } from '../../CartesianChart';
@@ -2441,7 +2441,9 @@ export default () => {
       <Example title="Discrete Gradient">
         <LineChart
           enableScrubbing
+          showArea
           showYAxis
+          AreaComponent={(props) => <SolidArea {...props} fillOpacity={0.5} />}
           curve="monotone"
           height={150}
           renderPoints={() => true}

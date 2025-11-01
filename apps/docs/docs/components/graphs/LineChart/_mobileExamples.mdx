@@ -770,6 +770,8 @@ You can set multiple stops at the same offset to create a discrete gradient.
   yAxis={{
     showGrid: true,
   }}
+  showArea
+  AreaComponent={(props) => <SolidArea {...props} fillOpacity={0.5} />}
 >
   <Scrubber />
 </LineChart>

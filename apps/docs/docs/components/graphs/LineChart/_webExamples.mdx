@@ -416,10 +416,9 @@ This example shows how to use an empty state for a line chart.
       color: '#f59e0b',
       curve: 'natural',
       gradient: {
-        axis: 'y',
         stops: [
-          { offset: 0, color: '#E3D74D' },
-          { offset: 100, color: '#F7931A' },
+          { offset: 8, color: '#E3D74D' },
+          { offset: 30, color: '#F7931A' },
         ],
       },
       LineComponent: (props) => <SolidLine {...props} strokeWidth={4} />,
@@ -1053,6 +1052,8 @@ function DiscreteGradient() {
       yAxis={{
         showGrid: true,
       }}
+      showArea
+      AreaComponent={props => <SolidArea {...props} fillOpacity={0.5} />}
       accessibilityLabel={chartAccessibilityLabel}
     >
       <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
