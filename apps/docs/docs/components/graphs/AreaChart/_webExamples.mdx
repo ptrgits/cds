@@ -165,11 +165,16 @@ You can have different area styles for each series.
 
 ## Animations
 
-You can configure chart transitions using the `transitionConfigs` prop. This example showcases stacked areas with animated data updates.
+You can configure chart transitions using the `transitionConfigs` prop.
+
+### Customized Transitions
+
+You can pass in a custom spring based transition to your `AreaChart` for a custom transition.
 
 ```jsx live
 function AnimatedStackedAreas() {
   const dataCount = 20;
+  const minYValue = 5000;
   const maxDataOffset = 15000;
   const minStepOffset = 2500;
   const maxStepOffset = 10000;
@@ -196,22 +201,21 @@ function AnimatedStackedAreas() {
     let direction;
     if (previousValue >= maxDataOffset) {
       direction = -1;
-    } else if (previousValue <= 0) {
+    } else if (previousValue <= minYValue) {
       direction = 1;
     } else {
-      // Not at boundary, random direction
       direction = Math.random() < 0.5 ? -1 : 1;
     }
 
     let newValue = previousValue + offset * direction;
-    newValue = Math.max(0, Math.min(maxDataOffset, newValue));
+    newValue = Math.max(minYValue, Math.min(maxDataOffset, newValue));
     return newValue;
   }
 
   function generateInitialData() {
     const data = [];
 
-    let previousValue = Math.random() * maxDataOffset;
+    let previousValue = minYValue + Math.random() * (maxDataOffset - minYValue);
     data.push(previousValue);
 
     for (let i = 1; i < dataCount; i++) {
@@ -252,6 +256,7 @@ function AnimatedStackedAreas() {
 
     return (
       <AreaChart
+        overflow="visible"
         stacked
         height={{ base: 200, tablet: 250, desktop: 300 }}
         series={series}
@@ -283,6 +288,7 @@ You can also disable animations by setting the `animate` prop to `false`.
 ```jsx live
 function AnimatedStackedAreas() {
   const dataCount = 20;
+  const minYValue = 5000;
   const maxDataOffset = 15000;
   const minStepOffset = 2500;
   const maxStepOffset = 10000;
@@ -309,21 +315,21 @@ function AnimatedStackedAreas() {
     let direction;
     if (previousValue >= maxDataOffset) {
       direction = -1;
-    } else if (previousValue <= 0) {
+    } else if (previousValue <= minYValue) {
       direction = 1;
     } else {
       direction = Math.random() < 0.5 ? -1 : 1;
     }
 
     let newValue = previousValue + offset * direction;
-    newValue = Math.max(0, Math.min(maxDataOffset, newValue));
+    newValue = Math.max(minYValue, Math.min(maxDataOffset, newValue));
     return newValue;
   }
 
   function generateInitialData() {
     const data = [];
 
-    let previousValue = Math.random() * maxDataOffset;
+    let previousValue = minYValue + Math.random() * (maxDataOffset - minYValue);
     data.push(previousValue);
 
     for (let i = 1; i < dataCount; i++) {
@@ -366,6 +372,7 @@ function AnimatedStackedAreas() {
     return (
       <AreaChart
         animate={false}
+        overflow="visible"
         stacked
         height={{ base: 200, tablet: 250, desktop: 300 }}
         series={series}
