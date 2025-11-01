@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo } from 'react';
 import type { ThemeVars } from '@coinbase/cds-common/core/theme';
 import type { ElevationLevels, Rect, SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
@@ -309,19 +309,6 @@ export type ChartTextProps = SharedProps & {
 };
 
 /**
- * Checks if two rectangles are different (with epsilon tolerance to avoid jitter).
- */
-const isDimensionChanged = (rect1: Rect | null, rect2: Rect, epsilon = 0.5): boolean => {
-  if (!rect1) return true;
-  return (
-    Math.abs(rect1.x - rect2.x) > epsilon ||
-    Math.abs(rect1.y - rect2.y) > epsilon ||
-    Math.abs(rect1.width - rect2.width) > epsilon ||
-    Math.abs(rect1.height - rect2.height) > epsilon
-  );
-};
-
-/**
  * Recursively extracts text segments from React children tree.
  * Processes ChartTextSpan components and plain text nodes.
  */
@@ -594,13 +581,11 @@ export const ChartText = memo<ChartTextProps>(
       [textPosition, overflowAmount, xOffset, yOffset],
     );
 
-    const [reportedDimensionsRect, setReportedDimensionsRect] = useState<Rect | null>(null);
-
-    // Report dimensions when they change (with epsilon comparison to avoid jitter)
-    if (isDimensionChanged(reportedDimensionsRect, adjustedBackgroundRect)) {
-      setReportedDimensionsRect(adjustedBackgroundRect);
-      onDimensionsChange?.(adjustedBackgroundRect);
-    }
+    useEffect(() => {
+      if (onDimensionsChange && adjustedBackgroundRect !== null) {
+        onDimensionsChange(adjustedBackgroundRect);
+      }
+    }, [adjustedBackgroundRect, onDimensionsChange]);
 
     // Resolve shadow configuration from elevation or individual props
     const shadowConfig = useMemo(() => {
