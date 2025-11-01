@@ -10,6 +10,8 @@ import { Bar, type BarComponent, type BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
 import { DefaultBarStack } from './DefaultBarStack';
 
+const EPSILON = 1e-4;
+
 export type BarStackComponentProps = {
   /**
    * The x position of the stack.
@@ -269,9 +271,9 @@ export const BarStack = memo<BarStackProps>(
           fillOpacity: s.fillOpacity,
           stroke: s.stroke,
           strokeWidth: s.strokeWidth,
-          // Pass context data for custom components
-          roundTop: roundBaseline || barTop !== baseline,
-          roundBottom: roundBaseline || barBottom !== baseline,
+          // Check if the bar should be rounded based on the baseline, with an epsilon to handle floating-point rounding
+          roundTop: roundBaseline || Math.abs(barTop - baseline) >= EPSILON,
+          roundBottom: roundBaseline || Math.abs(barBottom - baseline) >= EPSILON,
           shouldApplyGap,
         });
       });
@@ -691,8 +693,10 @@ export const BarStack = memo<BarStackProps>(
       />
     ));
 
-    const stackRoundBottom = roundBaseline || stackRect.y + stackRect.height !== baseline;
-    const stackRoundTop = roundBaseline || stackRect.y !== baseline;
+    // Check if the bar should be rounded based on the baseline, with an epsilon to handle floating-point rounding
+    const stackRoundBottom =
+      roundBaseline || Math.abs(stackRect.y + stackRect.height - baseline) >= EPSILON;
+    const stackRoundTop = roundBaseline || Math.abs(stackRect.y - baseline) >= EPSILON;
 
     return (
       <BarStackComponent

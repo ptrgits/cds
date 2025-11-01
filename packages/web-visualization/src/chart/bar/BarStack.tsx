@@ -10,6 +10,8 @@ import { Bar, type BarComponent, type BarProps } from './Bar';
 import type { BarSeries } from './BarChart';
 import { DefaultBarStack } from './DefaultBarStack';
 
+const EPSILON = 1e-4;
+
 export type BarStackComponentProps = {
   /**
    * The x position of the stack.
@@ -153,7 +155,6 @@ export const BarStack = memo<BarStackProps>(
   }) => {
     const { getSeriesData, getXAxis, getXScale, getSeries } = useCartesianChartContext();
 
-    const stackGapPx = stackGap;
     const xScale = getXScale();
     const barMinSizePx = barMinSize;
     const stackMinSizePx = stackMinSize;
@@ -286,15 +287,15 @@ export const BarStack = memo<BarStackProps>(
           fillOpacity: s.fillOpacity,
           stroke: s.stroke,
           strokeWidth: s.strokeWidth,
-          // Pass context data for custom components
-          roundTop: roundBaseline || barTop !== baseline,
-          roundBottom: roundBaseline || barBottom !== baseline,
+          // Check if the bar should be rounded based on the baseline, with an epsilon to handle floating-point rounding
+          roundTop: roundBaseline || Math.abs(barTop - baseline) >= EPSILON,
+          roundBottom: roundBaseline || Math.abs(barBottom - baseline) >= EPSILON,
           shouldApplyGap,
         });
       });
 
       // Apply proportional gap distribution to maintain total stack height
-      if (stackGapPx && allBars.length > 1) {
+      if (stackGap && allBars.length > 1) {
         // Separate bars by baseline side
         const barsAboveBaseline = allBars.filter((bar) => {
           const [bottom, top] = (bar.dataY as [number, number]).sort((a, b) => a - b);
@@ -307,7 +308,7 @@ export const BarStack = memo<BarStackProps>(
 
         // Apply proportional gaps to bars above baseline
         if (barsAboveBaseline.length > 1) {
-          const totalGapSpace = stackGapPx * (barsAboveBaseline.length - 1);
+          const totalGapSpace = stackGap * (barsAboveBaseline.length - 1);
           const totalDataHeight = barsAboveBaseline.reduce((sum, bar) => sum + bar.height, 0);
           const heightReduction = totalGapSpace / totalDataHeight;
 
@@ -331,13 +332,13 @@ export const BarStack = memo<BarStackProps>(
             }
 
             // Move to next position (include gap for next bar)
-            currentY = newY - (index < sortedBars.length - 1 ? stackGapPx : 0);
+            currentY = newY - (index < sortedBars.length - 1 ? stackGap : 0);
           });
         }
 
         // Apply proportional gaps to bars below baseline
         if (barsBelowBaseline.length > 1) {
-          const totalGapSpace = stackGapPx * (barsBelowBaseline.length - 1);
+          const totalGapSpace = stackGap * (barsBelowBaseline.length - 1);
           const totalDataHeight = barsBelowBaseline.reduce((sum, bar) => sum + bar.height, 0);
           const heightReduction = totalGapSpace / totalDataHeight;
 
@@ -360,7 +361,7 @@ export const BarStack = memo<BarStackProps>(
             }
 
             // Move to next position (include gap for next bar)
-            currentY = currentY + newHeight + (index < sortedBars.length - 1 ? stackGapPx : 0);
+            currentY = currentY + newHeight + (index < sortedBars.length - 1 ? stackGap : 0);
           });
         }
 
@@ -502,12 +503,12 @@ export const BarStack = memo<BarStackProps>(
 
             const shouldRoundTop =
               index === bars.length - 1 ||
-              (a.shouldApplyGap && stackGapPx) ||
+              (a.shouldApplyGap && stackGap) ||
               (!a.shouldApplyGap && barAfter && barAfter.y + barAfter.height !== a.y);
 
             const shouldRoundBottom =
               index === 0 ||
-              (a.shouldApplyGap && stackGapPx) ||
+              (a.shouldApplyGap && stackGap) ||
               (!a.shouldApplyGap && barBefore && barBefore.y !== a.y + a.height);
 
             return {
@@ -668,7 +669,7 @@ export const BarStack = memo<BarStackProps>(
       return { bars: allBars, stackRect: stackBounds };
     }, [
       series,
-      stackGapPx,
+      stackGap,
       barMinSizePx,
       x,
       baseline,
@@ -709,8 +710,10 @@ export const BarStack = memo<BarStackProps>(
       />
     ));
 
-    const stackRoundBottom = roundBaseline || stackRect.y + stackRect.height !== baseline;
-    const stackRoundTop = roundBaseline || stackRect.y !== baseline;
+    // Check if the bar should be rounded based on the baseline, with an epsilon to handle floating-point rounding
+    const stackRoundBottom =
+      roundBaseline || Math.abs(stackRect.y + stackRect.height - baseline) >= EPSILON;
+    const stackRoundTop = roundBaseline || Math.abs(stackRect.y - baseline) >= EPSILON;
 
     return (
       <BarStackComponent
