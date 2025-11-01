@@ -55,9 +55,7 @@ export type AreaProps = {
    */
   gradient?: GradientDefinition;
   /**
-   * When true, null values are skipped and the area connects across gaps.
-   * When false, null values create gaps in the area.
-   * @default false
+   * When true, the area is connected across null values.
    */
   connectNulls?: boolean;
   /**
@@ -84,7 +82,7 @@ export const Area = memo<AreaProps>(
     strokeWidth,
     baseline,
     gradient: gradientProp,
-    connectNulls = false,
+    connectNulls,
     animate,
     transitionConfig,
   }) => {

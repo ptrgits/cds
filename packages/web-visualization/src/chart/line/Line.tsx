@@ -116,8 +116,7 @@ export type LineProps = SharedProps & {
   renderPoints?: (params: RenderPointsParams) => boolean | null | undefined | PointConfig;
   strokeWidth?: number;
   /**
-   * When true, null values are skipped and the line connects across gaps.
-   * By default, null values create gaps in the line.
+   * When true, the area is connected across null values.
    */
   connectNulls?: boolean;
   /**

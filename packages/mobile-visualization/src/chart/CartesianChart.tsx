@@ -4,11 +4,11 @@ import type { Rect } from '@coinbase/cds-common/types';
 import { useLayout } from '@coinbase/cds-mobile/hooks/useLayout';
 import type { BoxBaseProps, BoxProps } from '@coinbase/cds-mobile/layout';
 import { Box } from '@coinbase/cds-mobile/layout';
-import { Skia } from '@shopify/react-native-skia';
+import { useContextBridge } from '@coinbase/cds-mobile/system';
+import { Canvas, Skia } from '@shopify/react-native-skia';
 
 import { ScrubberProvider, type ScrubberProviderProps } from './scrubber/ScrubberProvider';
 import { getGradientScale } from './utils/gradient';
-import { ChartCanvas } from './ChartCanvas';
 import { CartesianChartProvider } from './ChartProvider';
 import {
   type AxisConfig,
@@ -27,6 +27,18 @@ import {
   type Series,
   useTotalAxisPadding,
 } from './utils';
+
+const ChartCanvas = memo(
+  ({ children, width, height }: { children: React.ReactNode; width: number; height: number }) => {
+    const ContextBridge = useContextBridge();
+
+    return (
+      <Canvas style={{ width, height }}>
+        <ContextBridge>{children}</ContextBridge>
+      </Canvas>
+    );
+  },
+);
 
 export type CartesianChartBaseProps = BoxBaseProps &
   Pick<ScrubberProviderProps, 'enableScrubbing' | 'onScrubberPositionChange'> & {

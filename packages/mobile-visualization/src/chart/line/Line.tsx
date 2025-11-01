@@ -6,7 +6,7 @@ import { Area, type AreaComponent } from '../area/Area';
 import { useCartesianChartContext } from '../ChartProvider';
 import { Point, type PointConfig, type RenderPointsParams } from '../Point';
 import { type ChartPathCurveType, getLinePath, type TransitionConfig } from '../utils';
-import { evaluateGradientAtValue, getGradientScale, type GradientDefinition } from '../utils/gradient';
+import { evaluateGradientAtValue, getGradientScale } from '../utils/gradient';
 
 import { DottedLine } from './DottedLine';
 import { type LineComponentProps, SolidLine } from './SolidLine';
@@ -77,9 +77,7 @@ export type LineProps = SharedProps & {
   renderPoints?: (params: RenderPointsParams) => boolean | null | undefined | PointConfig;
   strokeWidth?: number;
   /**
-   * When true, null values are skipped and the line connects across gaps.
-   * When false, null values create gaps in the line.
-   * @default false
+   * When true, the area is connected across null values.
    */
   connectNulls?: boolean;
   /**
@@ -97,12 +95,12 @@ export const Line = memo<LineProps>(
     areaType = 'gradient',
     areaBaseline,
     stroke: specifiedStroke,
-    showArea = false,
+    showArea,
     LineComponent: SelectedLineComponent,
     AreaComponent,
     opacity = 1,
     renderPoints,
-    connectNulls = false,
+    connectNulls,
     animate,
     transitionConfig,
     ...props

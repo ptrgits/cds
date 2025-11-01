@@ -70,8 +70,7 @@ export type AreaProps = Pick<
    */
   AreaComponent?: AreaComponent;
   /**
-   * When true, null values are skipped and the area connects across gaps.
-   * By default, null values create gaps in the area.
+   * When true, the area is connected across null values.
    */
   connectNulls?: boolean;
   /**
