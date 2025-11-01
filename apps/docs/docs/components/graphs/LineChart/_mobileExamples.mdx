@@ -660,6 +660,49 @@ function AccessibleChartWithHeader() {
 }
 ```
 
+## Animations
+
+You can configure chart transitions using the `transitionConfigs` prop.
+
+### Customized Transitions
+
+You can pass in a custom spring based transition to your `LineChart` and `Scrubber` components to create a unified transition.
+
+```jsx
+<LineChart
+  series={[
+    {
+      id: 'prices',
+      data: data,
+    },
+  ]}
+  transitionConfigs={{ update: { type: 'spring', stiffness: 700, damping: 20 } }}
+>
+  <Scrubber transitionConfigs={{ update: { type: 'spring', stiffness: 700, damping: 20 } }} />
+</LineChart>
+```
+
+### Disable Animations
+
+You can also disable animations by setting the `animate` prop to `false`.
+
+```jsx
+<LineChart
+  animate={false}
+  series={[
+    {
+      id: 'prices',
+      data: data,
+    },
+  ]}
+  // will be ignored
+  transitionConfigs={{ update: { type: 'spring', stiffness: 700, damping: 20 } }}
+>
+  {/* will be ignored */}
+  <Scrubber transitionConfigs={{ update: { type: 'spring', stiffness: 700, damping: 20 } }} />
+</LineChart>
+```
+
 ## Customization
 
 ### Asset Price with Dotted Area
