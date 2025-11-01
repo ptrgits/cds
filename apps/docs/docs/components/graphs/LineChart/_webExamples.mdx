@@ -957,6 +957,159 @@ function CustomizedTransitions() {
 }
 ```
 
+## Gradients
+
+You can use the `gradient` prop on `series` or `Line` components to enable gradients.
+
+Each stop requires an `offset`, which is based on the data within the x/y scale and `color`, with an optional `opacity` (defaults to 1).
+
+Values in between stops will be interpolated smoothly using [srgb color space](https://www.w3.org/TR/SVG11/painting.html#ColorInterpolationProperty).
+
+```jsx live
+function ContinuousGradient() {
+  const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
+
+  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
+    },
+    [data],
+  );
+
+  return (
+    <LineChart
+      enableScrubbing
+      height={{ base: 150, tablet: 200, desktop: 250 }}
+      series={[
+        {
+          id: 'prices',
+          data: data,
+          gradient: {
+            stops: [
+              { offset: 0, color: 'rgb(var(--pink90))' },
+              { offset: 100, color: 'rgb(var(--pink10))' },
+            ],
+          }
+        },
+      ]}
+      renderPoints={() => true}
+      strokeWidth={4}
+      curve="monotone"
+      showYAxis
+      yAxis={{
+        showGrid: true,
+      }}
+      accessibilityLabel={chartAccessibilityLabel}
+    >
+      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
+    </LineChart>
+  );
+}
+```
+
+### Discrete
+
+You can set multiple stops at the same offset to create a discrete gradient.
+
+```jsx live
+function DiscreteGradient() {
+  const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
+
+  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
+    },
+    [data],
+  );
+
+  return (
+    <LineChart
+      enableScrubbing
+      height={{ base: 150, tablet: 200, desktop: 250 }}
+      series={[
+        {
+          id: 'prices',
+          data: data,
+          gradient: {
+            stops: [
+              { offset: 0, color: 'rgb(var(--pink90))' },
+              { offset: 33, color: 'rgb(var(--pink90))' },
+              { offset: 33, color: 'rgb(var(--pink50))' },
+              { offset: 67, color: 'rgb(var(--pink50))' },
+              { offset: 67, color: 'rgb(var(--pink10))' },
+              { offset: 100, color: 'rgb(var(--pink10))' },
+            ],
+          }
+        },
+      ]}
+      renderPoints={() => true}
+      strokeWidth={4}
+      curve="monotone"
+      showYAxis
+      yAxis={{
+        showGrid: true,
+      }}
+      accessibilityLabel={chartAccessibilityLabel}
+    >
+      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
+    </LineChart>
+  );
+}
+```
+
+### Axes
+
+By default, gradients will be applied to the y-axis. You can apply a gradient to the x-axis by setting `axis` to `x` in the gradient definition.
+
+```jsx live
+function XAxisGradient() {
+  const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
+
+  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
+    },
+    [data],
+  );
+
+  return (
+    <LineChart
+      enableScrubbing
+      height={{ base: 150, tablet: 200, desktop: 250 }}
+      series={[
+        {
+          id: 'prices',
+          data: data,
+          gradient: {
+            axis: 'x',
+            stops: [
+              { offset: 0, color: 'rgb(var(--pink90))', opacity: 0 },
+              { offset: data.length, color: 'rgb(var(--pink10))', opacity: 1 },
+            ],
+          }
+        },
+      ]}
+      renderPoints={() => true}
+      strokeWidth={4}
+      curve="monotone"
+      showYAxis
+      yAxis={{
+        showGrid: true,
+      }}
+      accessibilityLabel={chartAccessibilityLabel}
+    >
+      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
+    </LineChart>
+  );
+}
+```
+
 ## Customization
 
 ### Asset Price with Dotted Area

@@ -329,9 +329,9 @@ export const evaluateGradientAtValue = (
     effectiveStops = [{ offset: baselineOffset, color, opacity: 0 }, singleStop];
   }
 
-  // Use oklab color space to give an evenly spaced gradient perceptually
-  // https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix#choosing_a_color_space
-  const colorSpace = 'oklab';
+  // Use srgb color space to match our linearGradient which uses srgb color space
+  // https://www.w3.org/TR/SVG11/painting.html#ColorInterpolationProperty
+  const colorSpace = 'srgb';
 
   // Process stops - always ignore opacity for point evaluation (opacity is handled in gradient rendering)
   const processedColors = effectiveStops.map((stop) => {

@@ -2350,7 +2350,7 @@ export default () => {
 
   return (
     <ExampleScreen>
-      <Example title="Gradient line 6">
+      {/*<Example title="Gradient line 6">
         <CartesianChart
           enableScrubbing
           height={defaultChartHeight}
@@ -2410,6 +2410,96 @@ export default () => {
       </Example>
       <Example title="Animated Gain/Loss">
         <AnimatedGainLossChart />
+      </Example>*/}
+      <Example title="Continuous Gradient">
+        <LineChart
+          enableScrubbing
+          showYAxis
+          curve="monotone"
+          height={150}
+          renderPoints={() => true}
+          series={[
+            {
+              id: 'prices',
+              data: sampleData,
+              gradient: {
+                stops: [
+                  { offset: 0, color: `rgb(${theme.spectrum.pink90})` },
+                  { offset: 100, color: `rgb(${theme.spectrum.pink10})` },
+                ],
+              },
+            },
+          ]}
+          strokeWidth={4}
+          yAxis={{
+            showGrid: true,
+          }}
+        >
+          <Scrubber />
+        </LineChart>
+      </Example>
+      <Example title="Discrete Gradient">
+        <LineChart
+          enableScrubbing
+          showYAxis
+          curve="monotone"
+          height={150}
+          renderPoints={() => true}
+          series={[
+            {
+              id: 'prices',
+              data: sampleData,
+              gradient: {
+                stops: [
+                  { offset: 0, color: `rgb(${theme.spectrum.pink90})` },
+                  { offset: 33, color: `rgb(${theme.spectrum.pink90})` },
+                  { offset: 33, color: `rgb(${theme.spectrum.pink50})` },
+                  { offset: 67, color: `rgb(${theme.spectrum.pink50})` },
+                  { offset: 67, color: `rgb(${theme.spectrum.pink10})` },
+                  { offset: 100, color: `rgb(${theme.spectrum.pink10})` },
+                ],
+              },
+            },
+          ]}
+          strokeWidth={4}
+          yAxis={{
+            showGrid: true,
+          }}
+        >
+          <Scrubber />
+        </LineChart>
+      </Example>
+      <Example title="X Axis Gradient">
+        <LineChart
+          enableScrubbing
+          showYAxis
+          curve="monotone"
+          height={150}
+          renderPoints={() => true}
+          series={[
+            {
+              id: 'prices',
+              data: sampleData,
+              gradient: {
+                axis: 'x',
+                stops: [
+                  { offset: 0, color: `rgb(${theme.spectrum.pink90})`, opacity: 0 },
+                  {
+                    offset: sampleData.length - 1,
+                    color: `rgb(${theme.spectrum.pink10})`,
+                    opacity: 1,
+                  },
+                ],
+              },
+            },
+          ]}
+          strokeWidth={4}
+          yAxis={{
+            showGrid: true,
+          }}
+        >
+          <Scrubber />
+        </LineChart>
       </Example>
     </ExampleScreen>
   );

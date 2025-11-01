@@ -703,6 +703,111 @@ You can also disable animations by setting the `animate` prop to `false`.
 </LineChart>
 ```
 
+## Gradients
+
+You can use the `gradient` prop on `series` or `Line` components to enable gradients.
+
+Each stop requires an `offset`, which is based on the data within the x/y scale and `color`, with an optional `opacity` (defaults to 1).
+
+Values in between stops will be interpolated smoothly using [srgb color space](https://www.w3.org/TR/SVG11/painting.html#ColorInterpolationProperty).
+
+```jsx
+<LineChart
+  enableScrubbing
+  showYAxis
+  curve="monotone"
+  height={150}
+  renderPoints={() => true}
+  series={[
+    {
+      id: 'prices',
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
+      gradient: {
+        stops: [
+          { offset: 0, color: `rgb(${theme.spectrum.pink90})` },
+          { offset: 100, color: `rgb(${theme.spectrum.pink10})` },
+        ],
+      },
+    },
+  ]}
+  strokeWidth={4}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Scrubber />
+</LineChart>
+```
+
+### Discrete
+
+You can set multiple stops at the same offset to create a discrete gradient.
+
+```jsx
+<LineChart
+  enableScrubbing
+  showYAxis
+  curve="monotone"
+  height={150}
+  renderPoints={() => true}
+  series={[
+    {
+      id: 'prices',
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
+      gradient: {
+        stops: [
+          { offset: 0, color: `rgb(${theme.spectrum.pink90})` },
+          { offset: 33, color: `rgb(${theme.spectrum.pink90})` },
+          { offset: 33, color: `rgb(${theme.spectrum.pink50})` },
+          { offset: 67, color: `rgb(${theme.spectrum.pink50})` },
+          { offset: 67, color: `rgb(${theme.spectrum.pink10})` },
+          { offset: 100, color: `rgb(${theme.spectrum.pink10})` },
+        ],
+      },
+    },
+  ]}
+  strokeWidth={4}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Scrubber />
+</LineChart>
+```
+
+### Axes
+
+By default, gradients will be applied to the y-axis. You can apply a gradient to the x-axis by setting `axis` to `x` in the gradient definition.
+
+```jsx
+<LineChart
+  enableScrubbing
+  showYAxis
+  curve="monotone"
+  height={150}
+  renderPoints={() => true}
+  series={[
+    {
+      id: 'prices',
+      data: [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58],
+      gradient: {
+        axis: 'x',
+        stops: [
+          { offset: 0, color: `rgb(${theme.spectrum.pink90})`, opacity: 0 },
+          { offset: 14, color: `rgb(${theme.spectrum.pink10})`, opacity: 1 },
+        ],
+      },
+    },
+  ]}
+  strokeWidth={4}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Scrubber />
+</LineChart>
+```
+
 ## Customization
 
 ### Asset Price with Dotted Area
