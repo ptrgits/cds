@@ -2,63 +2,32 @@ import type { AxisBounds } from './chart';
 import { type ChartScaleFunction, isCategoricalScale, isNumericScale } from './scale';
 
 /**
- * A gradient stop defines a color transition point in the gradient
+ * Defines a color transition point in the gradient
  */
 export type GradientStop = {
   /**
-   * Position in data space (will be normalized to 0-1 based on scale domain).
+   * Position in data space.
    * Multiple stops at the same offset create hard color transitions.
    */
   offset: number;
-
   /** Color value (CSS color string or variable like 'var(--color-fgPositive)') */
   color: string;
-
   /** Optional opacity (0-1). Defaults to 1. */
   opacity?: number;
 };
 
 /**
- * Unified gradient configuration for chart visualizations.
+ * Defines a gradient.
  */
 export type GradientDefinition = {
   /**
-   * Which axis to map colors against.
-   * - 'y': Map colors based on y-values (high/low values) - most common
-   * - 'x': Map colors based on x-position (left/right, or time progression)
+   * Axis that the gradient maps to.
    * @default 'y'
    */
   axis?: 'x' | 'y';
-
   /**
-   * Gradient stops defining the color transitions.
+   * Gradient stops with colors and positions.
    * Can be an array of stop objects or a function that receives domain bounds.
-   *
-   * **Static form:**
-   * ```ts
-   * stops: [
-   *   { offset: 0, color: 'red' },
-   *   { offset: 50, color: 'yellow' },
-   *   { offset: 100, color: 'green' }
-   * ]
-   * ```
-   *
-   * **Function form (receives domain bounds):**
-   * ```ts
-   * stops: ({ min, max }) => [
-   *   { offset: min, color: 'red' },
-   *   { offset: 0, color: 'yellow' },
-   *   { offset: max, color: 'green' }
-   * ]
-   * ```
-   *
-   * **Hard transitions (multiple stops at same offset):**
-   * ```ts
-   * stops: [
-   *   { offset: 0, color: 'red' },
-   *   { offset: 0, color: 'green' }  // Creates hard transition at 0
-   * ]
-   * ```
    */
   stops: GradientStop[] | ((domain: AxisBounds) => GradientStop[]);
 };
@@ -86,26 +55,6 @@ const getGradientStops = (
 };
 
 /**
- * Normalizes a GradientStop to include default opacity if not specified.
- */
-export const normalizeGradientStop = (gradientStop: GradientStop): ProcessedColor => {
-  return {
-    color: gradientStop.color,
-    opacity: gradientStop.opacity ?? 1,
-  };
-};
-
-/**
- * Applies an additional opacity multiplier to a color using CSS color-mix().
- */
-export const applyOpacityToColor = (colorString: string, opacityMultiplier: number): string => {
-  if (opacityMultiplier >= 1) return colorString;
-
-  const transparentPercent = (1 - opacityMultiplier) * 100;
-  return `color-mix(in srgb, ${colorString} ${100 - transparentPercent}%, transparent)`;
-};
-
-/**
  * Processes Gradient to gradient configuration for SVG linearGradient.
  * Colors are smoothly interpolated between stops by the browser.
  * Multiple stops at the same offset create hard color transitions.
@@ -115,66 +64,35 @@ const processGradientStops = (
   domain: { min: number; max: number },
   scale: ChartScaleFunction,
 ): GradientStop[] | undefined => {
-  // Handle edge cases
   if (stops.length === 0) {
     console.warn('Gradient has no stops - falling back to default');
     return;
   }
 
-  const { min: minValue, max: maxValue } = domain;
+  // Check if stops are in ascending order
+  const isOutOfOrder = stops.some((stop, i) => {
+    return i > 0 && stop.offset < stops[i - 1].offset;
+  });
 
-  // If only 1 stop, create a 2-stop gradient from baseline to the stop
-  let effectiveStops = stops;
-  if (stops.length === 1) {
-    const singleStop = stops[0];
-    const { color, opacity } = normalizeGradientStop(singleStop);
-
-    // Create a gradient from baseline (transparent) to the stop color
-    // Determine baseline based on whether stop is positive or negative
-    const baselineOffset = singleStop.offset >= 0 ? minValue : maxValue;
-
-    effectiveStops = [{ offset: baselineOffset, color, opacity: 0 }, singleStop];
-  }
-
-  // Extract offsets from input stops (in data space)
-  const offsets = effectiveStops.map((stop) => stop.offset);
-
-  // Validate offsets are in ascending order (allow equal values for hard transitions)
-  for (let i = 1; i < offsets.length; i++) {
-    if (offsets[i] < offsets[i - 1]) {
-      console.warn(`Gradient: stop offsets must be in ascending order`);
-      return;
-    }
-  }
-
-  // Use scale to map values to positions (handles log scales correctly)
-  const scaleRange = scale.range();
-  const [rangeMin, rangeMax] = Array.isArray(scaleRange)
-    ? (scaleRange as [number, number])
-    : [scaleRange, scaleRange];
-
-  const rangeSpan = Math.abs(rangeMax - rangeMin);
-  if (rangeSpan === 0) {
-    console.warn('Scale range has zero span');
+  if (isOutOfOrder) {
+    console.warn(`Gradient: stop offsets must be in ascending order`);
     return;
   }
 
+  const [rangeMin, rangeMax] = scale.range();
+  const rangeSpan = Math.abs(rangeMax - rangeMin);
+
   // Convert data value offsets to normalized positions (0-1) using scale
-  // Create normalized stops with positions instead of data-space offsets
-  const normalizedStops: GradientStop[] = effectiveStops.map((stop, index) => {
-    const offset = offsets[index];
-    const stopPosition = scale(offset);
+  const normalizedStops: GradientStop[] = stops.map((stop, index) => {
+    const stopPosition = scale(stop.offset);
     const normalized =
       stopPosition === undefined
         ? 0
         : Math.max(0, Math.min(1, Math.abs(stopPosition - rangeMin) / rangeSpan));
-
-    const { color, opacity } = normalizeGradientStop(stop);
-
     return {
       offset: normalized, // Now 0-1 normalized (not data space)
-      color,
-      opacity,
+      color: stop.color,
+      opacity: stop.opacity ?? 1,
     };
   });
 
@@ -259,10 +177,9 @@ export const evaluateGradientAtValue = (
   let effectiveStops = resolvedStops;
   if (resolvedStops.length === 1) {
     const singleStop = resolvedStops[0];
-    const { color } = normalizeGradientStop(singleStop);
     const baselineOffset = singleStop.offset >= 0 ? minValue : maxValue;
 
-    effectiveStops = [{ offset: baselineOffset, color, opacity: 0 }, singleStop];
+    effectiveStops = [{ offset: baselineOffset, color: singleStop.color, opacity: 0 }, singleStop];
   }
 
   // Use srgb color space to match our linearGradient which uses srgb color space
@@ -271,8 +188,7 @@ export const evaluateGradientAtValue = (
 
   // Process stops - always ignore opacity for point evaluation (opacity is handled in gradient rendering)
   const processedColors = effectiveStops.map((stop) => {
-    const { color } = normalizeGradientStop(stop);
-    return color;
+    return stop.color;
   });
 
   const offsets = effectiveStops.map((stop) => stop.offset);

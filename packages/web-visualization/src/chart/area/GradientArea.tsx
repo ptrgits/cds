@@ -114,21 +114,8 @@ export const GradientArea = memo<GradientAreaProps>(
     const gradientConfig = useMemo(() => {
       if (!gradient || !xScale || !yScale) return;
 
-      const config = getGradientConfig(gradient, xScale, yScale);
-      if (!config) return;
-
-      if (fillOpacity < 1) {
-        return {
-          ...config,
-          stops: config.stops.map((stop) => ({
-            ...stop,
-            color: applyOpacityToColor(stop.color, fillOpacity),
-          })),
-        };
-      }
-
-      return config;
-    }, [gradient, xScale, yScale, fillOpacity]);
+      return getGradientConfig(gradient, xScale, yScale);
+    }, [gradient, xScale, yScale]);
 
     if (!gradientConfig) {
       return (
