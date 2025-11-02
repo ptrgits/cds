@@ -90,34 +90,15 @@ export type GradientConfig = {
 };
 
 /**
- * Extracts min/max domain values from any scale type.
- * Handles both numeric scales ([min, max]) and band scales ([0, 1, 2, ...]).
- */
-const getScaleDomainBounds = (scale: ChartScaleFunction): [number, number] => {
-  const domain = scale.domain();
-
-  if (isCategoricalScale(scale)) {
-    // Band scale domain is an array like [0, 1, 2, 3, ...]
-    // Extract the first and last values
-    const domainArray = domain as number[];
-    return [domainArray[0], domainArray[domainArray.length - 1]];
-  } else {
-    // Numeric scale domain is [min, max]
-    return domain as [number, number];
-  }
-};
-
-/**
  * Resolves gradient stops, handling both static arrays and function forms.
- * When stops is a function, calls it with the domain bounds of the scale.
+ * When stops is a function, calls it with the domain bounds.
  */
 export const resolveGradientStops = (
   stops: GradientStop[] | ((domain: { min: number; max: number }) => GradientStop[]),
-  scale: ChartScaleFunction,
+  domain: { min: number; max: number },
 ): GradientStop[] => {
   if (typeof stops === 'function') {
-    const [min, max] = getScaleDomainBounds(scale);
-    return stops({ min, max });
+    return stops(domain);
   }
   return stops;
 };
@@ -133,25 +114,12 @@ export const normalizeGradientStop = (gradientStop: GradientStop): ProcessedColo
 };
 
 /**
- * Applies an additional opacity multiplier to a color.
- * For CSS variables and non-rgba colors, wraps them with color-mix for transparency.
- * For rgba colors, multiplies the alpha channel.
+ * Applies an additional opacity multiplier to a color using CSS color-mix().
+ * Works with any CSS color format including variables like var(--color-primary).
  */
 export const applyOpacityToColor = (colorString: string, opacityMultiplier: number): string => {
-  // If already fully opaque or no multiplier needed, return as-is
   if (opacityMultiplier >= 1) return colorString;
 
-  // Parse rgba string: rgba(r, g, b, a) or rgb(r, g, b)
-  const rgbaMatch = colorString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
-  if (rgbaMatch) {
-    const r = parseInt(rgbaMatch[1], 10);
-    const g = parseInt(rgbaMatch[2], 10);
-    const b = parseInt(rgbaMatch[3], 10);
-    const a = parseFloat(rgbaMatch[4] ?? '1');
-    return `rgba(${r}, ${g}, ${b}, ${a * opacityMultiplier})`;
-  }
-
-  // For CSS variables or other color formats, use color-mix with transparent
   const transparentPercent = (1 - opacityMultiplier) * 100;
   return `color-mix(in srgb, ${colorString} ${100 - transparentPercent}%, transparent)`;
 };
@@ -163,6 +131,7 @@ export const applyOpacityToColor = (colorString: string, opacityMultiplier: numb
  */
 const processGradientStops = (
   stops: GradientStop[],
+  domain: { min: number; max: number },
   scale: ChartScaleFunction,
 ): GradientConfig | null => {
   // Handle edge cases
@@ -171,8 +140,7 @@ const processGradientStops = (
     return null;
   }
 
-  // Get scale domain for single-stop expansion and normalization
-  const [minValue, maxValue] = getScaleDomainBounds(scale);
+  const { min: minValue, max: maxValue } = domain;
 
   // If only 1 stop, create a 2-stop gradient from baseline to the stop
   let effectiveStops = stops;
@@ -208,17 +176,23 @@ const processGradientStops = (
     }
   }
 
-  // Calculate range and normalize offsets to 0-1
-  const range = maxValue - minValue;
+  // Use scale to map values to positions (handles log scales correctly)
+  const scaleRange = scale.range();
+  const [rangeMin, rangeMax] = Array.isArray(scaleRange)
+    ? (scaleRange as [number, number])
+    : [scaleRange, scaleRange];
 
-  if (range === 0) {
-    console.warn('Scale domain has zero range');
+  const rangeSpan = Math.abs(rangeMax - rangeMin);
+  if (rangeSpan === 0) {
+    console.warn('Scale range has zero span');
     return null;
   }
 
-  // Convert data value offsets to normalized positions (0-1)
+  // Convert data value offsets to normalized positions (0-1) using scale
   const positions = offsets.map((offset) => {
-    const normalized = (offset - minValue) / range;
+    const stopPosition = scale(offset);
+    if (stopPosition === undefined) return 0;
+    const normalized = Math.abs(stopPosition - rangeMin) / rangeSpan;
     // Clamp to [0, 1] to handle offsets outside domain
     return Math.max(0, Math.min(1, normalized));
   });
@@ -235,7 +209,7 @@ const processGradientStops = (
  * Supports both numeric scales (linear, log) and categorical scales (band).
  *
  * @param gradient - The GradientDefinition configuration
- * @param scale - The d3 scale to use for mapping data values to positions
+ * @param scale - The d3 scale to use for domain extraction and value mapping
  * @returns Gradient configuration with colors and positions, or null if invalid
  */
 export const processGradient = (
@@ -244,10 +218,22 @@ export const processGradient = (
 ): GradientConfig | null => {
   if (!gradient) return null;
 
-  // Resolve stops (handle function form)
-  const resolvedStops = resolveGradientStops(gradient.stops, scale);
+  // Extract domain from scale
+  const scaleDomain = scale.domain();
+  let domain: { min: number; max: number };
 
-  return processGradientStops(resolvedStops, scale);
+  if (isCategoricalScale(scale)) {
+    const domainArray = scaleDomain as number[];
+    domain = { min: domainArray[0], max: domainArray[domainArray.length - 1] };
+  } else {
+    const [min, max] = scaleDomain as [number, number];
+    domain = { min, max };
+  }
+
+  // Resolve stops (handle function form)
+  const resolvedStops = resolveGradientStops(gradient.stops, domain);
+
+  return processGradientStops(resolvedStops, domain, scale);
 };
 
 /**
@@ -297,7 +283,7 @@ export const getGradientScale = (
  *
  * @param gradient - The GradientDefinition configuration
  * @param dataValue - The data value to evaluate (for band scales, this is the index)
- * @param scale - The scale to use for mapping
+ * @param scale - The scale to use for value mapping (handles log scales correctly)
  * @returns The color string at this data value (may be a color-mix() expression), or null if invalid
  */
 export const evaluateGradientAtValue = (
@@ -305,13 +291,24 @@ export const evaluateGradientAtValue = (
   dataValue: number,
   scale: ChartScaleFunction,
 ): string | null => {
+  // Extract domain from scale
+  const scaleDomain = scale.domain();
+  let domain: { min: number; max: number };
+
+  if (isCategoricalScale(scale)) {
+    const domainArray = scaleDomain as number[];
+    domain = { min: domainArray[0], max: domainArray[domainArray.length - 1] };
+  } else {
+    const [min, max] = scaleDomain as [number, number];
+    domain = { min, max };
+  }
+
   // Resolve stops (handle function form)
-  const resolvedStops = resolveGradientStops(gradient.stops, scale);
+  const resolvedStops = resolveGradientStops(gradient.stops, domain);
 
   if (resolvedStops.length === 0) return null;
 
-  // Get scale domain for single-stop expansion
-  const [minValue, maxValue] = getScaleDomainBounds(scale);
+  const { min: minValue, max: maxValue } = domain;
 
   // If only 1 stop, expand to 2-stop gradient from baseline
   let effectiveStops = resolvedStops;
@@ -335,18 +332,29 @@ export const evaluateGradientAtValue = (
 
   const offsets = effectiveStops.map((stop) => stop.offset);
 
-  // Calculate range
-  const range = maxValue - minValue;
+  // Use scale to map values to positions (handles log scales correctly)
+  // For numeric scales: scale(value) returns pixel position
+  // We normalize these positions to 0-1 based on the range
+  const scaleRange = scale.range();
+  const [rangeMin, rangeMax] = Array.isArray(scaleRange)
+    ? (scaleRange as [number, number])
+    : [scaleRange, scaleRange]; // fallback for band scales
 
-  if (range === 0) return processedColors[0];
+  const rangeSpan = Math.abs(rangeMax - rangeMin);
+  if (rangeSpan === 0) return processedColors[0];
 
-  // Normalize the value to 0-1
-  const normalizedValue = Math.max(0, Math.min(1, (dataValue - minValue) / range));
+  // Map dataValue through scale to get position
+  const dataPosition = scale(dataValue);
+  if (dataPosition === undefined) return processedColors[0];
 
-  // Normalize offsets to 0-1 range
+  // Normalize to 0-1 based on range
+  const normalizedValue = Math.max(0, Math.min(1, Math.abs(dataPosition - rangeMin) / rangeSpan));
+
+  // Map stop offsets through scale and normalize to 0-1
   const positions = offsets.map((offset) => {
-    const normalized = (offset - minValue) / range;
-    return Math.max(0, Math.min(1, normalized));
+    const stopPosition = scale(offset);
+    if (stopPosition === undefined) return 0;
+    return Math.max(0, Math.min(1, Math.abs(stopPosition - rangeMin) / rangeSpan));
   });
 
   // Find which segment we're in
@@ -357,19 +365,31 @@ export const evaluateGradientAtValue = (
     return processedColors[processedColors.length - 1];
   }
 
-  // Find the two colors to mix
+  // Check if dataValue matches any stop offset exactly (for hard transitions)
+  for (let i = 0; i < offsets.length; i++) {
+    if (dataValue === offsets[i]) {
+      // Found exact match - check if there are multiple stops at this offset (hard transition)
+      // Use the LAST color at this offset for hard transitions
+      let lastIndexAtOffset = i;
+      while (
+        lastIndexAtOffset + 1 < offsets.length &&
+        offsets[lastIndexAtOffset + 1] === offsets[i]
+      ) {
+        lastIndexAtOffset++;
+      }
+      return processedColors[lastIndexAtOffset];
+    }
+  }
+
+  // Find the two colors to mix based on normalized positions
   for (let i = 0; i < positions.length - 1; i++) {
     const start = positions[i];
     const end = positions[i + 1];
+
     if (normalizedValue >= start && normalizedValue <= end) {
-      // Handle hard transitions (multiple stops at same offset)
+      // Handle hard transitions (multiple stops at same position)
       if (end === start) {
         return processedColors[i + 1];
-      }
-
-      // At exact start position, return the start color
-      if (normalizedValue === start) {
-        return processedColors[i];
       }
 
       // Calculate progress within this segment (0-1)
