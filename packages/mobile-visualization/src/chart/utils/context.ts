@@ -4,7 +4,6 @@ import type { SkTypefaceFontProvider } from '@shopify/react-native-skia';
 
 import type { AxisConfig } from './axis';
 import type { Series } from './chart';
-import type { GradientScale } from './gradient';
 import type { ChartScaleFunction } from './scale';
 
 /**
@@ -88,7 +87,7 @@ export type CartesianChartContextValue = {
    * Returns undefined if the series does not exist or if there is no valid color map for that series.
    * @param seriesId - The series ID
    */
-  getSeriesGradientScale: (seriesId: string) => GradientScale | undefined;
+  getSeriesGradientScale: (seriesId: string) => ChartScaleFunction | undefined;
 };
 
 export type ScrubberContextValue = {

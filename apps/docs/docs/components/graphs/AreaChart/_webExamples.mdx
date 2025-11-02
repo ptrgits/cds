@@ -99,37 +99,6 @@ When an area chart contains negative values, the baseline automatically adjusts 
 />
 ```
 
-## Data-Based Gradients
-
-You can apply color gradients to dotted areas based on y-values or x-values. This creates visual emphasis on different data ranges.
-
-```jsx live
-<AreaChart
-  height={{ base: 150, tablet: 200, desktop: 250 }}
-  inset={0}
-  series={[
-    {
-      id: 'performance',
-      data: [-50, -30, -10, 20, 45, 65, 80, 70, 50, 30, 10, -20, -40],
-      gradient: {
-        axis: 'y',
-        stops: [
-          { offset: -50, color: '#dc2626', opacity: 0.8 },
-          { offset: 0, color: '#fbbf24', opacity: 0.6 },
-          { offset: 80, color: '#16a34a', opacity: 0.8 },
-        ],
-      },
-    },
-  ]}
-  type="dotted"
-  showLines
-  showYAxis
-  yAxis={{
-    showGrid: true,
-  }}
-/>
-```
-
 ## Area Styles
 
 You can have different area styles for each series.
@@ -406,42 +375,69 @@ Values in between stops will be interpolated smoothly using [srgb color space](h
 
 ```jsx live
 function ContinuousGradient() {
+  const spectrumColors = [
+    'blue',
+    'green',
+    'orange',
+    'yellow',
+    'gray',
+    'indigo',
+    'pink',
+    'purple',
+    'red',
+    'teal',
+    'chartreuse',
+  ];
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
-
-  const scrubberAccessibilityLabel = useCallback(
-    (index: number) => {
-      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
-    },
-    [data],
-  );
+  const [currentSpectrumColor, setCurrentSpectrumColor] = useState('pink');
 
   return (
-    <AreaChart
-      enableScrubbing
-      height={{ base: 150, tablet: 200, desktop: 250 }}
-      series={[
-        {
-          id: 'prices',
-          data: data,
-          gradient: {
-            stops: [
-              { offset: 0, color: 'rgb(var(--pink90))' },
-              { offset: 100, color: 'rgb(var(--pink10))' },
-            ],
-          }
-        },
-      ]}
-      curve="monotone"
-      showYAxis
-      yAxis={{
-        showGrid: true,
-      }}
-      accessibilityLabel={chartAccessibilityLabel}
-    >
-      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
-    </AreaChart>
+    <VStack gap={2}>
+      <HStack gap={1} justifyContent="flex-end" flexWrap="wrap">
+        {spectrumColors.map((color) => (
+          <Pressable
+            key={color}
+            onClick={() => setCurrentSpectrumColor(color)}
+            accessibilityLabel={`Select ${color}`}
+            style={{
+              backgroundColor: `rgb(var(--${color}20))`,
+              border: `2px solid rgb(var(--${color}50))`,
+              outlineColor: `rgb(var(--${color}80))`,
+              outline:
+                currentSpectrumColor === color ? `2px solid rgb(var(--${color}80))` : undefined,
+            }}
+            width={{ base: 16, tablet: 24, desktop: 24 }}
+            height={{ base: 16, tablet: 24, desktop: 24 }}
+            borderRadius={1000}
+          />
+        ))}
+      </HStack>
+      <AreaChart
+        enableScrubbing
+        height={{ base: 150, tablet: 200, desktop: 250 }}
+        series={[
+          {
+            id: 'prices',
+            data: data,
+            gradient: {
+              stops: ({ min, max }) => [
+                // Allows a function which accepts min/max or direct array
+                { offset: min, color: `rgb(var(--${currentSpectrumColor}80))` },
+                { offset: max, color: `rgb(var(--${currentSpectrumColor}20))` },
+              ],
+            },
+          },
+        ]}
+        curve="monotone"
+        showYAxis
+        yAxis={{
+          showGrid: true,
+        }}
+      >
+        <Scrubber />
+      </AreaChart>
+    </VStack>
   );
 }
 ```
@@ -452,49 +448,75 @@ You can set multiple stops at the same offset to create a discrete gradient.
 
 ```jsx live
 function DiscreteGradient() {
+  const spectrumColors = [
+    'blue',
+    'green',
+    'orange',
+    'yellow',
+    'gray',
+    'indigo',
+    'pink',
+    'purple',
+    'red',
+    'teal',
+    'chartreuse',
+  ];
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
-
-  const scrubberAccessibilityLabel = useCallback(
-    (index: number) => {
-      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
-    },
-    [data],
-  );
+  const [currentSpectrumColor, setCurrentSpectrumColor] = useState('pink');
 
   return (
-    <AreaChart
-      enableScrubbing
-      height={{ base: 150, tablet: 200, desktop: 250 }}
-      series={[
-        {
-          id: 'prices',
-          data: data,
-          gradient: {
-            stops: [
-              { offset: 0, color: 'rgb(var(--pink90))' },
-              { offset: 33, color: 'rgb(var(--pink90))' },
-              { offset: 33, color: 'rgb(var(--pink50))' },
-              { offset: 67, color: 'rgb(var(--pink50))' },
-              { offset: 67, color: 'rgb(var(--pink10))' },
-              { offset: 100, color: 'rgb(var(--pink10))' },
-            ],
-          }
-        },
-      ]}
-      showLines
-      strokeWidth={4}
-      curve="monotone"
-      showYAxis
-      yAxis={{
-        showGrid: true,
-      }}
-      fillOpacity={0.5}
-      accessibilityLabel={chartAccessibilityLabel}
-    >
-      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
-    </AreaChart>
+    <VStack gap={2}>
+      <HStack gap={1} justifyContent="flex-end" flexWrap="wrap">
+        {spectrumColors.map((color) => (
+          <Pressable
+            key={color}
+            onClick={() => setCurrentSpectrumColor(color)}
+            accessibilityLabel={`Select ${color}`}
+            style={{
+              backgroundColor: `rgb(var(--${color}20))`,
+              border: `2px solid rgb(var(--${color}50))`,
+              outlineColor: `rgb(var(--${color}80))`,
+              outline:
+                currentSpectrumColor === color ? `2px solid rgb(var(--${color}80))` : undefined,
+            }}
+            width={{ base: 16, tablet: 24, desktop: 24 }}
+            height={{ base: 16, tablet: 24, desktop: 24 }}
+            borderRadius={1000}
+          />
+        ))}
+      </HStack>
+      <AreaChart
+        enableScrubbing
+        height={{ base: 150, tablet: 200, desktop: 250 }}
+        series={[
+          {
+            id: 'prices',
+            data: data,
+            gradient: {
+              stops: ({ min, max }) => [
+                { offset: min, color: `rgb(var(--${currentSpectrumColor}80))` },
+                { offset: (max - min) / 3, color: `rgb(var(--${currentSpectrumColor}80))` },
+                { offset: (max - min) / 3, color: `rgb(var(--${currentSpectrumColor}50))` },
+                { offset: ((max - min) / 3) * 2, color: `rgb(var(--${currentSpectrumColor}50))` },
+                { offset: ((max - min) / 3) * 2, color: `rgb(var(--${currentSpectrumColor}20))` },
+                { offset: max, color: `rgb(var(--${currentSpectrumColor}20))` },
+              ],
+            },
+          },
+        ]}
+        showLines
+        strokeWidth={4}
+        curve="monotone"
+        showYAxis
+        yAxis={{
+          showGrid: true,
+        }}
+        fillOpacity={0.5}
+      >
+        <Scrubber />
+      </AreaChart>
+    </VStack>
   );
 }
 ```
@@ -505,43 +527,69 @@ By default, gradients will be applied to the y-axis. You can apply a gradient to
 
 ```jsx live
 function XAxisGradient() {
+  const spectrumColors = [
+    'blue',
+    'green',
+    'orange',
+    'yellow',
+    'gray',
+    'indigo',
+    'pink',
+    'purple',
+    'red',
+    'teal',
+    'chartreuse',
+  ];
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
-
-  const scrubberAccessibilityLabel = useCallback(
-    (index: number) => {
-      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
-    },
-    [data],
-  );
+  const [currentSpectrumColor, setCurrentSpectrumColor] = useState('pink');
 
   return (
-    <AreaChart
-      enableScrubbing
-      height={{ base: 150, tablet: 200, desktop: 250 }}
-      series={[
-        {
-          id: 'prices',
-          data: data,
-          gradient: {
-            axis: 'x',
-            stops: [
-              { offset: 0, color: 'rgb(var(--pink90))', opacity: 0 },
-              { offset: data.length, color: 'rgb(var(--pink10))', opacity: 1 },
-            ],
-          }
-        },
-      ]}
-      curve="monotone"
-      showYAxis
-      yAxis={{
-        showGrid: true,
-      }}
-      accessibilityLabel={chartAccessibilityLabel}
-    >
-      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
-    </AreaChart>
+    <VStack gap={2}>
+      <HStack gap={1} justifyContent="flex-end" flexWrap="wrap">
+        {spectrumColors.map((color) => (
+          <Pressable
+            key={color}
+            onClick={() => setCurrentSpectrumColor(color)}
+            accessibilityLabel={`Select ${color}`}
+            style={{
+              backgroundColor: `rgb(var(--${color}20))`,
+              border: `2px solid rgb(var(--${color}50))`,
+              outlineColor: `rgb(var(--${color}80))`,
+              outline:
+                currentSpectrumColor === color ? `2px solid rgb(var(--${color}80))` : undefined,
+            }}
+            width={{ base: 16, tablet: 24, desktop: 24 }}
+            height={{ base: 16, tablet: 24, desktop: 24 }}
+            borderRadius={1000}
+          />
+        ))}
+      </HStack>
+      <AreaChart
+        enableScrubbing
+        height={{ base: 150, tablet: 200, desktop: 250 }}
+        series={[
+          {
+            id: 'prices',
+            data: data,
+            gradient: {
+              axis: 'x',
+              stops: ({ min, max }) => [
+                { offset: min, color: `rgb(var(--${currentSpectrumColor}80))`, opacity: 0 },
+                { offset: max, color: `rgb(var(--${currentSpectrumColor}20))`, opacity: 1 },
+              ],
+            },
+          },
+        ]}
+        curve="monotone"
+        showYAxis
+        yAxis={{
+          showGrid: true,
+        }}
+      >
+        <Scrubber />
+      </AreaChart>
+    </VStack>
   );
 }
 ```

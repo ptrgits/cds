@@ -90,16 +90,10 @@ export type GradientConfig = {
 };
 
 /**
- * Type for scales that can be used with Gradient.
- * Band scales use numerical indices [0, 1, 2, ...] so they work with Gradient.
- */
-export type GradientScale = NumericScale | CategoricalScale;
-
-/**
  * Extracts min/max domain values from any scale type.
  * Handles both numeric scales ([min, max]) and band scales ([0, 1, 2, ...]).
  */
-const getScaleDomainBounds = (scale: GradientScale): [number, number] => {
+const getScaleDomainBounds = (scale: ChartScaleFunction): [number, number] => {
   const domain = scale.domain();
 
   if (isCategoricalScale(scale)) {
@@ -119,7 +113,7 @@ const getScaleDomainBounds = (scale: GradientScale): [number, number] => {
  */
 export const resolveGradientStops = (
   stops: GradientStop[] | ((domain: { min: number; max: number }) => GradientStop[]),
-  scale: GradientScale,
+  scale: ChartScaleFunction,
 ): GradientStop[] => {
   if (typeof stops === 'function') {
     const [min, max] = getScaleDomainBounds(scale);
@@ -169,7 +163,7 @@ export const applyOpacityToColor = (colorString: string, opacityMultiplier: numb
  */
 const processGradientStops = (
   stops: GradientStop[],
-  scale: GradientScale,
+  scale: ChartScaleFunction,
 ): GradientConfig | null => {
   // Handle edge cases
   if (stops.length === 0) {
@@ -246,7 +240,7 @@ const processGradientStops = (
  */
 export const processGradient = (
   gradient: GradientDefinition,
-  scale: GradientScale,
+  scale: ChartScaleFunction,
 ): GradientConfig | null => {
   if (!gradient) return null;
 
@@ -270,7 +264,7 @@ export const getGradientScale = (
   gradient: GradientDefinition | undefined,
   xScale: ChartScaleFunction | undefined,
   yScale: ChartScaleFunction | undefined,
-): GradientScale | undefined => {
+): ChartScaleFunction | undefined => {
   if (!gradient) {
     return yScale && isNumericScale(yScale) ? yScale : undefined;
   }
@@ -289,7 +283,7 @@ export const getGradientScale = (
     return;
   }
 
-  return targetScale as GradientScale;
+  return targetScale;
 };
 
 /**
@@ -309,7 +303,7 @@ export const getGradientScale = (
 export const evaluateGradientAtValue = (
   gradient: GradientDefinition,
   dataValue: number,
-  scale: GradientScale,
+  scale: ChartScaleFunction,
 ): string | null => {
   // Resolve stops (handle function form)
   const resolvedStops = resolveGradientStops(gradient.stops, scale);

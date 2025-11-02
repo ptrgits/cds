@@ -43,15 +43,11 @@ export const DottedLine = memo<DottedLineProps>(
 
     const xScale = context.getXScale();
     const yScale = context.getYScale(yAxisId);
-    const drawingArea = context.drawingArea;
 
     const gradientConfig = useMemo(() => {
       if (!gradient || !xScale || !yScale) return;
       return getGradientConfig(gradient, xScale, yScale);
     }, [gradient, xScale, yScale]);
-
-    // Determine gradient direction based on gradient axis
-    const gradientDirection = gradient?.axis === 'x' ? 'horizontal' : 'vertical';
 
     return (
       <>
@@ -59,11 +55,11 @@ export const DottedLine = memo<DottedLineProps>(
           <defs>
             <Gradient
               animate={animate}
+              axis={gradient?.axis}
               config={gradientConfig}
-              direction={gradientDirection}
-              drawingArea={drawingArea}
               id={gradientId}
               transitionConfigs={transitionConfigs}
+              yAxisId={yAxisId}
             />
           </defs>
         )}

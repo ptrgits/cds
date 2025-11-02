@@ -104,7 +104,6 @@ export const DottedArea = memo<DottedAreaProps>(
     const xScale = context.getXScale();
     const yScale = context.getYScale(yAxisId);
     const yAxisConfig = context.getYAxis(yAxisId);
-    const { drawingArea } = context;
 
     // Auto-generate gradient if not provided
     const gradient = useMemo((): GradientDefinition | undefined => {
@@ -156,8 +155,6 @@ export const DottedArea = memo<DottedAreaProps>(
       if (!gradient || !xScale || !yScale) return;
       return getGradientConfig(gradient, xScale, yScale);
     }, [gradient, xScale, yScale]);
-
-    const gradientDirection = (gradient?.axis ?? 'y') === 'x' ? 'horizontal' : 'vertical';
 
     if (!gradientConfig) {
       return (
@@ -214,11 +211,11 @@ export const DottedArea = memo<DottedAreaProps>(
           </mask>
           <Gradient
             animate={animate}
+            axis={gradient?.axis}
             config={gradientConfig}
-            direction={gradientDirection}
-            drawingArea={drawingArea}
             id={gradientId}
             transitionConfigs={transitionConfigs}
+            yAxisId={yAxisId}
           />
         </defs>
         <Path

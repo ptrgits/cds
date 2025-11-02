@@ -966,44 +966,71 @@ Values in between stops will be interpolated smoothly using [srgb color space](h
 
 ```jsx live
 function ContinuousGradient() {
+  const spectrumColors = [
+    'blue',
+    'green',
+    'orange',
+    'yellow',
+    'gray',
+    'indigo',
+    'pink',
+    'purple',
+    'red',
+    'teal',
+    'chartreuse',
+  ];
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
-
-  const scrubberAccessibilityLabel = useCallback(
-    (index: number) => {
-      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
-    },
-    [data],
-  );
+  const [currentSpectrumColor, setCurrentSpectrumColor] = useState('pink');
 
   return (
-    <LineChart
-      enableScrubbing
-      height={{ base: 150, tablet: 200, desktop: 250 }}
-      series={[
-        {
-          id: 'prices',
-          data: data,
-          gradient: {
-            stops: [
-              { offset: 0, color: 'rgb(var(--pink90))' },
-              { offset: 100, color: 'rgb(var(--pink10))' },
-            ],
-          }
-        },
-      ]}
-      renderPoints={() => true}
-      strokeWidth={4}
-      curve="monotone"
-      showYAxis
-      yAxis={{
-        showGrid: true,
-      }}
-      accessibilityLabel={chartAccessibilityLabel}
-    >
-      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
-    </LineChart>
+    <VStack gap={2}>
+      <HStack gap={1} justifyContent="flex-end" flexWrap="wrap">
+        {spectrumColors.map((color) => (
+          <Pressable
+            key={color}
+            onClick={() => setCurrentSpectrumColor(color)}
+            accessibilityLabel={`Select ${color}`}
+            style={{
+              backgroundColor: `rgb(var(--${color}20))`,
+              border: `2px solid rgb(var(--${color}50))`,
+              outlineColor: `rgb(var(--${color}80))`,
+              outline:
+                currentSpectrumColor === color ? `2px solid rgb(var(--${color}80))` : undefined,
+            }}
+            width={{ base: 16, tablet: 24, desktop: 24 }}
+            height={{ base: 16, tablet: 24, desktop: 24 }}
+            borderRadius={1000}
+          />
+        ))}
+      </HStack>
+      <LineChart
+        enableScrubbing
+        height={{ base: 150, tablet: 200, desktop: 250 }}
+        series={[
+          {
+            id: 'prices',
+            data: data,
+            gradient: {
+              stops: ({ min, max }) => [
+                // Allows a function which accepts min/max or direct array
+                { offset: min, color: `rgb(var(--${currentSpectrumColor}80))` },
+                { offset: max, color: `rgb(var(--${currentSpectrumColor}20))` },
+              ],
+            },
+          },
+        ]}
+        renderPoints={() => true}
+        strokeWidth={4}
+        curve="monotone"
+        showYAxis
+        yAxis={{
+          showGrid: true,
+        }}
+      >
+        <Scrubber />
+      </LineChart>
+    </VStack>
   );
 }
 ```
@@ -1014,48 +1041,74 @@ You can set multiple stops at the same offset to create a discrete gradient.
 
 ```jsx live
 function DiscreteGradient() {
+  const spectrumColors = [
+    'blue',
+    'green',
+    'orange',
+    'yellow',
+    'gray',
+    'indigo',
+    'pink',
+    'purple',
+    'red',
+    'teal',
+    'chartreuse',
+  ];
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
-
-  const scrubberAccessibilityLabel = useCallback(
-    (index: number) => {
-      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
-    },
-    [data],
-  );
+  const [currentSpectrumColor, setCurrentSpectrumColor] = useState('pink');
 
   return (
-    <LineChart
-      enableScrubbing
-      height={{ base: 150, tablet: 200, desktop: 250 }}
-      series={[
-        {
-          id: 'prices',
-          data: data,
-          gradient: {
-            stops: [
-              { offset: 0, color: 'rgb(var(--pink90))' },
-              { offset: 33, color: 'rgb(var(--pink90))' },
-              { offset: 33, color: 'rgb(var(--pink50))' },
-              { offset: 67, color: 'rgb(var(--pink50))' },
-              { offset: 67, color: 'rgb(var(--pink10))' },
-              { offset: 100, color: 'rgb(var(--pink10))' },
-            ],
-          }
-        },
-      ]}
-      renderPoints={() => true}
-      strokeWidth={4}
-      curve="monotone"
-      showYAxis
-      yAxis={{
-        showGrid: true,
-      }}
-      accessibilityLabel={chartAccessibilityLabel}
-    >
-      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
-    </LineChart>
+    <VStack gap={2}>
+      <HStack gap={1} justifyContent="flex-end" flexWrap="wrap">
+        {spectrumColors.map((color) => (
+          <Pressable
+            key={color}
+            onClick={() => setCurrentSpectrumColor(color)}
+            accessibilityLabel={`Select ${color}`}
+            style={{
+              backgroundColor: `rgb(var(--${color}20))`,
+              border: `2px solid rgb(var(--${color}50))`,
+              outlineColor: `rgb(var(--${color}80))`,
+              outline:
+                currentSpectrumColor === color ? `2px solid rgb(var(--${color}80))` : undefined,
+            }}
+            width={{ base: 16, tablet: 24, desktop: 24 }}
+            height={{ base: 16, tablet: 24, desktop: 24 }}
+            borderRadius={1000}
+          />
+        ))}
+      </HStack>
+      <LineChart
+        enableScrubbing
+        height={{ base: 150, tablet: 200, desktop: 250 }}
+        series={[
+          {
+            id: 'prices',
+            data: data,
+            gradient: {
+              stops: ({ min, max }) => [
+                { offset: min, color: `rgb(var(--${currentSpectrumColor}80))` },
+                { offset: (max - min) / 3, color: `rgb(var(--${currentSpectrumColor}80))` },
+                { offset: (max - min) / 3, color: `rgb(var(--${currentSpectrumColor}50))` },
+                { offset: ((max - min) / 3) * 2, color: `rgb(var(--${currentSpectrumColor}50))` },
+                { offset: ((max - min) / 3) * 2, color: `rgb(var(--${currentSpectrumColor}20))` },
+                { offset: max, color: `rgb(var(--${currentSpectrumColor}20))` },
+              ],
+            },
+          },
+        ]}
+        renderPoints={() => true}
+        strokeWidth={4}
+        curve="monotone"
+        showYAxis
+        yAxis={{
+          showGrid: true,
+        }}
+      >
+        <Scrubber />
+      </LineChart>
+    </VStack>
   );
 }
 ```
@@ -1066,45 +1119,71 @@ By default, gradients will be applied to the y-axis. You can apply a gradient to
 
 ```jsx live
 function XAxisGradient() {
+  const spectrumColors = [
+    'blue',
+    'green',
+    'orange',
+    'yellow',
+    'gray',
+    'indigo',
+    'pink',
+    'purple',
+    'red',
+    'teal',
+    'chartreuse',
+  ];
   const data = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
 
-  const chartAccessibilityLabel = `Price chart showing ${data.length} data points. Current value: ${data[data.length - 1]}`;
-
-  const scrubberAccessibilityLabel = useCallback(
-    (index: number) => {
-      return `Price at position ${index + 1} of ${data.length}: ${data[index]}`;
-    },
-    [data],
-  );
+  const [currentSpectrumColor, setCurrentSpectrumColor] = useState('pink');
 
   return (
-    <LineChart
-      enableScrubbing
-      height={{ base: 150, tablet: 200, desktop: 250 }}
-      series={[
-        {
-          id: 'prices',
-          data: data,
-          gradient: {
-            axis: 'x',
-            stops: [
-              { offset: 0, color: 'rgb(var(--pink90))', opacity: 0 },
-              { offset: data.length, color: 'rgb(var(--pink10))', opacity: 1 },
-            ],
-          }
-        },
-      ]}
-      renderPoints={() => true}
-      strokeWidth={4}
-      curve="monotone"
-      showYAxis
-      yAxis={{
-        showGrid: true,
-      }}
-      accessibilityLabel={chartAccessibilityLabel}
-    >
-      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} />
-    </LineChart>
+    <VStack gap={2}>
+      <HStack gap={1} justifyContent="flex-end" flexWrap="wrap">
+        {spectrumColors.map((color) => (
+          <Pressable
+            key={color}
+            onClick={() => setCurrentSpectrumColor(color)}
+            accessibilityLabel={`Select ${color}`}
+            style={{
+              backgroundColor: `rgb(var(--${color}20))`,
+              border: `2px solid rgb(var(--${color}50))`,
+              outlineColor: `rgb(var(--${color}80))`,
+              outline:
+                currentSpectrumColor === color ? `2px solid rgb(var(--${color}80))` : undefined,
+            }}
+            width={{ base: 16, tablet: 24, desktop: 24 }}
+            height={{ base: 16, tablet: 24, desktop: 24 }}
+            borderRadius={1000}
+          />
+        ))}
+      </HStack>
+      <LineChart
+        enableScrubbing
+        height={{ base: 150, tablet: 200, desktop: 250 }}
+        series={[
+          {
+            id: 'prices',
+            data: data,
+            gradient: {
+              axis: 'x',
+              stops: ({ min, max }) => [
+                { offset: min, color: `rgb(var(--${currentSpectrumColor}80))`, opacity: 0 },
+                { offset: max, color: `rgb(var(--${currentSpectrumColor}20))`, opacity: 1 },
+              ],
+            },
+          },
+        ]}
+        renderPoints={() => true}
+        strokeWidth={4}
+        curve="monotone"
+        showYAxis
+        yAxis={{
+          showGrid: true,
+        }}
+      >
+        <Scrubber />
+      </LineChart>
+    </VStack>
   );
 }
 ```
@@ -1703,4 +1782,124 @@ function BitcoinChartWithScrubberBeacon() {
     </VStack>
   );
 };
+```
+
+### Monotone Asset Price Chart
+
+```jsx live
+function MonotoneAssetPriceChart() {
+  const prices = sparklineInteractiveData.hour;
+  const currentPrice = prices[prices.length - 1].value;
+
+  const priceFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      }),
+    [],
+  );
+
+  const scrubberPriceFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [],
+  );
+
+  const formatPrice = useCallback((price: number) => {
+    return priceFormatter.format(price);
+  }, [priceFormatter]);
+
+  const formatAxisLabelPrice = useCallback((price: number) => {
+    return <tspan dy={-12} textAnchor="start" dx={4}>{formatPrice(price)}</tspan>;
+  }, [formatPrice]);
+
+  const formatDate = useCallback((date: Date) => {
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
+
+    const monthDay = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+
+    const time = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return `${dayOfWeek}, ${monthDay}, ${time}`;
+  }, []);
+
+  const scrubberLabel = useCallback(
+    (index: number) => {
+      const price = scrubberPriceFormatter.format(prices[index].value);
+      const date = formatDate(prices[index].date);
+      return (
+        <>
+          <tspan style={{ fontWeight: 'bold' }}>{price} USD</tspan> {date}
+        </>
+      );
+    },
+    [scrubberPriceFormatter, prices, formatDate],
+  );
+
+  const CustomScrubberBeacon = memo((props: ScrubberBeaconProps) => {
+    return (
+      <Point {...props} animate={false} />
+    );
+  });
+
+  return (
+    <LineChart
+      overflow="visible"
+      enableScrubbing
+      series={[
+        {
+          id: 'btc',
+          data: prices.map((price) => price.value),
+          color: 'var(--color-fg)',
+          gradient: {
+            axis: 'x',
+            stops: ({ min, max }) => [
+              { offset: min, color: 'var(--color-fg)', opacity: 0 },
+              { offset: 32, color: 'var(--color-fg)', opacity: 1 },
+            ]
+          }
+        },
+      ]}
+      height={{ base: 200, tablet: 250, desktop: 300 }}
+      style={{ outlineColor: 'var(--color-fg)' }}
+      showYAxis
+      xAxis={{
+        range: ({ min, max }) => ({ min: 96, max: max }),
+      }}
+      yAxis={{
+        position: 'left',
+        width: 0,
+        showGrid: true,
+        tickLabelFormatter: formatAxisLabelPrice,
+      }}
+      inset={{ top: 64 }}
+    >
+      <Scrubber
+        label={scrubberLabel}
+        labelProps={{ elevation: 1 }}
+        styles={{
+          beacon: {
+            stroke: 'var(--color-fg)',
+            fill: 'var(--color-bg)',
+            r: 5,
+            strokeWidth: 3
+          }
+        }}
+        BeaconComponent={CustomScrubberBeacon}
+        hideOverlay
+      />
+    </LineChart>
+  );
+}
 ```

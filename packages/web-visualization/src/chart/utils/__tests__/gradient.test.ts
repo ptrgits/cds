@@ -4,11 +4,11 @@ import {
   evaluateGradientAtValue,
   getGradientScale,
   type GradientDefinition,
-  type GradientScale,
   normalizeGradientStop,
   processGradient,
   resolveGradientStops,
 } from '../gradient';
+import type { ChartScaleFunction } from '../scale';
 
 describe('gradient utilities', () => {
   describe('normalizeGradientStop', () => {
@@ -29,7 +29,7 @@ describe('gradient utilities', () => {
   });
 
   describe('resolveGradientStops', () => {
-    const scale: GradientScale = scaleLinear().domain([0, 100]).range([0, 400]);
+    const scale: ChartScaleFunction = scaleLinear().domain([0, 100]).range([0, 400]);
 
     it('should return static stops array as-is', () => {
       const stops = [
@@ -68,7 +68,7 @@ describe('gradient utilities', () => {
   });
 
   describe('processGradient', () => {
-    const scale: GradientScale = scaleLinear().domain([0, 100]).range([0, 400]);
+    const scale: ChartScaleFunction = scaleLinear().domain([0, 100]).range([0, 400]);
 
     describe('static stops', () => {
       it('should generate gradient config from stops', () => {
@@ -158,17 +158,6 @@ describe('gradient utilities', () => {
         expect(result?.positions[1]).toBe(0.5);
         expect(result?.positions[2]).toBe(0.5);
       });
-
-      it('should require at least 2 stops', () => {
-        const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-        const gradient: GradientDefinition = {
-          stops: [{ offset: 0, color: '#ff0000' }],
-        };
-        const result = processGradient(gradient, scale);
-        expect(result).toBeNull();
-        expect(warnSpy).toHaveBeenCalledWith('Gradient requires at least 2 stops');
-        warnSpy.mockRestore();
-      });
     });
 
     describe('function form stops', () => {
@@ -221,7 +210,7 @@ describe('gradient utilities', () => {
   });
 
   describe('evaluateGradientAtValue', () => {
-    const scale: GradientScale = scaleLinear().domain([0, 100]).range([0, 400]);
+    const scale: ChartScaleFunction = scaleLinear().domain([0, 100]).range([0, 400]);
 
     describe('static stops', () => {
       it('should return color-mix() string for continuous gradient', () => {

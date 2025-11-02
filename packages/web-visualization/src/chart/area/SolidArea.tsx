@@ -35,7 +35,6 @@ export const SolidArea = memo<SolidAreaProps>(
 
     const xScale = context.getXScale();
     const yScale = context.getYScale(yAxisId);
-    const drawingArea = context.drawingArea;
 
     const gradientConfig = useMemo(() => {
       if (!gradient || !xScale || !yScale) return;
@@ -55,19 +54,16 @@ export const SolidArea = memo<SolidAreaProps>(
       );
     }
 
-    const gradientAxis = gradient?.axis ?? 'y';
-    const gradientDirection = gradientAxis === 'x' ? 'horizontal' : 'vertical';
-
     return (
       <>
         <defs>
           <Gradient
             animate={animate}
+            axis={gradient?.axis}
             config={gradientConfig}
-            direction={gradientDirection}
-            drawingArea={drawingArea}
             id={patternId}
             transitionConfigs={transitionConfigs}
+            yAxisId={yAxisId}
           />
         </defs>
         <Path
