@@ -51,6 +51,8 @@ export const DataTableBodyRow = ({
   const centerCells = visibleCells.filter((c) => !c.column.getIsPinned());
   const rightCells = visibleCells.filter((c) => c.column.getIsPinned() === 'right');
   const isSelected = !!row.getIsSelected?.();
+  const rowDepth = row.depth ?? 0;
+  const firstCenterCellId = centerCells[0]?.id;
 
   return (
     <tr
@@ -74,6 +76,7 @@ export const DataTableBodyRow = ({
           cell={cell}
           hasLeftOverflow={hasLeftOverflow}
           hasRightOverflow={hasRightOverflow}
+          rowDepth={rowDepth}
           selected={isSelected}
         />
       ))}
@@ -90,6 +93,8 @@ export const DataTableBodyRow = ({
                 cell={cell}
                 hasLeftOverflow={hasLeftOverflow}
                 hasRightOverflow={hasRightOverflow}
+                isFirstCenterCell={cell.id === firstCenterCellId}
+                rowDepth={rowDepth}
                 selected={isSelected}
               />
             );
@@ -100,6 +105,8 @@ export const DataTableBodyRow = ({
               cell={cell}
               hasLeftOverflow={hasLeftOverflow}
               hasRightOverflow={hasRightOverflow}
+              isFirstCenterCell={cell.id === firstCenterCellId}
+              rowDepth={rowDepth}
               selected={isSelected}
             />
           ))}
@@ -113,6 +120,7 @@ export const DataTableBodyRow = ({
           cell={cell}
           hasLeftOverflow={hasLeftOverflow}
           hasRightOverflow={hasRightOverflow}
+          rowDepth={rowDepth}
           selected={isSelected}
         />
       ))}

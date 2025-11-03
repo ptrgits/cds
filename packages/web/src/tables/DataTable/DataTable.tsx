@@ -2,6 +2,7 @@ import { forwardRef, useCallback, useLayoutEffect, useRef, useState } from 'reac
 import { css } from '@linaria/core';
 import {
   getCoreRowModel,
+  getExpandedRowModel,
   getSortedRowModel,
   type TableOptions,
   useReactTable,
@@ -113,6 +114,7 @@ const DataTableBase = <TData,>(
   // the same memoized APIs (sorting, pinning, sizing, etc.).
   const table = useReactTable({
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     getSortedRowModel: getSortedRowModel(),
     ...tableOptions,
   });
@@ -220,10 +222,6 @@ const DataTableBase = <TData,>(
       window.removeEventListener('resize', handleScroll);
     };
   }, [updateOverflowIndicators]);
-
-  useLayoutEffect(() => {
-    updateOverflowIndicators();
-  }, [updateOverflowIndicators, virtualPaddingLeft, virtualPaddingRight]);
 
   return (
     <Box ref={tableContainerRef} className={tableContainerCss} style={style}>

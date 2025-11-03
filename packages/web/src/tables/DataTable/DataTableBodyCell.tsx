@@ -4,6 +4,8 @@ import { type Cell, flexRender } from '@tanstack/react-table';
 
 import { getColumnPinningStyles } from './getColumnPinningStyles';
 
+const subRowIndentPx = 7;
+
 const bodyCellCss = css`
   align-items: center;
   background-color: var(--color-bg);
@@ -14,6 +16,8 @@ export type DataTableBodyCellProps = HTMLAttributes<HTMLTableCellElement> & {
   cell: Cell<any, unknown>;
   hasLeftOverflow?: boolean;
   hasRightOverflow?: boolean;
+  isFirstCenterCell?: boolean;
+  rowDepth?: number;
   selected?: boolean;
   leftOffset?: number;
 };
@@ -22,6 +26,8 @@ export const DataTableBodyCell = ({
   cell,
   hasLeftOverflow,
   hasRightOverflow,
+  isFirstCenterCell,
+  rowDepth = 0,
   selected,
   leftOffset,
   ...props
@@ -33,6 +39,8 @@ export const DataTableBodyCell = ({
       className={bodyCellCss}
       style={{
         backgroundColor: selected ? 'var(--color-bgAlternate)' : undefined,
+        paddingInlineStart:
+          isFirstCenterCell && rowDepth > 0 ? `var(--space-${subRowIndentPx})` : undefined,
         width: cell.column.getSize(),
         ...getColumnPinningStyles(cell.column, leftOffset, {
           hasLeftOverflow,

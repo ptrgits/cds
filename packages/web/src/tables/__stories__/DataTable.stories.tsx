@@ -1,14 +1,14 @@
-import React from 'react';
+import { useMemo, useState } from 'react';
 import { css } from '@linaria/core';
 import type { Meta } from '@storybook/react';
-import type { ColumnPinningState } from '@tanstack/react-table';
+import type { ColumnPinningState, ExpandedState } from '@tanstack/react-table';
 
 import { IconButton } from '../../buttons/IconButton';
 import { Checkbox } from '../../controls';
 import { Box, HStack, VStack } from '../../layout';
 import { Text } from '../../typography/Text';
 import type { ColumnDef, SortingState } from '../DataTable';
-import { ActionColumnIds, checkColumnConfig, DataTable } from '../DataTable';
+import { ActionColumnIds, checkColumnConfig, DataTable, expandColumnConfig } from '../DataTable';
 
 export default {
   title: 'Components/Table/DataTable',
@@ -18,21 +18,23 @@ const actionCellCss = css`
   padding: var(--space-2);
 `;
 
-type RowData = { rowId: string } & Record<`col${number}`, number>;
+type RowData = { rowId: string; children?: RowData[] } & Record<`col${number}`, number>;
 
 export const DataTableExample = () => {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnOrder, setColumnOrder] = React.useState<string[]>([]);
-  const [virtualizeRows, setVirtualizeRows] = React.useState(true);
-  const [virtualizeColumns, setVirtualizeColumns] = React.useState(true);
-  const [stickyHeader, setStickyHeader] = React.useState(true);
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>({
-    left: [ActionColumnIds.select, 'pinTop', 'pinBottom'],
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [virtualizeRows, setVirtualizeRows] = useState(true);
+  const [virtualizeColumns, setVirtualizeColumns] = useState(true);
+  const [stickyHeader, setStickyHeader] = useState(true);
+  const [rowSelection, setRowSelection] = useState({});
+  const [expanded, setExpanded] = useState<ExpandedState>({});
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
+    left: [ActionColumnIds.select, 'pinTop', 'pinBottom', ActionColumnIds.expand],
     right: [],
   });
-  const actionColumns = React.useMemo<ColumnDef<RowData>[]>(
+  const actionColumns = useMemo<ColumnDef<RowData>[]>(
     () => [
+      expandColumnConfig,
       checkColumnConfig,
       {
         id: 'pinTop',
@@ -40,6 +42,7 @@ export const DataTableExample = () => {
           <Box className={actionCellCss}>
             <IconButton
               compact
+              aria-label={row.getIsPinned?.() === 'top' ? 'Unpin row from top' : 'Pin row to top'}
               name={row.getIsPinned?.() === 'top' ? 'close' : 'arrowUp'}
               onClick={() => {
                 row.pin(row.getIsPinned?.() === 'top' ? false : 'top');
@@ -57,6 +60,9 @@ export const DataTableExample = () => {
           <Box className={actionCellCss}>
             <IconButton
               compact
+              aria-label={
+                row.getIsPinned?.() === 'bottom' ? 'Unpin row from bottom' : 'Pin row to bottom'
+              }
               name={row.getIsPinned?.() === 'bottom' ? 'close' : 'arrowDown'}
               onClick={() => {
                 row.pin(row.getIsPinned?.() === 'bottom' ? false : 'bottom');
@@ -72,7 +78,7 @@ export const DataTableExample = () => {
     [],
   );
 
-  const dataColumns = React.useMemo<ColumnDef<RowData>[]>(() => {
+  const dataColumns = useMemo<ColumnDef<RowData>[]>(() => {
     const cols: ColumnDef<RowData>[] = [];
     for (let c = 0; c < 1000; c += 1) {
       const key = `col${c}`;
@@ -85,22 +91,29 @@ export const DataTableExample = () => {
     return cols;
   }, []);
 
-  const columns = React.useMemo<ColumnDef<RowData>[]>(
+  const columns = useMemo<ColumnDef<RowData>[]>(
     () => [...actionColumns, ...dataColumns],
     [actionColumns, dataColumns],
   );
 
-  const [data, setData] = React.useState<RowData[]>(() => {
-    const rows: RowData[] = [];
-    for (let r = 0; r < 1000; r += 1) {
-      const row: RowData = { rowId: String(r) };
+  const data = useMemo<RowData[]>(() => {
+    const buildRow = (rowId: string, depth: number): RowData => {
+      const row: RowData = { rowId };
       for (let c = 0; c < 1000; c += 1) {
-        row[`col${c}`] = r * 1000 + c;
+        row[`col${c}`] = depth * 1000 + Number(rowId.replace(/-/g, '')) + c;
       }
-      rows.push(row);
-    }
-    return rows;
-  });
+
+      if (depth < 2) {
+        row.children = new Array(3)
+          .fill(null)
+          .map((_, index) => buildRow(`${rowId}-${index}`, depth + 1));
+      }
+
+      return row;
+    };
+
+    return new Array(1000).fill(null).map((_, index) => buildRow(String(index), 0));
+  }, []);
 
   return (
     <VStack gap={3}>
@@ -127,10 +140,13 @@ export const DataTableExample = () => {
         tableOptions={{
           data,
           columns,
-          enableRowSelection: (row) => Number(row.original.rowId) % 2 === 0,
+          enableRowSelection: (row) => Number(row.original.rowId.split('-')[0]) % 2 === 0,
+          enableExpanding: true,
+          getSubRows: (row) => row.children,
+          onExpandedChange: setExpanded,
           onRowSelectionChange: setRowSelection,
           onColumnPinningChange: setColumnPinning,
-          state: { sorting, columnOrder, rowSelection, columnPinning },
+          state: { sorting, columnOrder, rowSelection, columnPinning, expanded },
           onSortingChange: setSorting,
           onColumnOrderChange: setColumnOrder,
           getRowId: (row) => row.rowId,
