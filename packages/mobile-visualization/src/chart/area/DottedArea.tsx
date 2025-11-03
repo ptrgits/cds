@@ -1,10 +1,11 @@
 import { memo, useMemo } from 'react';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
-import { Blend, ImageShader, LinearGradient, Skia, vec } from '@shopify/react-native-skia';
+import { Blend, ImageShader, Skia } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
+import { Gradient } from '../gradient';
 import { Path, type PathProps } from '../Path';
-import { applyOpacityToColor, getGradientScale, processGradient } from '../utils/gradient';
+import { type GradientDefinition } from '../utils/gradient';
 
 import { type AreaComponentProps } from './SolidArea';
 
@@ -63,14 +64,53 @@ export const DottedArea = memo<DottedAreaProps>(
     const animate = animateProp ?? context.animate;
 
     const targetSeries = seriesId ? context.getSeries(seriesId) : undefined;
-    const gradient = gradientProp ?? targetSeries?.gradient;
-    const gradientScale = seriesId ? context.getSeriesGradientScale(seriesId) : undefined;
+    const yAxisConfig = context.getYAxis(yAxisId);
 
-    // Get scales for gradient calculation
-    const xScale = context.getXScale();
-    const yScale = context.getYScale(yAxisId);
-    const yRange = yScale?.range();
-    const yDomain = yScale?.domain();
+    // Auto-generate gradient if not provided
+    const gradient = useMemo((): GradientDefinition | undefined => {
+      if (gradientProp) return gradientProp;
+      if (targetSeries?.gradient) return targetSeries.gradient;
+      if (!yAxisConfig) return;
+
+      const { min, max } = yAxisConfig.domain;
+      const baselineValue = min >= 0 ? min : max <= 0 ? max : (baseline ?? 0);
+
+      // Diverging gradient (data crosses zero)
+      if (min < 0 && max > 0) {
+        return {
+          axis: 'y',
+          stops: [
+            { offset: min, color: fill, opacity: peakOpacity },
+            { offset: baselineValue, color: fill, opacity: baselineOpacity },
+            { offset: max, color: fill, opacity: peakOpacity },
+          ],
+        };
+      }
+
+      // Simple gradient (all positive or all negative)
+      const peakValue = min >= 0 ? max : min;
+      return {
+        axis: 'y',
+        stops:
+          max <= 0
+            ? [
+                { offset: peakValue, color: fill, opacity: peakOpacity },
+                { offset: baselineValue, color: fill, opacity: baselineOpacity },
+              ]
+            : [
+                { offset: baselineValue, color: fill, opacity: baselineOpacity },
+                { offset: peakValue, color: fill, opacity: peakOpacity },
+              ],
+      };
+    }, [
+      gradientProp,
+      targetSeries?.gradient,
+      yAxisConfig,
+      fill,
+      baseline,
+      peakOpacity,
+      baselineOpacity,
+    ]);
 
     // Create white dot pattern image (reused for all gradients)
     // We use white so it can be colored by the gradient
@@ -91,109 +131,7 @@ export const DottedArea = memo<DottedAreaProps>(
       return surface.makeImageSnapshot();
     }, [patternSize, dotSize]);
 
-    // Calculate gradient configuration (color or opacity-based)
-    const gradientConfig = useMemo(() => {
-      // If a data-based gradient is provided, use it for colors
-      if (gradient) {
-        // Use gradientScale if available, otherwise calculate from scales
-        let scale = gradientScale;
-        if (!scale && xScale && yScale) {
-          scale = getGradientScale(gradient, xScale, yScale);
-        }
-
-        if (!scale) {
-          console.warn('Gradient requires a valid numeric scale');
-          return null;
-        }
-
-        const processed = processGradient(gradient, scale);
-        if (!processed) return null;
-
-        const axisType = gradient.axis ?? 'y';
-        const range = scale.range();
-
-        // Apply fillOpacity to all colors
-        const colors =
-          fillOpacity < 1
-            ? processed.colors.map((color) => applyOpacityToColor(color, fillOpacity))
-            : processed.colors;
-
-        // Determine gradient direction based on axis
-        const gradientStart = axisType === 'x' ? vec(range[0], 0) : vec(0, range[0]);
-        const gradientEnd = axisType === 'x' ? vec(range[1], 0) : vec(0, range[1]);
-
-        return {
-          start: gradientStart,
-          end: gradientEnd,
-          colors,
-          positions: processed.positions,
-          isColorGradient: true,
-        };
-      }
-
-      // No data gradient - use opacity mask (legacy behavior)
-      const createMaskColor = (alpha: number) => {
-        return applyOpacityToColor(fill, alpha * fillOpacity);
-      };
-
-      if (!yScale || !yDomain || !yRange || !drawingArea) {
-        // Fallback to simple top-to-bottom gradient
-        return {
-          start: vec(0, drawingArea?.y ?? 0),
-          end: vec(0, (drawingArea?.y ?? 0) + (drawingArea?.height ?? 100)),
-          colors: [createMaskColor(peakOpacity), createMaskColor(baselineOpacity)],
-          positions: [0, 1],
-          isColorGradient: false,
-        };
-      }
-
-      const [minValue, maxValue] = yDomain;
-      const [yMin, yMax] = yRange; // yMin is bottom (higher y), yMax is top (lower y)
-
-      // Determine baseline value
-      let dataBaseline: number;
-      if (minValue >= 0) {
-        dataBaseline = minValue; // All positive: baseline at min
-      } else if (maxValue <= 0) {
-        dataBaseline = maxValue; // All negative: baseline at max
-      } else {
-        dataBaseline = 0; // Crosses zero: baseline at 0
-      }
-
-      const scaledBaseline = yScale(baseline ?? dataBaseline);
-      const baselineY = typeof scaledBaseline === 'number' ? scaledBaseline : yMin;
-
-      // Calculate normalized position for baseline (0 = top, 1 = bottom)
-      const baselinePosition = Math.max(0, Math.min(1, (baselineY - yMax) / (yMin - yMax)));
-
-      // Diverging gradient: high opacity at extremes, low at baseline
-      return {
-        start: vec(0, yMax), // Top
-        end: vec(0, yMin), // Bottom
-        colors: [
-          createMaskColor(peakOpacity), // Top peak
-          createMaskColor(baselineOpacity), // Baseline
-          createMaskColor(peakOpacity), // Bottom peak
-        ],
-        positions: [0, baselinePosition, 1],
-        isColorGradient: false,
-      };
-    }, [
-      gradient,
-      gradientScale,
-      xScale,
-      yScale,
-      yDomain,
-      yRange,
-      drawingArea,
-      baseline,
-      peakOpacity,
-      baselineOpacity,
-      fillOpacity,
-      fill,
-    ]);
-
-    if (!drawingArea || !patternImage || !gradientConfig) return null;
+    if (!drawingArea || !patternImage || !gradient) return null;
 
     return (
       <Path
@@ -201,16 +139,12 @@ export const DottedArea = memo<DottedAreaProps>(
         clipRect={clipRect}
         d={d}
         fill={fill}
+        fillOpacity={fillOpacity}
         transitionConfigs={transitionConfig ? { update: transitionConfig } : undefined}
       >
         <ImageShader fit="none" image={patternImage} tx="repeat" ty="repeat" />
         <Blend mode="srcIn">
-          <LinearGradient
-            colors={gradientConfig.colors}
-            end={gradientConfig.end}
-            positions={gradientConfig.positions}
-            start={gradientConfig.start}
-          />
+          <Gradient gradient={gradient} yAxisId={yAxisId} />
         </Blend>
       </Path>
     );

@@ -1,10 +1,10 @@
 import { memo, useMemo } from 'react';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
-import { LinearGradient } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
+import { Gradient } from '../gradient';
 import { Path, type PathProps } from '../Path';
-import { applyOpacityToColor, getGradientConfig, type GradientDefinition } from '../utils/gradient';
+import { type GradientDefinition } from '../utils/gradient';
 
 import { type AreaComponentProps } from './SolidArea';
 
@@ -53,8 +53,6 @@ export const GradientArea = memo<GradientAreaProps>(
 
     const fill = fillProp ?? theme.color.fgPrimary;
 
-    const xScale = context.getXScale();
-    const yScale = context.getYScale(yAxisId);
     const yAxisConfig = context.getYAxis(yAxisId);
 
     const gradient = useMemo((): GradientDefinition | undefined => {
@@ -93,23 +91,7 @@ export const GradientArea = memo<GradientAreaProps>(
       };
     }, [gradientProp, yAxisConfig, fill, baseline, peakOpacity, baselineOpacity]);
 
-    const gradientConfig = useMemo(() => {
-      if (!gradient || !xScale || !yScale) return;
-
-      const config = getGradientConfig(gradient, xScale, yScale);
-      if (!config) return;
-
-      if (fillOpacity < 1) {
-        return {
-          ...config,
-          colors: config.colors.map((color: string) => applyOpacityToColor(color, fillOpacity)),
-        };
-      }
-
-      return config;
-    }, [gradient, xScale, yScale, fillOpacity]);
-
-    if (!gradientConfig) return null;
+    if (!gradient) return null;
 
     return (
       <Path
@@ -117,15 +99,11 @@ export const GradientArea = memo<GradientAreaProps>(
         clipRect={clipRect}
         d={d}
         fill={fill}
+        fillOpacity={fillOpacity}
         transitionConfigs={transitionConfig ? { update: transitionConfig } : undefined}
+        {...pathProps}
       >
-        <LinearGradient
-          colors={gradientConfig.colors}
-          end={gradientConfig.end}
-          mode="clamp"
-          positions={gradientConfig.positions}
-          start={gradientConfig.start}
-        />
+        <Gradient gradient={gradient} yAxisId={yAxisId} />
       </Path>
     );
   },

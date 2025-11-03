@@ -496,10 +496,16 @@ function DiscreteGradient() {
             gradient: {
               stops: ({ min, max }) => [
                 { offset: min, color: `rgb(var(--${currentSpectrumColor}80))` },
-                { offset: (max - min) / 3, color: `rgb(var(--${currentSpectrumColor}80))` },
-                { offset: (max - min) / 3, color: `rgb(var(--${currentSpectrumColor}50))` },
-                { offset: ((max - min) / 3) * 2, color: `rgb(var(--${currentSpectrumColor}50))` },
-                { offset: ((max - min) / 3) * 2, color: `rgb(var(--${currentSpectrumColor}20))` },
+                { offset: min + (max - min) / 3, color: `rgb(var(--${currentSpectrumColor}80))` },
+                { offset: min + (max - min) / 3, color: `rgb(var(--${currentSpectrumColor}50))` },
+                {
+                  offset: min + ((max - min) / 3) * 2,
+                  color: `rgb(var(--${currentSpectrumColor}50))`,
+                },
+                {
+                  offset: min + ((max - min) / 3) * 2,
+                  color: `rgb(var(--${currentSpectrumColor}20))`,
+                },
                 { offset: max, color: `rgb(var(--${currentSpectrumColor}20))` },
               ],
             },

@@ -1,11 +1,10 @@
 import { memo, useMemo } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
-import { DashPathEffect, LinearGradient } from '@shopify/react-native-skia';
+import { DashPathEffect } from '@shopify/react-native-skia';
 
-import { useCartesianChartContext } from '../ChartProvider';
+import { Gradient } from '../gradient';
 import { Path, type PathProps } from '../Path';
-import { getGradientConfig } from '../utils/gradient';
 
 import { type LineComponentProps } from './SolidLine';
 
@@ -47,15 +46,6 @@ export const DottedLine = memo<DottedLineProps>(
     ...props
   }) => {
     const theme = useTheme();
-    const context = useCartesianChartContext();
-
-    const xScale = context.getXScale();
-    const yScale = context.getYScale(yAxisId);
-
-    const gradientConfig = useMemo(() => {
-      if (!gradient || !xScale || !yScale) return;
-      return getGradientConfig(gradient, xScale, yScale);
-    }, [gradient, xScale, yScale]);
 
     // Parse strokeDasharray into intervals for DashPathEffect
     // todo: change the prop to be this array instead
@@ -76,16 +66,10 @@ export const DottedLine = memo<DottedLineProps>(
         strokeOpacity={strokeOpacity}
         strokeWidth={strokeWidth}
         transitionConfigs={transitionConfig ? { update: transitionConfig } : undefined}
+        {...props}
       >
         <DashPathEffect intervals={dashIntervals} />
-        {gradientConfig && (
-          <LinearGradient
-            colors={gradientConfig.colors}
-            end={gradientConfig.end}
-            positions={gradientConfig.positions ?? undefined}
-            start={gradientConfig.start}
-          />
-        )}
+        {gradient && <Gradient gradient={gradient} yAxisId={yAxisId} />}
       </Path>
     );
   },

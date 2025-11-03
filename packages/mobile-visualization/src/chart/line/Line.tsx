@@ -1,6 +1,8 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useEffect, useMemo } from 'react';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
+import { Group } from '@shopify/react-native-skia';
 
 import { Area, type AreaComponent } from '../area/Area';
 import { useCartesianChartContext } from '../ChartProvider';
@@ -106,7 +108,30 @@ export const Line = memo<LineProps>(
     ...props
   }) => {
     const theme = useTheme();
-    const { getSeries, getSeriesData, getXScale, getYScale, getXAxis } = useCartesianChartContext();
+    const {
+      getSeries,
+      getSeriesData,
+      getXScale,
+      getYScale,
+      getXAxis,
+      animate: contextAnimate,
+    } = useCartesianChartContext();
+
+    // Use animate prop or fall back to context animate
+    const shouldAnimate = animate ?? contextAnimate;
+
+    // Animation state for delayed point rendering (matches web timing)
+    const pointsOpacity = useSharedValue(shouldAnimate ? 0 : 1);
+
+    // Trigger delayed point animation when component mounts and animate is true
+    useEffect(() => {
+      if (shouldAnimate) {
+        // Match web timing: 850ms delay + 150ms fade in
+        setTimeout(() => {
+          pointsOpacity.value = withTiming(1, { duration: 150 });
+        }, 850);
+      }
+    }, [shouldAnimate, pointsOpacity]);
 
     const matchedSeries = getSeries(seriesId);
     const seriesGradient = matchedSeries?.gradient;
@@ -223,58 +248,61 @@ export const Line = memo<LineProps>(
           yAxisId={matchedSeries?.yAxisId}
           {...props}
         />
-        {renderPoints &&
-          chartData.map((value, index) => {
-            if (value === null) {
-              return null;
-            }
-
-            const xValue = xData && xData[index] !== undefined ? xData[index] : index;
-
-            const pointResult = renderPoints({
-              dataY: value,
-              dataX: xValue,
-              x: xScale?.(xValue) ?? 0,
-              y: yScale?.(value) ?? 0,
-            });
-
-            if (pointResult === false || pointResult === null || pointResult === undefined) {
-              return null;
-            }
-
-            const pointConfig = pointResult === true ? {} : pointResult;
-
-            // Evaluate colors from gradient if available (only if not explicitly set)
-            let pointFill = pointConfig.fill ?? stroke;
-
-            if (gradientScale && seriesGradient && !pointConfig.fill) {
-              // Use the appropriate data value based on gradient axis
-              const axis = seriesGradient.axis ?? 'y';
-              const dataValue = axis === 'x' ? xValue : value;
-
-              const evaluatedColor = evaluateGradientAtValue(
-                seriesGradient,
-                dataValue,
-                gradientScale,
-              );
-              if (evaluatedColor) {
-                // Apply gradient color to fill if not explicitly set
-                pointFill = evaluatedColor;
+        {renderPoints && (
+          <Group opacity={pointsOpacity}>
+            {chartData.map((value, index) => {
+              if (value === null) {
+                return null;
               }
-            }
 
-            return (
-              <Point
-                key={`${seriesId}-renderpoint-${xValue}`}
-                dataX={xValue}
-                dataY={value}
-                transitionConfig={transitionConfig}
-                {...pointConfig}
-                fill={pointFill}
-                opacity={pointConfig.opacity ?? opacity}
-              />
-            );
-          })}
+              const xValue = xData && xData[index] !== undefined ? xData[index] : index;
+
+              const pointResult = renderPoints({
+                dataY: value,
+                dataX: xValue,
+                x: xScale?.(xValue) ?? 0,
+                y: yScale?.(value) ?? 0,
+              });
+
+              if (pointResult === false || pointResult === null || pointResult === undefined) {
+                return null;
+              }
+
+              const pointConfig = pointResult === true ? {} : pointResult;
+
+              // Evaluate colors from gradient if available (only if not explicitly set)
+              let pointFill = pointConfig.fill ?? stroke;
+
+              if (gradientScale && seriesGradient && !pointConfig.fill) {
+                // Use the appropriate data value based on gradient axis
+                const axis = seriesGradient.axis ?? 'y';
+                const dataValue = axis === 'x' ? xValue : value;
+
+                const evaluatedColor = evaluateGradientAtValue(
+                  seriesGradient,
+                  dataValue,
+                  gradientScale,
+                );
+                if (evaluatedColor) {
+                  // Apply gradient color to fill if not explicitly set
+                  pointFill = evaluatedColor;
+                }
+              }
+
+              return (
+                <Point
+                  key={`${seriesId}-renderpoint-${xValue}`}
+                  dataX={xValue}
+                  dataY={value}
+                  transitionConfig={transitionConfig}
+                  {...pointConfig}
+                  fill={pointFill}
+                  opacity={pointConfig.opacity ?? opacity}
+                />
+              );
+            })}
+          </Group>
+        )}
       </>
     );
   },

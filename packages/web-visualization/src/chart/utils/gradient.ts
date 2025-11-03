@@ -10,7 +10,7 @@ export type GradientStop = {
    * Multiple stops at the same offset create hard color transitions.
    */
   offset: number;
-  /** Color value (CSS color string or variable like 'var(--color-fgPositive)') */
+  /**  Color at the stop (any valid CSS color) */
   color: string;
   /** Optional opacity (0-1). Defaults to 1. */
   opacity?: number;
@@ -53,7 +53,6 @@ const getGradientStops = (
  */
 const processGradientStops = (
   stops: GradientStop[],
-  domain: { min: number; max: number },
   scale: ChartScaleFunction,
 ): GradientStop[] | undefined => {
   if (stops.length === 0) {
@@ -113,7 +112,6 @@ export const getGradientScale = (
   const axis = gradient.axis ?? 'y';
   const targetScale = axis === 'x' ? xScale : yScale;
 
-  // Gradient requires either a numeric scale or a categorical (band) scale
   if (!targetScale) {
     console.warn(`Gradient requires a scale on the ${axis}-axis`);
     return;
@@ -158,32 +156,12 @@ export const evaluateGradientAtValue = (
     domain = { min, max };
   }
 
-  // Resolve stops (handle function form)
-  const resolvedStops = getGradientStops(gradient.stops, domain);
-
-  if (resolvedStops.length === 0) return;
-
-  const { min: minValue, max: maxValue } = domain;
-
-  // If only 1 stop, expand to 2-stop gradient from baseline
-  let effectiveStops = resolvedStops;
-  if (resolvedStops.length === 1) {
-    const singleStop = resolvedStops[0];
-    const baselineOffset = singleStop.offset >= 0 ? minValue : maxValue;
-
-    effectiveStops = [{ offset: baselineOffset, color: singleStop.color, opacity: 0 }, singleStop];
-  }
+  const stops = getGradientStops(gradient.stops, domain);
+  if (stops.length === 0) return;
 
   // Use srgb color space to match our linearGradient which uses srgb color space
   // https://www.w3.org/TR/SVG11/painting.html#ColorInterpolationProperty
   const colorSpace = 'srgb';
-
-  // Process stops - always ignore opacity for point evaluation (opacity is handled in gradient rendering)
-  const processedColors = effectiveStops.map((stop) => {
-    return stop.color;
-  });
-
-  const offsets = effectiveStops.map((stop) => stop.offset);
 
   // Use scale to map values to positions (handles log scales correctly)
   // For numeric scales: scale(value) returns pixel position
@@ -194,43 +172,43 @@ export const evaluateGradientAtValue = (
     : [scaleRange, scaleRange]; // fallback for band scales
 
   const rangeSpan = Math.abs(rangeMax - rangeMin);
-  if (rangeSpan === 0) return processedColors[0];
+  if (rangeSpan === 0) return stops[0].color;
 
   // Map dataValue through scale to get position
   const dataPosition = scale(dataValue);
-  if (dataPosition === undefined) return processedColors[0];
+  if (dataPosition === undefined) return stops[0].color;
 
   // Normalize to 0-1 based on range
   const normalizedValue = Math.max(0, Math.min(1, Math.abs(dataPosition - rangeMin) / rangeSpan));
 
   // Map stop offsets through scale and normalize to 0-1
-  const positions = offsets.map((offset) => {
-    const stopPosition = scale(offset);
+  const positions = stops.map((stop) => {
+    const stopPosition = scale(stop.offset);
     if (stopPosition === undefined) return 0;
     return Math.max(0, Math.min(1, Math.abs(stopPosition - rangeMin) / rangeSpan));
   });
 
   // Find which segment we're in
   if (normalizedValue < positions[0]) {
-    return processedColors[0];
+    return stops[0].color;
   }
   if (normalizedValue >= positions[positions.length - 1]) {
-    return processedColors[processedColors.length - 1];
+    return stops[stops.length - 1].color;
   }
 
   // Check if dataValue matches any stop offset exactly (for hard transitions)
-  for (let i = 0; i < offsets.length; i++) {
-    if (dataValue === offsets[i]) {
+  for (let i = 0; i < stops.length; i++) {
+    if (dataValue === stops[i].offset) {
       // Found exact match - check if there are multiple stops at this offset (hard transition)
       // Use the LAST color at this offset for hard transitions
       let lastIndexAtOffset = i;
       while (
-        lastIndexAtOffset + 1 < offsets.length &&
-        offsets[lastIndexAtOffset + 1] === offsets[i]
+        lastIndexAtOffset + 1 < stops.length &&
+        stops[lastIndexAtOffset + 1].offset === stops[i].offset
       ) {
         lastIndexAtOffset++;
       }
-      return processedColors[lastIndexAtOffset];
+      return stops[lastIndexAtOffset].color;
     }
   }
 
@@ -242,7 +220,7 @@ export const evaluateGradientAtValue = (
     if (normalizedValue >= start && normalizedValue <= end) {
       // Handle hard transitions (multiple stops at same position)
       if (end === start) {
-        return processedColors[i + 1];
+        return stops[i + 1].color;
       }
 
       // Calculate progress within this segment (0-1)
@@ -250,11 +228,11 @@ export const evaluateGradientAtValue = (
       const percentage = segmentProgress * 100;
 
       // Use color-mix()! This works with CSS variables!
-      return `color-mix(in ${colorSpace}, ${processedColors[i + 1]} ${percentage}%, ${processedColors[i]})`;
+      return `color-mix(in ${colorSpace}, ${stops[i + 1].color} ${percentage}%, ${stops[i].color})`;
     }
   }
 
-  return processedColors[processedColors.length - 1];
+  return stops[stops.length - 1].color;
 };
 
 /**
@@ -309,5 +287,5 @@ export const getGradientConfig = (
   }
 
   const resolvedStops = getGradientStops(gradient.stops, domain);
-  return processGradientStops(resolvedStops, domain, scale);
+  return processGradientStops(resolvedStops, scale);
 };

@@ -9,7 +9,6 @@ import {
   useState,
 } from 'react';
 import type { View } from 'react-native';
-import type { ThemeVars } from '@coinbase/cds-common/core/theme';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
 import { prices } from '@coinbase/cds-common/internal/data/prices';
 import { sparklineInteractiveData } from '@coinbase/cds-common/internal/visualizations/SparklineInteractiveData';
@@ -2411,7 +2410,7 @@ export default () => {
       <Example title="Animated Gain/Loss">
         <AnimatedGainLossChart />
       </Example>*/}
-      <Example title="Continuous Gradient">
+      <Example title="Continuous Gradient 2">
         <LineChart
           enableScrubbing
           showYAxis
@@ -2452,13 +2451,13 @@ export default () => {
               id: 'prices',
               data: sampleData,
               gradient: {
-                stops: [
-                  { offset: 0, color: `rgb(${theme.spectrum.pink90})` },
-                  { offset: 33, color: `rgb(${theme.spectrum.pink90})` },
-                  { offset: 33, color: `rgb(${theme.spectrum.pink50})` },
-                  { offset: 67, color: `rgb(${theme.spectrum.pink50})` },
-                  { offset: 67, color: `rgb(${theme.spectrum.pink10})` },
-                  { offset: 100, color: `rgb(${theme.spectrum.pink10})` },
+                stops: ({ min, max }) => [
+                  { offset: min, color: `rgb(${theme.spectrum.pink90})` },
+                  { offset: min + (max - min) / 3, color: `rgb(${theme.spectrum.pink90})` },
+                  { offset: min + (max - min) / 3, color: `rgb(${theme.spectrum.pink50})` },
+                  { offset: min + ((max - min) / 3) * 2, color: `rgb(${theme.spectrum.pink50})` },
+                  { offset: min + ((max - min) / 3) * 2, color: `rgb(${theme.spectrum.pink10})` },
+                  { offset: max, color: `rgb(${theme.spectrum.pink10})` },
                 ],
               },
             },

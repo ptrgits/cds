@@ -630,7 +630,7 @@ const ColorMapWithOpacity = () => {
 const BarChartStories = () => {
   return (
     <ExampleScreen>
-      <Example title="Basic 2">
+      <Example title="Basic 3">
         <UpdatingChartValues />
       </Example>
       {/*<Example title="Animated Auto-Updating">

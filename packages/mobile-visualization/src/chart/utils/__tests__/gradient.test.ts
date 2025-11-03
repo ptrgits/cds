@@ -1,11 +1,8 @@
 import {
   evaluateGradientAtValue,
+  getGradientConfig,
   getGradientScale,
   type GradientDefinition,
-  normalizeGradientStop,
-  parseColor,
-  processGradient,
-  resolveGradientStops,
 } from '../gradient';
 import { getCategoricalScale, getNumericScale } from '../scale';
 
@@ -51,72 +48,7 @@ jest.mock('@shopify/react-native-skia', () => ({
   },
 }));
 
-describe('normalizeGradientStop', () => {
-  it('should handle gradient stops with opacity', () => {
-    const result = normalizeGradientStop({ offset: 0, color: 'red', opacity: 0.5 });
-    expect(result).toEqual({ color: 'red', opacity: 0.5 });
-  });
-
-  it('should default opacity to 1 when not provided', () => {
-    const result = normalizeGradientStop({ offset: 0, color: 'green' });
-    expect(result).toEqual({ color: 'green', opacity: 1 });
-  });
-});
-
-describe('parseColor', () => {
-  it('should parse hex colors', () => {
-    const result = parseColor('#FF0000', 1);
-    expect(result).toMatch(/rgba\(\s*255,\s*0,\s*0,\s*1\s*\)/);
-  });
-
-  it('should apply opacity', () => {
-    const result = parseColor('#FF0000', 0.5);
-    expect(result).toMatch(/rgba\(\s*255,\s*0,\s*0,\s*0\.5\s*\)/);
-  });
-});
-
-describe('resolveGradientStops', () => {
-  const linearScale = getNumericScale({
-    scaleType: 'linear',
-    domain: { min: 0, max: 100 },
-    range: { min: 0, max: 400 },
-  });
-
-  it('should return static stops array as-is', () => {
-    const stops = [
-      { offset: 0, color: 'red' },
-      { offset: 100, color: 'blue' },
-    ];
-    const result = resolveGradientStops(stops, linearScale);
-    expect(result).toEqual(stops);
-  });
-
-  it('should resolve function form with domain bounds', () => {
-    const stopsFn = ({ min, max }: { min: number; max: number }) => [
-      { offset: min, color: 'red' },
-      { offset: max, color: 'blue' },
-    ];
-    const result = resolveGradientStops(stopsFn, linearScale);
-    expect(result).toEqual([
-      { offset: 0, color: 'red' },
-      { offset: 100, color: 'blue' },
-    ]);
-  });
-
-  it('should resolve function form with calculated offsets', () => {
-    const stopsFn = ({ min, max }: { min: number; max: number }) => [
-      { offset: min, color: 'red' },
-      { offset: (min + max) / 2, color: 'yellow' },
-      { offset: max, color: 'green' },
-    ];
-    const result = resolveGradientStops(stopsFn, linearScale);
-    expect(result).toEqual([
-      { offset: 0, color: 'red' },
-      { offset: 50, color: 'yellow' },
-      { offset: 100, color: 'green' },
-    ]);
-  });
-});
+// Tests for internal functions removed - these are now implementation details
 
 describe('getGradientScale', () => {
   it('should return yScale by default when no gradient provided', () => {
@@ -191,24 +123,30 @@ describe('getGradientScale', () => {
   });
 });
 
-describe('processGradient with band scale', () => {
+describe('getGradientConfig with band scale', () => {
   it('should process gradient with band scale', () => {
-    const bandScale = getCategoricalScale({
+    const xScale = getCategoricalScale({
       domain: { min: 0, max: 6 }, // [0, 1, 2, 3, 4, 5, 6]
       range: { min: 0, max: 200 },
     });
+    
+    const yScale = getNumericScale({
+      scaleType: 'linear',
+      domain: { min: 0, max: 100 },
+      range: { min: 0, max: 400 },
+    });
 
     const gradient: GradientDefinition = {
+      axis: 'x',
       stops: [
         { offset: 0, color: 'red' },
         { offset: 6, color: 'blue' },
       ],
     };
 
-    const result = processGradient(gradient, bandScale);
-    expect(result).not.toBeNull();
-    expect(result?.colors).toHaveLength(2);
-    expect(result?.positions).toHaveLength(2);
+    const result = getGradientConfig(gradient, xScale, yScale);
+    expect(result).toBeTruthy();
+    expect(result).toHaveLength(2);
   });
 });
 
@@ -304,14 +242,20 @@ describe('evaluateGradientAtValue includeAlpha parameter', () => {
   });
 });
 
-describe('processGradient with numeric scale', () => {
-  it('should process gradient with linear scale', () => {
-    const linearScale = getNumericScale({
-      scaleType: 'linear',
-      domain: { min: 0, max: 100 },
-      range: { min: 0, max: 400 },
-    });
+describe('getGradientConfig with numeric scale', () => {
+  const xScale = getNumericScale({
+    scaleType: 'linear',
+    domain: { min: 0, max: 100 },
+    range: { min: 0, max: 400 },
+  });
+  
+  const yScale = getNumericScale({
+    scaleType: 'linear',
+    domain: { min: 0, max: 100 },
+    range: { min: 400, max: 0 },
+  });
 
+  it('should process gradient with linear scale', () => {
     const gradient: GradientDefinition = {
       stops: [
         { offset: 0, color: 'red' },
@@ -320,19 +264,15 @@ describe('processGradient with numeric scale', () => {
       ],
     };
 
-    const result = processGradient(gradient, linearScale);
-    expect(result).not.toBeNull();
-    expect(result?.colors).toHaveLength(3);
-    expect(result?.positions).toEqual([0, 0.5, 1]);
+    const result = getGradientConfig(gradient, xScale, yScale);
+    expect(result).toBeTruthy();
+    expect(result).toHaveLength(3);
+    expect(result?.[0].offset).toBe(0);
+    expect(result?.[1].offset).toBeCloseTo(0.5);
+    expect(result?.[2].offset).toBe(1);
   });
 
   it('should handle gradient with custom stops', () => {
-    const linearScale = getNumericScale({
-      scaleType: 'linear',
-      domain: { min: 0, max: 100 },
-      range: { min: 0, max: 400 },
-    });
-
     const gradient: GradientDefinition = {
       stops: [
         { offset: 0, color: 'red' },
@@ -341,18 +281,14 @@ describe('processGradient with numeric scale', () => {
       ],
     };
 
-    const result = processGradient(gradient, linearScale);
-    expect(result).not.toBeNull();
-    expect(result?.positions).toEqual([0, 0.3, 1]); // These get normalized to 0-1
+    const result = getGradientConfig(gradient, xScale, yScale);
+    expect(result).toBeTruthy();
+    expect(result?.[0].offset).toBe(0);
+    expect(result?.[1].offset).toBeCloseTo(0.3);
+    expect(result?.[2].offset).toBe(1);
   });
 
   it('should handle function form stops', () => {
-    const linearScale = getNumericScale({
-      scaleType: 'linear',
-      domain: { min: 0, max: 100 },
-      range: { min: 0, max: 400 },
-    });
-
     const gradient: GradientDefinition = {
       stops: ({ min, max }: { min: number; max: number }) => [
         { offset: min, color: 'red' },
@@ -360,9 +296,10 @@ describe('processGradient with numeric scale', () => {
       ],
     };
 
-    const result = processGradient(gradient, linearScale);
-    expect(result).not.toBeNull();
-    expect(result?.colors).toHaveLength(2);
-    expect(result?.positions).toEqual([0, 1]);
+    const result = getGradientConfig(gradient, xScale, yScale);
+    expect(result).toBeTruthy();
+    expect(result).toHaveLength(2);
+    expect(result?.[0].offset).toBe(0);
+    expect(result?.[1].offset).toBe(1);
   });
 });

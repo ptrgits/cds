@@ -115,7 +115,7 @@ export const DottedArea = memo<DottedAreaProps>(
       // Diverging gradient (data crosses zero)
       if (min < 0 && max > 0) {
         return {
-          axis: 'y' as const,
+          axis: 'y',
           stops: [
             { offset: min, color: fill, opacity: peakOpacity },
             { offset: baselineValue, color: fill, opacity: baselineOpacity },
@@ -127,7 +127,7 @@ export const DottedArea = memo<DottedAreaProps>(
       // Simple gradient (all positive or all negative)
       const peakValue = min >= 0 ? max : min;
       return {
-        axis: 'y' as const,
+        axis: 'y',
         stops:
           max <= 0
             ? [

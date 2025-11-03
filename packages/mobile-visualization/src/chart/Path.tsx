@@ -1,6 +1,7 @@
-import { memo, type ReactNode, useMemo } from 'react';
+import { memo, type ReactNode, useEffect, useMemo } from 'react';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 import type { Rect, SharedProps } from '@coinbase/cds-common/types';
-import { Group, Path as SkiaPath, Skia } from '@shopify/react-native-skia';
+import { Group, Path as SkiaPath, Skia, usePathInterpolation } from '@shopify/react-native-skia';
 
 import type { TransitionConfig } from './utils/transition';
 import { usePathTransition } from './utils/transition';
@@ -173,27 +174,70 @@ export const Path = memo<PathProps>((props) => {
   // Area charts typically use offset=0 for exact clipping, while lines use offset=2 for breathing room
   const totalOffset = clipOffset * 2; // Applied on both sides
 
+  // Animation progress for clip path reveal
+  const clipProgress = useSharedValue(animate ? 0 : 1);
+
+  // Trigger clip path animation when component mounts and animate is true
+  useEffect(() => {
+    if (animate) {
+      clipProgress.value = withTiming(1, { duration: 800 });
+    }
+  }, [animate, clipProgress]);
+
+  // Create initial and target clip paths for animation
+  const { initialClipPath, targetClipPath } = useMemo(() => {
+    if (!rect) return { initialClipPath: null, targetClipPath: null };
+
+    // Initial clip path (width = 0)
+    const initial = Skia.Path.Make();
+    initial.addRect({
+      x: rect.x - clipOffset,
+      y: rect.y - clipOffset,
+      width: 0,
+      height: rect.height + totalOffset,
+    });
+
+    // Target clip path (full width)
+    const target = Skia.Path.Make();
+    target.addRect({
+      x: rect.x - clipOffset,
+      y: rect.y - clipOffset,
+      width: rect.width + totalOffset,
+      height: rect.height + totalOffset,
+    });
+
+    return { initialClipPath: initial, targetClipPath: target };
+  }, [rect, clipOffset, totalOffset]);
+
+  // Use usePathInterpolation for animated clip path
+  const animatedClipPath = usePathInterpolation(
+    clipProgress,
+    [0, 1],
+    animate && initialClipPath && targetClipPath
+      ? [initialClipPath, targetClipPath]
+      : targetClipPath
+        ? [targetClipPath, targetClipPath]
+        : [Skia.Path.Make(), Skia.Path.Make()],
+  );
+
   // Resolve the final clip path:
   // 1. If clipPath prop was explicitly provided, use it (even if undefined = no clipping)
-  // 2. Otherwise, generate clip path from clipRect/clipOffset
+  // 2. If animating, use the interpolated clip path
+  // 3. Otherwise, use static target clip path
   const resolvedClipPath = useMemo(() => {
     // If clipPath was explicitly provided, use it directly
     if (hasExplicitClipPath) {
       return clipPathProp;
     }
 
-    // Otherwise, generate clip path from rect and offset (default behavior)
-    if (!rect) return null;
+    // If not animating or paths are null, return target clip path
+    if (!animate || !targetClipPath) {
+      return targetClipPath;
+    }
 
-    const path = Skia.Path.Make();
-    path.addRect({
-      x: rect.x - clipOffset,
-      y: rect.y - clipOffset,
-      width: rect.width + totalOffset,
-      height: rect.height + totalOffset,
-    });
-    return path;
-  }, [hasExplicitClipPath, clipPathProp, rect, clipOffset, totalOffset]);
+    // Return null here since we'll use animatedClipPath directly
+    return null;
+  }, [hasExplicitClipPath, clipPathProp, animate, targetClipPath]);
 
   // Convert SVG path string to SkPath for static rendering
   const staticPath = useMemo(() => {
@@ -202,9 +246,6 @@ export const Path = memo<PathProps>((props) => {
 
   const isFilled = fill !== undefined && fill !== 'none';
   const isStroked = stroke !== undefined && stroke !== 'none';
-
-  // Don't render if resolvedClipPath is null (invalid state)
-  if (resolvedClipPath === null) return null;
 
   const content = !animate ? (
     <>
@@ -244,10 +285,16 @@ export const Path = memo<PathProps>((props) => {
     </AnimatedPath>
   );
 
-  // If resolvedClipPath is undefined, render without clipping
-  if (resolvedClipPath === undefined) {
+  // Determine which clip path to use
+  const finalClipPath = animate && resolvedClipPath === null ? animatedClipPath : resolvedClipPath;
+
+  // If finalClipPath is undefined, render without clipping
+  if (finalClipPath === undefined) {
     return content;
   }
 
-  return <Group clip={resolvedClipPath}>{content}</Group>;
+  // Don't render if finalClipPath is null (invalid state)
+  if (finalClipPath === null) return null;
+
+  return <Group clip={finalClipPath}>{content}</Group>;
 });

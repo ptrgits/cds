@@ -1,11 +1,11 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import type { Rect } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
-import { LinearGradient } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
+import { Gradient } from '../gradient';
 import { Path, type PathProps } from '../Path';
-import { getGradientConfig, type GradientDefinition } from '../utils/gradient';
+import { type GradientDefinition } from '../utils/gradient';
 import { type TransitionConfig } from '../utils/transition';
 
 /**
@@ -88,14 +88,6 @@ export const SolidArea = memo<SolidAreaProps>(
     const seriesGradient = targetSeries?.gradient;
     const gradient = gradientProp ?? seriesGradient;
 
-    const xScale = context.getXScale();
-    const yScale = context.getYScale(yAxisId);
-
-    const gradientConfig = useMemo(() => {
-      if (!gradient || !xScale || !yScale) return;
-      return getGradientConfig(gradient, xScale, yScale);
-    }, [gradient, xScale, yScale]);
-
     return (
       <Path
         animate={animate}
@@ -104,16 +96,9 @@ export const SolidArea = memo<SolidAreaProps>(
         fill={fill}
         fillOpacity={fillOpacity}
         transitionConfigs={transitionConfig ? { update: transitionConfig } : undefined}
+        {...props}
       >
-        {gradientConfig && (
-          <LinearGradient
-            colors={gradientConfig.colors}
-            end={gradientConfig.end}
-            mode="clamp"
-            positions={gradientConfig.positions}
-            start={gradientConfig.start}
-          />
-        )}
+        {gradient && <Gradient gradient={gradient} yAxisId={yAxisId} />}
       </Path>
     );
   },

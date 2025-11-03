@@ -7,7 +7,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { useSharedValue } from 'react-native-reanimated';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
@@ -129,8 +129,21 @@ export const Scrubber = memo(
       );
 
       const { scrubberPosition: scrubberPosition } = useScrubberContext();
-      const { getXScale, getYScale, getSeriesData, getXAxis, series, drawingArea } =
+      const { getXScale, getYScale, getSeriesData, getXAxis, series, drawingArea, animate } =
         useCartesianChartContext();
+
+      // Animation state for delayed scrubber rendering (matches web timing)
+      const scrubberOpacity = useSharedValue(animate ? 0 : 1);
+
+      // Trigger delayed scrubber animation when component mounts and animate is true
+      useEffect(() => {
+        if (animate) {
+          // Match web timing: 850ms delay + 150ms fade in
+          setTimeout(() => {
+            scrubberOpacity.value = withTiming(1, { duration: 150 });
+          }, 850);
+        }
+      }, [animate, scrubberOpacity]);
 
       // Expose imperative handle with pulse method
       useImperativeHandle(ref, () => ({
@@ -547,7 +560,7 @@ export const Scrubber = memo(
       if (!defaultXScale) return null;
 
       return (
-        <>
+        <Group opacity={scrubberOpacity}>
           {!hideOverlay &&
             dataX !== undefined &&
             scrubberPosition !== undefined &&
@@ -624,7 +637,7 @@ export const Scrubber = memo(
               </Group>
             );
           })}
-        </>
+        </Group>
       );
     },
   ),
