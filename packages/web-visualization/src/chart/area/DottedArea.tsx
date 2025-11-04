@@ -149,35 +149,7 @@ export const DottedArea = memo<DottedAreaProps>(
       baselineOpacity,
     ]);
 
-    if (!gradient) {
-      return (
-        <g className={className ?? classNames?.root} style={style ?? styles?.root}>
-          <defs>
-            <pattern
-              className={classNames?.pattern}
-              height={patternSize}
-              id={patternId}
-              patternUnits="userSpaceOnUse"
-              style={styles?.pattern}
-              width={patternSize}
-              x="0"
-              y="0"
-            >
-              <circle cx={dotCenterPosition} cy={dotCenterPosition} fill={fill} r={dotSize} />
-            </pattern>
-          </defs>
-          <Path
-            animate={animate}
-            className={classNames?.path}
-            d={d}
-            fill={`url(#${patternId})`}
-            style={styles?.path}
-            transitionConfigs={transitionConfigs}
-            {...pathProps}
-          />
-        </g>
-      );
-    }
+    if (!gradient) return;
 
     return (
       <g className={className ?? classNames?.root} style={style ?? styles?.root}>

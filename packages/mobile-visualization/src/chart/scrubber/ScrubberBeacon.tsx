@@ -1,4 +1,4 @@
-import { forwardRef, memo, useEffect, useImperativeHandle, useMemo } from 'react';
+import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import {
   cancelAnimation,
   useDerivedValue,
@@ -12,6 +12,7 @@ import { useTheme } from '@coinbase/cds-mobile';
 import { Circle, Group } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
+import { ChartText } from '../text';
 import { projectPoint, useScrubberContext } from '../utils';
 import { evaluateGradientAtValue, type GradientDefinition } from '../utils/gradient';
 import { buildTransition, defaultTransition, type TransitionConfig } from '../utils/transition';
@@ -112,6 +113,8 @@ export const ScrubberBeacon = memo(
       },
       ref,
     ) => {
+      const renderCount = useRef(0);
+      renderCount.current++;
       const theme = useTheme();
       const { getSeries, getXScale, getYScale, getSeriesData, animate, getSeriesGradientScale } =
         useCartesianChartContext();
@@ -282,6 +285,9 @@ export const ScrubberBeacon = memo(
       if (!isIdleState) {
         return (
           <Group opacity={opacity}>
+            <ChartText color="red" x={pixelCoordinate.x} y={pixelCoordinate.y - 20}>
+              {renderCount.current}
+            </ChartText>
             {/* Glow circle behind */}
             <Circle
               c={{ x: pixelCoordinate.x, y: pixelCoordinate.y }}

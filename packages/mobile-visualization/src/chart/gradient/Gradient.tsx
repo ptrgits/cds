@@ -1,7 +1,8 @@
-import { memo, useMemo } from 'react';
-import { LinearGradient, vec } from '@shopify/react-native-skia';
+import { memo, useMemo, useRef } from 'react';
+import { LinearGradient, Skia, vec } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
+import { ChartText } from '../text';
 import type { GradientDefinition } from '../utils';
 import { getGradientConfig } from '../utils/gradient';
 
@@ -19,6 +20,15 @@ export type GradientProps = {
 };
 
 /**
+ * Interpolates between two colors using linear interpolation.
+ * Returns an rgba string.
+ */
+const interpolateColor = (color1: string, opacity: number): string => {
+  const c = Skia.Color(color1);
+  return `rgba(${c[0] * 255}, ${c[1] * 255}, ${c[2] * 255}, ${opacity})`;
+};
+
+/**
  * Renders a Skia LinearGradient element based on a GradientDefinition.
  * The gradient should be used as a child of a Path component.
  *
@@ -28,6 +38,8 @@ export type GradientProps = {
  * </Path>
  */
 export const Gradient = memo<GradientProps>(({ gradient, yAxisId }) => {
+  const renderCount = useRef(0);
+  renderCount.current++;
   const context = useCartesianChartContext();
 
   const xScale = context.getXScale();
@@ -57,9 +69,15 @@ export const Gradient = memo<GradientProps>(({ gradient, yAxisId }) => {
   const end = axis === 'x' ? vec(range[1], 0) : vec(0, range[1]);
 
   // Extract colors and positions for LinearGradient
-  const colors = stops.map((s) => s.color);
+  const colors = stops.map((s) => interpolateColor(s.color, s.opacity ?? 1));
   const positions = stops.map((s) => s.offset);
 
-  return <LinearGradient colors={colors} end={end} positions={positions} start={start} />;
+  return (
+    <>
+      <ChartText color="red" x={40} y={40}>
+        {`renderCount: ${renderCount.current}`}
+      </ChartText>
+      <LinearGradient colors={colors} end={end} positions={positions} start={start} />
+    </>
+  );
 });
-

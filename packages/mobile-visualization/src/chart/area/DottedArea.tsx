@@ -1,11 +1,12 @@
 import { memo, useMemo } from 'react';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
-import { Blend, ImageShader, Skia } from '@shopify/react-native-skia';
+import { Group, Skia } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { Gradient } from '../gradient';
 import { Path, type PathProps } from '../Path';
 import { type GradientDefinition } from '../utils/gradient';
+import { getDottedAreaPath } from '../utils/path';
 
 import { type AreaComponentProps } from './SolidArea';
 
@@ -35,7 +36,7 @@ export type DottedAreaProps = Omit<PathProps, 'd' | 'fill' | 'fillOpacity'> &
 
 /**
  * Efficient dotted area component with gradient opacity support.
- * Uses Skia's ImageShader for the dot pattern and LinearGradient for colors/opacity.
+ * Uses SVG path circles for the dot pattern and LinearGradient for colors/opacity.
  * Supports both data-based color gradients and simple opacity gradients.
  */
 export const DottedArea = memo<DottedAreaProps>(
@@ -63,13 +64,30 @@ export const DottedArea = memo<DottedAreaProps>(
 
     const animate = animateProp ?? context.animate;
 
-    const targetSeries = seriesId ? context.getSeries(seriesId) : undefined;
     const yAxisConfig = context.getYAxis(yAxisId);
 
-    // Auto-generate gradient if not provided
+    const dottedPath = useMemo(() => {
+      if (!drawingArea) return '';
+
+      return getDottedAreaPath(
+        {
+          x: drawingArea.x,
+          y: drawingArea.y,
+          width: drawingArea.width,
+          height: drawingArea.height,
+        },
+        patternSize,
+        dotSize,
+      );
+    }, [drawingArea, patternSize, dotSize]);
+
+    const areaClipPath = useMemo(() => {
+      if (!d) return;
+      return Skia.Path.MakeFromSVGString(d) ?? undefined;
+    }, [d]);
+
     const gradient = useMemo((): GradientDefinition | undefined => {
       if (gradientProp) return gradientProp;
-      if (targetSeries?.gradient) return targetSeries.gradient;
       if (!yAxisConfig) return;
 
       const { min, max } = yAxisConfig.domain;
@@ -102,51 +120,25 @@ export const DottedArea = memo<DottedAreaProps>(
                 { offset: peakValue, color: fill, opacity: peakOpacity },
               ],
       };
-    }, [
-      gradientProp,
-      targetSeries?.gradient,
-      yAxisConfig,
-      fill,
-      baseline,
-      peakOpacity,
-      baselineOpacity,
-    ]);
+    }, [gradientProp, yAxisConfig, fill, baseline, peakOpacity, baselineOpacity]);
 
-    // Create white dot pattern image (reused for all gradients)
-    // We use white so it can be colored by the gradient
-    const patternImage = useMemo(() => {
-      const surface = Skia.Surface.Make(patternSize, patternSize);
-      if (!surface) return null;
+    if (!gradient) return;
 
-      const canvas = surface.getCanvas();
-      const paint = Skia.Paint();
-
-      // Use white for the pattern, will be colored by gradient
-      paint.setColor(Skia.Color('white'));
-      paint.setAntiAlias(true);
-
-      // Draw a single dot in the center of the pattern
-      canvas.drawCircle(patternSize / 2, patternSize / 2, dotSize, paint);
-
-      return surface.makeImageSnapshot();
-    }, [patternSize, dotSize]);
-
-    if (!drawingArea || !patternImage || !gradient) return null;
+    if (!drawingArea || !dottedPath || !gradient) return;
 
     return (
-      <Path
-        animate={animate}
-        clipRect={clipRect}
-        d={d}
-        fill={fill}
-        fillOpacity={fillOpacity}
-        transitionConfigs={transitionConfig ? { update: transitionConfig } : undefined}
-      >
-        <ImageShader fit="none" image={patternImage} tx="repeat" ty="repeat" />
-        <Blend mode="srcIn">
+      <Group clip={areaClipPath}>
+        <Path
+          animate={animate}
+          clipRect={clipRect}
+          d={dottedPath}
+          fill={fill}
+          fillOpacity={fillOpacity}
+          transitionConfigs={transitionConfig ? { update: transitionConfig } : undefined}
+        >
           <Gradient gradient={gradient} yAxisId={yAxisId} />
-        </Blend>
-      </Path>
+        </Path>
+      </Group>
     );
   },
 );

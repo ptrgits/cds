@@ -295,3 +295,56 @@ export const getBarPath = (
   path += ' Z';
   return path;
 };
+
+/**
+ * Generates an SVG path string with circles arranged in a dotted pattern within a bounding area.
+ * Creates circles at regular intervals based on the pattern size and dot size parameters.
+ *
+ * @param bounds - The bounding rectangle to fill with dots
+ * @param patternSize - Size of the pattern unit (spacing between dots)
+ * @param dotSize - Radius of each dot
+ * @returns SVG path string containing all the circles
+ *
+ * @example
+ * ```typescript
+ * const dotsPath = getDottedAreaPath(
+ *   { x: 0, y: 0, width: 100, height: 50 },
+ *   8, // 8px spacing
+ *   2  // 2px radius dots
+ * );
+ * ```
+ */
+export const getDottedAreaPath = (
+  bounds: { x: number; y: number; width: number; height: number },
+  patternSize: number,
+  dotSize: number,
+): string => {
+  if (bounds.width <= 0 || bounds.height <= 0 || patternSize <= 0 || dotSize <= 0) {
+    return '';
+  }
+
+  let path = '';
+  
+  // Calculate the number of dots that fit in each dimension
+  const dotsX = Math.ceil(bounds.width / patternSize);
+  const dotsY = Math.ceil(bounds.height / patternSize);
+  
+  // Generate circles in a grid pattern
+  for (let row = 0; row < dotsY; row++) {
+    for (let col = 0; col < dotsX; col++) {
+      const centerX = bounds.x + col * patternSize + patternSize / 2;
+      const centerY = bounds.y + row * patternSize + patternSize / 2;
+      
+      // Only draw dots that are within the bounds
+      if (centerX >= bounds.x && centerX <= bounds.x + bounds.width &&
+          centerY >= bounds.y && centerY <= bounds.y + bounds.height) {
+        
+        // Create circle using SVG arc commands
+        // M cx,cy-r a r,r 0 1,0 0,2r a r,r 0 1,0 0,-2r
+        path += `M ${centerX},${centerY - dotSize} a ${dotSize},${dotSize} 0 1,0 0,${dotSize * 2} a ${dotSize},${dotSize} 0 1,0 0,${-dotSize * 2} `;
+      }
+    }
+  }
+  
+  return path.trim();
+};

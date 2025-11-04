@@ -91,7 +91,7 @@ export const GradientArea = memo<GradientAreaProps>(
       };
     }, [gradientProp, yAxisConfig, fill, baseline, peakOpacity, baselineOpacity]);
 
-    if (!gradient) return null;
+    if (!gradient) return;
 
     return (
       <Path

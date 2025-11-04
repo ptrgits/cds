@@ -30,9 +30,8 @@ import { TextLabel1 } from '@coinbase/cds-mobile/typography';
 import { Text } from '@coinbase/cds-mobile/typography/Text';
 import { FontWeight, Rect } from '@shopify/react-native-skia';
 
-import { Area, type AreaComponentProps, DottedArea, GradientArea, SolidArea } from '../../area';
+import { type AreaComponentProps, DottedArea, GradientArea, SolidArea } from '../../area';
 import { XAxis, YAxis } from '../../axis';
-import { BarChart } from '../../bar';
 import { CartesianChart } from '../../CartesianChart';
 import { useCartesianChartContext } from '../../ChartProvider';
 import { PeriodSelector, PeriodSelectorActiveIndicator } from '../../PeriodSelector';
@@ -40,7 +39,7 @@ import { Point, type RenderPointsParams } from '../../Point';
 import { Scrubber, type ScrubberRef } from '../../scrubber';
 import { ChartText, type ChartTextChildren, ChartTextSpan } from '../../text';
 import type { ChartAxisScaleType } from '../../utils/scale';
-import { Line, LineChart, type LineComponentProps, ReferenceLine, SolidLine } from '..';
+import { Line, LineChart, ReferenceLine } from '..';
 
 const defaultChartHeight = 200;
 
@@ -208,7 +207,7 @@ export const BasicLineChartWithPoints = () => {
   );
 };
 
-const data = sparklineInteractiveData.all.map((d) => d.value);
+const data = sparklineInteractiveData.day.map((d) => d.value);
 
 const ethData = data.map((value) => value * 2);
 const uniData = data.map((value) => value * 3);
@@ -2344,8 +2343,14 @@ const GradientLineWithStateCallback = memo(
   },
 );
 
+const PartialSolidArea = memo((props: AreaComponentProps) => (
+  <SolidArea {...props} fillOpacity={0.5} />
+));
+
 export default () => {
   const theme = useTheme();
+
+  const value = useCallback((dataIndex: number) => `test ${dataIndex}`, []);
 
   return (
     <ExampleScreen>
@@ -2413,28 +2418,38 @@ export default () => {
       <Example title="Continuous Gradient 2">
         <LineChart
           enableScrubbing
+          showArea
           showYAxis
+          AreaComponent={(props) => <DottedArea {...props} fillOpacity={0.5} />}
           curve="monotone"
-          height={150}
-          renderPoints={() => true}
+          height={250}
           series={[
             {
               id: 'prices',
-              data: sampleData,
-              gradient: {
-                stops: [
-                  { offset: 0, color: `rgb(${theme.spectrum.pink90})` },
-                  { offset: 100, color: `rgb(${theme.spectrum.pink10})` },
-                ],
-              },
+              data: data.map((d) => d * 3),
+              color: `rgb(${theme.spectrum.pink50})`,
+              label: value,
+            },
+            {
+              id: 'prices2',
+              data: data.map((d) => d * 2),
+              color: `rgb(${theme.spectrum.red50})`,
+              label: 'test',
+            },
+            {
+              id: 'prices3',
+              data: data,
+              color: `rgb(${theme.spectrum.chartreuse50})`,
+              label: (dataIndex: number) => `test ${data[dataIndex]}`,
             },
           ]}
           strokeWidth={4}
           yAxis={{
             showGrid: true,
+            tickLabelFormatter: (value) => `$${(value / 1000).toFixed(0)}k`,
           }}
         >
-          <Scrubber />
+          <Scrubber hideOverlay />
         </LineChart>
       </Example>
       <Example title="Discrete Gradient">
@@ -2442,7 +2457,7 @@ export default () => {
           enableScrubbing
           showArea
           showYAxis
-          AreaComponent={(props) => <SolidArea {...props} fillOpacity={0.5} />}
+          AreaComponent={PartialSolidArea}
           curve="monotone"
           height={150}
           renderPoints={() => true}
@@ -2470,7 +2485,7 @@ export default () => {
           <Scrubber />
         </LineChart>
       </Example>
-      <Example title="X Axis Gradient">
+      {/*<Example title="X Axis Gradient 2">
         <LineChart
           enableScrubbing
           showYAxis
@@ -2501,7 +2516,7 @@ export default () => {
         >
           <Scrubber />
         </LineChart>
-      </Example>
+      </Example>*/}
     </ExampleScreen>
   );
 };
