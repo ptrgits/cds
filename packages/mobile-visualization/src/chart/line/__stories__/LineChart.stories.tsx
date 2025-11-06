@@ -2415,6 +2415,26 @@ export default () => {
       <Example title="Animated Gain/Loss">
         <AnimatedGainLossChart />
       </Example>*/}
+      <Example title="Basic">
+        <LineChart
+          enableScrubbing
+          showArea
+          showYAxis
+          curve="monotone"
+          height={150}
+          series={[
+            {
+              id: 'prices',
+              data: sampleData,
+            },
+          ]}
+          yAxis={{
+            showGrid: true,
+          }}
+        >
+          <Scrubber />
+        </LineChart>
+      </Example>
       <Example title="Continuous Gradient 2">
         <LineChart
           enableScrubbing

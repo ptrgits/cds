@@ -1,20 +1,28 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
+import { runOnJS, useSharedValue } from 'react-native-reanimated';
 import { Haptics } from '@coinbase/cds-mobile/utils/haptics';
 
 import { useCartesianChartContext } from '../ChartProvider';
-import { isCategoricalScale, ScrubberContext, type ScrubberContextValue } from '../utils';
+import {
+  type CategoricalScale,
+  isCategoricalScale,
+  ScrubberContext,
+  type ScrubberContextValue,
+} from '../utils';
 
-export type ScrubberProviderProps = Partial<
-  Pick<ScrubberContextValue, 'enableScrubbing' | 'onScrubberPositionChange'>
-> & {
+export type ScrubberProviderProps = Partial<Pick<ScrubberContextValue, 'enableScrubbing'>> & {
   children: React.ReactNode;
   /**
    * Allows continuous gestures on the chart to continue outside the bounds of the chart element.
    */
   allowOverflowGestures?: boolean;
+  /**
+   * Callback fired when the scrubber position changes.
+   * Receives the dataIndex of the scrubber or undefined when not scrubbing.
+   */
+  onScrubberPositionChange?: (index: number | undefined) => void;
 };
 
 /**
@@ -33,104 +41,102 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
     throw new Error('ScrubberProvider must be used within a ChartContext');
   }
 
-  const { getXScale, getXAxis, series } = chartContext;
-  const [scrubberPosition, setScrubberPosition] = useState<number | undefined>(undefined);
+  const { getXScale, getXAxis } = chartContext;
+  const scrubberPosition = useSharedValue<number | undefined>(undefined);
+
+  const xAxis = useMemo(() => getXAxis(), [getXAxis]);
+  const xScale = useMemo(() => getXScale(), [getXScale]);
+  const isXScaleCategorical = useMemo(
+    () => xScale !== undefined && isCategoricalScale(xScale),
+    [xScale],
+  );
+
+  const xDataArray: number[] | undefined = useMemo(() => {
+    if (
+      !xAxis ||
+      !Array.isArray(xAxis.data) ||
+      xAxis.data.length === 0 ||
+      typeof xAxis.data[0] !== 'number'
+    )
+      return undefined;
+    return xAxis.data as number[];
+  }, [xAxis]);
+
+  const dataIndexScaleValues = useMemo(() => {
+    if (!xAxis || !xScale) return;
+
+    const scaleValues: Record<number, number> = {};
+
+    if (xDataArray) {
+      xDataArray.forEach((dataValue) => {
+        scaleValues[dataValue] = xScale(dataValue) ?? 0;
+      });
+    } else {
+      for (let i = xAxis.domain.min; i <= xAxis.domain.max; i++) {
+        scaleValues[i] = xScale(i) ?? 0;
+      }
+    }
+
+    return scaleValues;
+  }, [xAxis, xScale, xDataArray]);
+
+  const categoricalXScaleBandwidth = useMemo(() => {
+    if (!xAxis || !xScale) return;
+    if (isCategoricalScale(xScale)) {
+      return xScale.bandwidth?.() ?? 0;
+    }
+    return undefined;
+  }, [xAxis, xScale]);
 
   const getDataIndexFromX = useCallback(
-    (touchX: number): number => {
-      const xScale = getXScale();
-      const xAxis = getXAxis();
+    (touchX: number): number | undefined => {
+      'worklet';
 
-      if (!xScale || !xAxis) return 0;
+      if (!dataIndexScaleValues) return undefined;
 
-      if (isCategoricalScale(xScale)) {
-        const categories = xScale.domain?.() ?? xAxis.data ?? [];
-        const bandwidth = xScale.bandwidth?.() ?? 0;
+      if (isXScaleCategorical) {
+        const bandwidth = categoricalXScaleBandwidth ?? 0;
         let closestIndex = 0;
         let closestDistance = Infinity;
-        for (let i = 0; i < categories.length; i++) {
-          const xPos = xScale(i);
+        const dataScaleValuesKeys = Object.keys(dataIndexScaleValues).map(Number);
+        for (const dataIndex of dataScaleValuesKeys) {
+          const xPos = dataIndexScaleValues[dataIndex];
           if (xPos !== undefined) {
             const distance = Math.abs(touchX - (xPos + bandwidth / 2));
             if (distance < closestDistance) {
               closestDistance = distance;
-              closestIndex = i;
+              closestIndex = dataIndex;
             }
           }
         }
         return closestIndex;
       } else {
-        // For numeric scales with axis data, find the nearest data point
-        const axisData = xAxis.data;
-        if (axisData && Array.isArray(axisData) && typeof axisData[0] === 'number') {
-          // We have numeric axis data - find the closest data point
-          const numericData = axisData as number[];
-          let closestIndex = 0;
-          let closestDistance = Infinity;
+        let closestIndex = 0;
+        let closestDistance = Infinity;
 
-          for (let i = 0; i < numericData.length; i++) {
-            const xValue = numericData[i];
-            const xPos = xScale(xValue);
-            if (xPos !== undefined) {
-              const distance = Math.abs(touchX - xPos);
-              if (distance < closestDistance) {
-                closestDistance = distance;
-                closestIndex = i;
-              }
+        const dataScaleValuesKeys = Object.keys(dataIndexScaleValues).map(Number);
+        for (const dataIndex of dataScaleValuesKeys) {
+          const xPos = dataIndexScaleValues[dataIndex];
+          if (xPos !== undefined) {
+            const distance = Math.abs(touchX - xPos);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = dataIndex;
             }
           }
-          return closestIndex;
-        } else {
-          const xValue = xScale.invert(touchX);
-          const dataIndex = Math.round(xValue);
-          const domain = xAxis.domain;
-          return Math.max(domain.min ?? 0, Math.min(dataIndex, domain.max ?? 0));
         }
+
+        return closestIndex;
       }
     },
-    [getXScale, getXAxis],
+    [dataIndexScaleValues, isXScaleCategorical, categoricalXScaleBandwidth],
   );
-
-  const handlePositionUpdate = useCallback(
-    (x: number) => {
-      if (!enableScrubbing || !series || series.length === 0) return;
-
-      const dataIndex = getDataIndexFromX(x);
-      if (dataIndex !== scrubberPosition) {
-        setScrubberPosition(dataIndex);
-        onScrubberPositionChange?.(dataIndex);
-      }
-    },
-    [enableScrubbing, series, getDataIndexFromX, scrubberPosition, onScrubberPositionChange],
-  );
-
-  const handleInteractionEnd = useCallback(() => {
-    if (!enableScrubbing) return;
-    setScrubberPosition(undefined);
-    onScrubberPositionChange?.(undefined);
-  }, [enableScrubbing, onScrubberPositionChange]);
 
   // Gesture handler callbacks
   const handleOnStartJsThread = useCallback(() => {
     void Haptics.lightImpact();
     // Could add onScrubStart callback here if needed
   }, []);
-
-  const handleOnEndOrCancelledJsThread = useCallback(() => {
-    handleInteractionEnd();
-  }, [handleInteractionEnd]);
-
-  const handleOnUpdateJsThread = useCallback(
-    (x: number) => {
-      handlePositionUpdate(x);
-    },
-    [handlePositionUpdate],
-  );
-
-  const handleOnEndJsThread = useCallback(() => {
-    void Haptics.lightImpact();
-    handleOnEndOrCancelledJsThread();
-  }, [handleOnEndOrCancelledJsThread]);
 
   // Create the long press pan gesture
   const longPressGesture = useMemo(
@@ -143,24 +149,43 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
 
           // Android does not trigger onUpdate when the gesture starts. This achieves consistent behavior across both iOS and Android
           if (Platform.OS === 'android') {
-            runOnJS(handleOnUpdateJsThread)(event.x);
+            const newScrubberPosition = getDataIndexFromX(event.x);
+            if (newScrubberPosition !== scrubberPosition.value) {
+              scrubberPosition.value = newScrubberPosition;
+              if (onScrubberPositionChange !== undefined)
+                runOnJS(onScrubberPositionChange)(newScrubberPosition);
+            }
           }
         })
         .onUpdate(function onUpdate(event) {
-          runOnJS(handleOnUpdateJsThread)(event.x);
+          const newScrubberPosition = getDataIndexFromX(event.x);
+          if (newScrubberPosition !== scrubberPosition.value) {
+            scrubberPosition.value = newScrubberPosition;
+            if (onScrubberPositionChange !== undefined)
+              runOnJS(onScrubberPositionChange)(newScrubberPosition);
+          }
         })
         .onEnd(function onEnd() {
-          runOnJS(handleOnEndJsThread)();
+          if (enableScrubbing) {
+            scrubberPosition.value = undefined;
+            if (onScrubberPositionChange !== undefined)
+              runOnJS(onScrubberPositionChange)(undefined);
+          }
         })
         .onTouchesCancelled(function onTouchesCancelled() {
-          runOnJS(handleOnEndOrCancelledJsThread)();
+          if (enableScrubbing) {
+            scrubberPosition.value = undefined;
+            if (onScrubberPositionChange !== undefined)
+              runOnJS(onScrubberPositionChange)(undefined);
+          }
         }),
     [
       allowOverflowGestures,
       handleOnStartJsThread,
-      handleOnUpdateJsThread,
-      handleOnEndJsThread,
-      handleOnEndOrCancelledJsThread,
+      getDataIndexFromX,
+      scrubberPosition,
+      onScrubberPositionChange,
+      enableScrubbing,
     ],
   );
 
@@ -168,7 +193,6 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
     () => ({
       enableScrubbing: !!enableScrubbing,
       scrubberPosition,
-      onScrubberPositionChange: setScrubberPosition,
     }),
     [enableScrubbing, scrubberPosition],
   );

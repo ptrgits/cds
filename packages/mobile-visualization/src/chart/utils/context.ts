@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import type { SharedValue } from 'react-native-reanimated';
 import type { Rect } from '@coinbase/cds-common/types';
 import type { SkTypefaceFontProvider } from '@shopify/react-native-skia';
 
@@ -99,12 +100,7 @@ export type ScrubberContextValue = {
   /**
    * The current position of the scrubber.
    */
-  scrubberPosition?: number;
-  /**
-   * Callback fired when the scrubber position changes.
-   * Receives the dataIndex of the scrubber or undefined when not scrubbing.
-   */
-  onScrubberPositionChange: (index: number | undefined) => void;
+  scrubberPosition: SharedValue<number | undefined>;
 };
 
 export const ScrubberContext = createContext<ScrubberContextValue | undefined>(undefined);

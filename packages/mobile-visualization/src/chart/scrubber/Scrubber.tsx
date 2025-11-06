@@ -5,19 +5,17 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef,
   useState,
 } from 'react';
-import { useSharedValue, withTiming } from 'react-native-reanimated';
+import { useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
-import { Group, Rect } from '@shopify/react-native-skia';
+import { DashPathEffect, Group, Line, Rect, vec } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { ReferenceLine, type ReferenceLineProps } from '../line';
-import { ChartText } from '../text';
-import { type ChartScaleFunction, useScrubberContext } from '../utils';
+import { type Series, useScrubberContext } from '../utils';
 
 import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 import { ScrubberBeaconLabel, type ScrubberBeaconLabelProps } from './ScrubberBeaconLabel';
@@ -117,8 +115,6 @@ export const Scrubber = memo(
       },
       ref,
     ) => {
-      const renderCount = useRef(0);
-      renderCount.current++;
       const theme = useTheme();
       const ScrubberBeaconRefs = useRefMap<ScrubberBeaconRef>();
 
@@ -132,8 +128,8 @@ export const Scrubber = memo(
         new Map(),
       );
 
-      const { scrubberPosition: scrubberPosition } = useScrubberContext();
-      const { getXScale, getYScale, getSeriesData, getXAxis, series, drawingArea, animate } =
+      const { scrubberPosition } = useScrubberContext();
+      const { getXScale, getSeriesData, getXAxis, series, drawingArea, animate } =
         useCartesianChartContext();
 
       // Animation state for delayed scrubber rendering (matches web timing)
@@ -159,35 +155,85 @@ export const Scrubber = memo(
         },
       }));
 
-      const { dataX, dataIndex } = useMemo(() => {
-        const xScale = getXScale() as ChartScaleFunction;
-        const xAxis = getXAxis();
-        if (!xScale) return { dataX: undefined, dataIndex: undefined };
-
-        const maxDataLength =
-          series?.reduce((max: any, s: any) => {
+      const maxSeriesDataLength = useMemo(() => {
+        return (
+          series?.reduce((max: any, s: Series) => {
             const seriesData = getSeriesData(s.id);
             return Math.max(max, seriesData?.length ?? 0);
-          }, 0) ?? 0;
+          }, 0) ?? 0
+        );
+      }, [series, getSeriesData]);
 
-        const dataIndex = scrubberPosition ?? Math.max(0, maxDataLength - 1);
+      const dataIndex = useDerivedValue(() => {
+        if (scrubberPosition.value !== undefined) return scrubberPosition.value;
+        return maxSeriesDataLength - 1;
+      });
 
-        // Convert index to actual x value if axis has data
-        let dataX: number;
-        if (xAxis?.data && Array.isArray(xAxis.data) && xAxis.data[dataIndex] !== undefined) {
-          const dataValue = xAxis.data[dataIndex];
-          dataX = typeof dataValue === 'string' ? dataIndex : dataValue;
+      const xAxis = useMemo(() => getXAxis(), [getXAxis]);
+      const xDataArray: number[] | undefined = useMemo(() => {
+        if (
+          !xAxis ||
+          !Array.isArray(xAxis.data) ||
+          xAxis.data.length === 0 ||
+          typeof xAxis.data[0] !== 'number'
+        )
+          return undefined;
+        return xAxis.data as number[];
+      }, [xAxis]);
+
+      const dataX = useDerivedValue(() => {
+        const result = xDataArray !== undefined ? xDataArray[dataIndex.value] : dataIndex.value;
+        return result;
+      });
+
+      const xScale = useMemo(() => getXScale(), [getXScale]);
+
+      const dataIndexScaleValues = useMemo(() => {
+        if (!xScale) return undefined;
+
+        // Precompute scale values for all possible data points
+        const scaleValues: Record<number, number> = {};
+
+        if (xDataArray) {
+          // If we have explicit x-axis data, precompute for those values
+          xDataArray.forEach((dataValue) => {
+            scaleValues[dataValue] = xScale(dataValue) ?? 0;
+          });
         } else {
-          dataX = dataIndex;
+          // If no explicit x-axis data, precompute for indices up to max series length
+          for (let i = 0; i <= maxSeriesDataLength; i++) {
+            scaleValues[i] = xScale(i) ?? 0;
+          }
         }
 
-        return { dataX, dataIndex };
-      }, [getXScale, getXAxis, series, scrubberPosition, getSeriesData]);
+        return scaleValues;
+      }, [xScale, xDataArray, maxSeriesDataLength]);
 
-      const beaconPositions = useMemo(() => {
-        const xScale = getXScale() as ChartScaleFunction;
+      const pixelX = useDerivedValue(() => {
+        if (dataX.value === undefined || !dataIndexScaleValues) return undefined;
+        return dataIndexScaleValues[dataX.value];
+      });
 
-        if (!xScale || dataX === undefined || dataIndex === undefined) return [];
+      const seriesDataMap = useMemo(() => {
+        const map: Record<string, Array<[number, number] | null> | undefined> = {};
+        series?.forEach((s) => {
+          const seriesData = getSeriesData(s.id);
+
+          if (seriesData !== undefined) {
+            map[s.id] = seriesData;
+          }
+        });
+        return map;
+      }, [series, getSeriesData]);
+
+      /* const beaconPositions = useDerivedValue(() => {
+        if (
+          !xScale ||
+          dataX === undefined ||
+          dataIndex === undefined ||
+          seriesDataMap === undefined
+        )
+          return [];
 
         return (
           series
@@ -196,9 +242,9 @@ export const Scrubber = memo(
               return seriesIds.includes(s.id);
             })
             ?.map((s) => {
-              const sourceData = getSeriesData(s.id);
+              const sourceData = seriesDataMap[s.id];
               // Use dataIndex to get the y value from the series data array
-              const stuff = sourceData?.[dataIndex];
+              const stuff = sourceData?.[dataIndex.value];
               let dataY: number | undefined;
               if (Array.isArray(stuff)) {
                 dataY = stuff[stuff.length - 1];
@@ -207,13 +253,14 @@ export const Scrubber = memo(
               }
 
               if (dataY !== undefined) {
-                const yScale = getYScale(s.yAxisId) as ChartScaleFunction;
+                /*const yScale = getYScale(s.yAxisId);
                 if (!yScale) {
                   return undefined;
-                }
+                }* /
 
-                const pixelY = yScale(dataY);
-                const resolvedLabel = typeof s.label === 'function' ? s.label(dataIndex) : s.label;
+                const pixelY = 0; //yScale(dataY);
+                const resolvedLabel = 'hello';
+                // typeof s.label === 'function' ? s.label(dataIndex.value) : s.label;
 
                 return {
                   x: dataX,
@@ -227,7 +274,7 @@ export const Scrubber = memo(
             })
             .filter((beacon: any) => beacon !== undefined) ?? []
         );
-      }, [getXScale, getYScale, dataX, dataIndex, series, seriesIds, getSeriesData]);
+      }, [getXScale, getYScale, dataX, dataIndex, series, seriesIds, getSeriesData]);*/
 
       const createScrubberBeaconRef = useCallback(
         (seriesId: string) => {
@@ -242,23 +289,21 @@ export const Scrubber = memo(
 
       const defaultXScale = getXScale();
 
-      const pixelX = dataX !== undefined && defaultXScale ? defaultXScale(dataX) : undefined;
-
-      const memoizedScrubberLabel: ReferenceLineProps['label'] = useMemo(() => {
+      const memoizedScrubberLabel = useDerivedValue<ReferenceLineProps['label']>(() => {
         if (typeof label === 'function') {
-          if (dataIndex === undefined) return undefined;
-          return label(dataIndex);
+          if (dataIndex.value === undefined) return undefined;
+          return label(dataIndex.value);
         }
         return label;
-      }, [label, dataIndex]);
+      });
 
       const labelVerticalInset = 2;
       const labelHorizontalInset = 4;
 
       // Calculate optimal label positioning strategy with collision detection
-      const labelPositioning = useMemo(() => {
+      /*const labelPositioning = useDerivedValue(() => {
         // Build enriched dimensions with current beacon positions
-        const dimensions = beaconPositions
+        const dimensions = beaconPositions.value
           .map((beacon: any) => {
             const dim = labelDimensions.get(beacon?.targetSeries.id);
             if (!dim) return null;
@@ -290,7 +335,11 @@ export const Scrubber = memo(
           // Check if labels would overflow when positioned on the right side
           const wouldOverflow = sortedDimensions.some((dim) => {
             const labelRightEdge =
-              dim.preferredX + anchorRadius + labelHorizontalInset + dim.width + bufferPx;
+              (dim.preferredX.value ?? 0) +
+              anchorRadius +
+              labelHorizontalInset +
+              dim.width +
+              bufferPx;
             return labelRightEdge > drawingArea.x + drawingArea.width;
           });
 
@@ -300,7 +349,7 @@ export const Scrubber = memo(
         // Initialize all labels at their preferred positions
         for (const dim of sortedDimensions) {
           adjustments.set(dim.id, {
-            x: dim.preferredX,
+            x: dim.preferredX.value ?? 0,
             y: dim.preferredY,
             side: globalSide,
           });
@@ -503,7 +552,7 @@ export const Scrubber = memo(
         }
 
         return { strategy: globalSide, adjustments };
-      }, [beaconPositions, labelDimensions, drawingArea, pixelX]);
+      });*/
 
       // Callback for labels to register their dimensions
       const registerLabelDimensions = useCallback((id: string, width: number, height: number) => {
@@ -522,9 +571,9 @@ export const Scrubber = memo(
       }, []);
 
       // Synchronize label positioning state when the position of any scrubber beacons change
-      useEffect(() => {
+      /*useEffect(() => {
         const currentBeaconIds = new Set(
-          beaconPositions.map((beacon: any) => beacon?.targetSeries.id).filter(Boolean),
+          beaconPositions.value.map((beacon: any) => beacon?.targetSeries.id).filter(Boolean),
         );
 
         setLabelDimensions((prev) => {
@@ -551,23 +600,25 @@ export const Scrubber = memo(
           }
           return next;
         });
-      }, [beaconPositions]);
+      }, [beaconPositions]);*/
 
-      useEffect(() => {
+      /*useEffect(() => {
         if (pixelX !== undefined) {
           scrubberLineX.value = pixelX;
           overlayX.value = pixelX;
           overlayWidth.value = drawingArea.x + drawingArea.width - pixelX + overlayOffset;
         }
-      }, [pixelX, drawingArea, overlayOffset, scrubberLineX, overlayX, overlayWidth]);
+      }, [pixelX, drawingArea, overlayOffset, scrubberLineX, overlayX, overlayWidth]);*/
+
+      const lineP1 = useDerivedValue(() => vec(pixelX.value ?? 50, drawingArea.y));
+      const lineP2 = useDerivedValue(() =>
+        vec(pixelX.value ?? 50, drawingArea.y + drawingArea.height),
+      );
 
       if (!defaultXScale) return null;
 
       return (
         <Group opacity={scrubberOpacity}>
-          <ChartText color="red" x={40} y={60}>
-            {`renderCount: ${renderCount.current}`}
-          </ChartText>
           {!hideOverlay &&
             dataX !== undefined &&
             scrubberPosition !== undefined &&
@@ -581,10 +632,21 @@ export const Scrubber = memo(
                 y={drawingArea.y - overlayOffset}
               />
             )}
-          {!hideLine && scrubberPosition !== undefined && dataX !== undefined && (
+          <Line
+            color={theme.color.fgPrimary}
+            p1={lineP1}
+            p2={lineP2}
+            strokeCap="round"
+            strokeJoin="round"
+            strokeWidth={2}
+            style="stroke"
+          >
+            <DashPathEffect intervals={[0, 4]} />
+          </Line>
+          {!hideLine && dataX.value !== undefined && (
             <LineComponent
-              dataX={dataX}
-              label={memoizedScrubberLabel}
+              dataX={dataX.value}
+              label={memoizedScrubberLabel.value}
               labelProps={{
                 verticalAlignment: 'middle',
                 ...labelProps,
@@ -592,10 +654,10 @@ export const Scrubber = memo(
               stroke={lineStroke}
             />
           )}
-          {beaconPositions.map((beacon: any) => {
+          {/*beaconPositions.value.map((beacon: any) => {
             if (!beacon) return null;
             const dotStroke = beacon.targetSeries?.color || theme.color.fgPrimary;
-            const adjustment = labelPositioning.adjustments.get(beacon.targetSeries.id);
+            const adjustment = labelPositioning.value.adjustments.get(beacon.targetSeries.id);
 
             return (
               <Group key={beacon.targetSeries.id}>
@@ -615,7 +677,7 @@ export const Scrubber = memo(
                   (() => {
                     const finalAnchorX = adjustment?.x ?? pixelX;
                     const finalAnchorY = adjustment?.y ?? beacon.pixelY;
-                    const finalSide = adjustment?.side ?? labelPositioning.strategy;
+                    const finalSide = adjustment?.side ?? labelPositioning.value.strategy;
 
                     return (
                       <BeaconLabelComponent
@@ -643,7 +705,7 @@ export const Scrubber = memo(
                   })()}
               </Group>
             );
-          })}
+          })*/}
         </Group>
       );
     },

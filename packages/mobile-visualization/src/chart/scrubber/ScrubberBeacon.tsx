@@ -1,4 +1,4 @@
-import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import { forwardRef, memo, useEffect, useImperativeHandle, useMemo } from 'react';
 import {
   cancelAnimation,
   useDerivedValue,
@@ -6,13 +6,11 @@ import {
   withRepeat,
   withSequence,
 } from 'react-native-reanimated';
-import { usePreviousValue } from '@coinbase/cds-common/hooks/usePreviousValue';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
 import { Circle, Group } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
-import { ChartText } from '../text';
 import { projectPoint, useScrubberContext } from '../utils';
 import { evaluateGradientAtValue, type GradientDefinition } from '../utils/gradient';
 import { buildTransition, defaultTransition, type TransitionConfig } from '../utils/transition';
@@ -113,11 +111,16 @@ export const ScrubberBeacon = memo(
       },
       ref,
     ) => {
-      const renderCount = useRef(0);
-      renderCount.current++;
       const theme = useTheme();
-      const { getSeries, getXScale, getYScale, getSeriesData, animate, getSeriesGradientScale } =
-        useCartesianChartContext();
+      const {
+        getSeries,
+        getXAxis,
+        getXScale,
+        getYScale,
+        getSeriesData,
+        animate,
+        getSeriesGradientScale,
+      } = useCartesianChartContext();
       const { scrubberPosition } = useScrubberContext();
 
       const targetSeries = getSeries(seriesId);
@@ -139,52 +142,42 @@ export const ScrubberBeacon = memo(
         [beaconTransitionConfig?.pulse],
       );
 
-      const { dataX, dataY } = useMemo(() => {
-        let x: number | undefined;
-        let y: number | undefined;
+      const dataX = useDerivedValue(() => {
+        if (dataXProp !== undefined) return dataXProp;
+        const xAxis = getXAxis();
+        if (!xAxis || scrubberPosition.value === undefined) return undefined;
+        if (
+          !Array.isArray(xAxis.data) ||
+          xAxis.data.length === 0 ||
+          typeof xAxis.data[0] !== 'number'
+        )
+          return scrubberPosition.value;
+        return xAxis.data[scrubberPosition.value] as number;
+      }, [scrubberPosition]);
 
-        if (xScale && yScale) {
-          if (
-            dataXProp !== undefined &&
-            dataYProp !== undefined &&
-            !isNaN(dataYProp) &&
-            !isNaN(dataXProp)
-          ) {
-            // Use direct coordinates if provided
-            x = dataXProp;
-            y = dataYProp;
-          } else if (
-            sourceData &&
-            scrubberPosition != null &&
-            scrubberPosition >= 0 &&
-            scrubberPosition < sourceData.length
-          ) {
-            // Use series data at highlight index
-            x = scrubberPosition;
-            const dataValue = sourceData[scrubberPosition];
+      const dataY = useDerivedValue(() => {
+        if (dataYProp !== undefined) return dataYProp;
+        if (dataX.value === undefined) return undefined;
+        const dataY = sourceData?.[dataX.value];
 
-            if (typeof dataValue === 'number') {
-              y = dataValue;
-            } else if (Array.isArray(dataValue)) {
-              const validValues = dataValue.filter((val): val is number => val !== null);
-              if (validValues.length >= 2) {
-                y = validValues[1];
-              }
-            }
-          }
-        }
+        if (Array.isArray(dataY)) return dataY[dataY.length - 1];
+        return dataY;
+      }, [sourceData, scrubberPosition]);
 
-        return { dataX: x, dataY: y };
-      }, [dataXProp, dataYProp, sourceData, scrubberPosition, xScale, yScale]);
-
-      const previousIdleState = usePreviousValue(!!isIdleState);
-
-      const pixelCoordinate = useMemo(() => {
-        if (!xScale || !yScale || dataX === undefined || dataY === undefined) return undefined;
+      const pixelCoordinate = useDerivedValue(() => {
+        if (
+          !xScale ||
+          !yScale ||
+          dataX === undefined ||
+          dataY === undefined ||
+          dataX.value === null ||
+          dataY.value === null
+        )
+          return undefined;
 
         const point = projectPoint({
-          x: dataX,
-          y: dataY,
+          x: dataX.value!,
+          y: dataY.value!,
           xScale,
           yScale,
         });
@@ -195,8 +188,6 @@ export const ScrubberBeacon = memo(
         return point;
       }, [xScale, yScale, dataX, dataY]);
 
-      const animatedX = useSharedValue(pixelCoordinate?.x ?? 0);
-      const animatedY = useSharedValue(pixelCoordinate?.y ?? 0);
       const pulseOpacity = useSharedValue(0);
 
       useImperativeHandle(ref, () => ({
@@ -227,7 +218,7 @@ export const ScrubberBeacon = memo(
       }, [animate, isIdleState, idlePulse, pulseOpacity, pulseTransitionConfig]);
 
       // Update position when data coordinates change
-      useEffect(() => {
+      /*useEffect(() => {
         if (!pixelCoordinate) return;
 
         // When scrubbing or animations disabled: snap immediately
@@ -249,20 +240,19 @@ export const ScrubberBeacon = memo(
         animatedX,
         animatedY,
         updateTransitionConfig,
-      ]);
+      ]);*/
 
-      // Create derived animated point for circles
-      const animatedPoint = useDerivedValue(() => {
-        return { x: animatedX.value, y: animatedY.value };
-      }, [animatedX, animatedY]);
-
-      const pointColor = useMemo(() => {
+      const pointColor = useDerivedValue(() => {
         if (gradient && gradientScale) {
           const axis = gradient.axis ?? 'y';
           const dataValue = axis === 'x' ? dataX : dataY;
 
-          if (dataValue !== undefined) {
-            const evaluatedColor = evaluateGradientAtValue(gradient, dataValue, gradientScale);
+          if (dataValue.value !== undefined && dataValue.value !== null) {
+            const evaluatedColor = evaluateGradientAtValue(
+              gradient,
+              dataValue.value,
+              gradientScale,
+            );
             if (evaluatedColor) {
               return evaluatedColor;
             }
@@ -285,28 +275,12 @@ export const ScrubberBeacon = memo(
       if (!isIdleState) {
         return (
           <Group opacity={opacity}>
-            <ChartText color="red" x={pixelCoordinate.x} y={pixelCoordinate.y - 20}>
-              {renderCount.current}
-            </ChartText>
             {/* Glow circle behind */}
-            <Circle
-              c={{ x: pixelCoordinate.x, y: pixelCoordinate.y }}
-              color={pointColor}
-              opacity={0.15}
-              r={glowRadius}
-            />
+            <Circle c={pixelCoordinate} color={pointColor} opacity={0.15} r={glowRadius} />
             {/* Outer stroke circle */}
-            <Circle
-              c={{ x: pixelCoordinate.x, y: pixelCoordinate.y }}
-              color={theme.color.bg}
-              r={radius + strokeWidth / 2}
-            />
+            <Circle c={pixelCoordinate} color={theme.color.bg} r={radius + strokeWidth / 2} />
             {/* Inner fill circle */}
-            <Circle
-              c={{ x: pixelCoordinate.x, y: pixelCoordinate.y }}
-              color={pointColor}
-              r={radius - strokeWidth / 2}
-            />
+            <Circle c={pixelCoordinate} color={pointColor} r={radius - strokeWidth / 2} />
           </Group>
         );
       }
@@ -314,13 +288,13 @@ export const ScrubberBeacon = memo(
       return (
         <Group opacity={opacity}>
           {/* Glow circle */}
-          <Circle c={animatedPoint} color={pointColor} opacity={0.15} r={glowRadius} />
+          <Circle c={pixelCoordinate} color={pointColor} opacity={0.15} r={glowRadius} />
           {/* Pulse circle */}
-          <Circle c={animatedPoint} color={pointColor} opacity={pulseOpacity} r={pulseRadius} />
+          <Circle c={pixelCoordinate} color={pointColor} opacity={pulseOpacity} r={pulseRadius} />
           {/* Outer stroke circle */}
-          <Circle c={animatedPoint} color={theme.color.bg} r={radius + strokeWidth / 2} />
+          <Circle c={pixelCoordinate} color={theme.color.bg} r={radius + strokeWidth / 2} />
           {/* Inner fill circle */}
-          <Circle c={animatedPoint} color={pointColor} r={radius - strokeWidth / 2} />
+          <Circle c={pixelCoordinate} color={pointColor} r={radius - strokeWidth / 2} />
         </Group>
       );
     },

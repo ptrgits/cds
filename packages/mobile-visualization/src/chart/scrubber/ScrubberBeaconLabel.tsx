@@ -1,5 +1,4 @@
-import { memo, useRef } from 'react';
-import { FontWeight } from '@shopify/react-native-skia';
+import { memo } from 'react';
 
 import { ChartText, type ChartTextProps } from '../text';
 
@@ -18,28 +17,16 @@ export const ScrubberBeaconLabel = memo<ScrubberBeaconLabelProps>(
     verticalAlignment = 'middle',
     ...chartTextProps
   }) => {
-    const renderCount = useRef(0);
-    renderCount.current++;
-
     return (
-      <>
-        <ChartText
-          color="red"
-          x={chartTextProps.x ? chartTextProps.x + 50 : 50}
-          y={chartTextProps.y ? chartTextProps.y - 10 : 40}
-        >
-          {`renderCount: ${renderCount.current}`}
-        </ChartText>
-        <ChartText
-          background={background}
-          borderRadius={borderRadius}
-          color={color}
-          elevation={elevation}
-          font={font}
-          verticalAlignment={verticalAlignment}
-          {...chartTextProps}
-        />
-      </>
+      <ChartText
+        background={background}
+        borderRadius={borderRadius}
+        color={color}
+        elevation={elevation}
+        font={font}
+        verticalAlignment={verticalAlignment}
+        {...chartTextProps}
+      />
     );
   },
 );

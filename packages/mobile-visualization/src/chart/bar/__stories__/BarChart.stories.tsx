@@ -415,7 +415,7 @@ const ScrubberRect = memo(() => {
       color={theme.color.bgLine}
       height={yMax - yMin}
       width={barWidth}
-      x={xScale(scrubberPosition)}
+      x={xScale(scrubberPosition.value ?? 0)}
       y={yMin}
     />
   );

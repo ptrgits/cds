@@ -15,6 +15,7 @@ export type CategoricalScale = ScaleBand<number>;
 export type ChartScaleFunction = NumericScale | CategoricalScale;
 
 export const isCategoricalScale = (scale: ChartScaleFunction): scale is CategoricalScale => {
+  'worklet';
   return scale !== undefined && 'bandwidth' in scale && typeof scale.bandwidth === 'function';
 };
 

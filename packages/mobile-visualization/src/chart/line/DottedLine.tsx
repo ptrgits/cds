@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 import { DashPathEffect } from '@shopify/react-native-skia';
@@ -14,13 +14,9 @@ export type DottedLineProps = SharedProps &
     fill?: string;
     /**
      * Stroke dash array for the dotted pattern.
-     * @default '0 4'
+     * @default [0, 4]
      */
-    strokeDasharray?: string;
-    /**
-     * Vector effect (not used on mobile, for compatibility).
-     */
-    vectorEffect?: string;
+    strokeDasharray?: number[];
   };
 
 /**
@@ -31,12 +27,11 @@ export const DottedLine = memo<DottedLineProps>(
   ({
     fill = 'none',
     stroke,
-    strokeDasharray = '0 4',
+    strokeDasharray = [0, 4],
     strokeLinecap = 'round',
     strokeLinejoin = 'round',
     strokeOpacity = 1,
     strokeWidth = 2,
-    vectorEffect = 'non-scaling-stroke',
     gradient,
     seriesId,
     yAxisId,
@@ -46,13 +41,6 @@ export const DottedLine = memo<DottedLineProps>(
     ...props
   }) => {
     const theme = useTheme();
-
-    // Parse strokeDasharray into intervals for DashPathEffect
-    // todo: change the prop to be this array instead
-    const dashIntervals = useMemo(() => {
-      if (!strokeDasharray) return [0, 4]; // default
-      return strokeDasharray.split(/[\s,]+/).map((v: string) => parseFloat(v));
-    }, [strokeDasharray]);
 
     return (
       <Path
@@ -68,7 +56,7 @@ export const DottedLine = memo<DottedLineProps>(
         transitionConfigs={transitionConfig ? { update: transitionConfig } : undefined}
         {...props}
       >
-        <DashPathEffect intervals={dashIntervals} />
+        <DashPathEffect intervals={strokeDasharray} />
         {gradient && <Gradient gradient={gradient} yAxisId={yAxisId} />}
       </Path>
     );
