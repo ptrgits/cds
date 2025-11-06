@@ -6,6 +6,7 @@ import type { SkTypefaceFontProvider } from '@shopify/react-native-skia';
 import type { AxisConfig } from './axis';
 import type { Series } from './chart';
 import type { ChartScaleFunction } from './scale';
+import type { WorkletScale } from './workletScales';
 
 /**
  * Context value for Cartesian (X/Y) coordinate charts.
@@ -90,23 +91,28 @@ export type CartesianChartContextValue = {
    */
   getSeriesGradientScale: (seriesId: string) => ChartScaleFunction | undefined;
   /**
-   * Pre-calculated coordinate arrays for fast lookups.
-   * Simple arrays that work identically on web and mobile.
+   * Worklet function to apply X scale transformation.
+   * Can be called directly from UI thread worklets.
    */
-  coordinateArrays: {
-    // Global X coordinates (shared across all series)
-    xInputs: number[]; // [0, 1, 2, 3, ...] or [timestamp1, timestamp2, ...]
-    xOutputs: number[]; // [10, 20, 30, 40, ...] screen pixels
+  getXScaleWorklet: (value: number | string) => number;
 
-    // Per-series Y coordinates
-    seriesCoordinates: Record<
-      string,
-      {
-        yInputs: Array<[number, number] | null>; // [[baseline, value], ...]
-        yOutputs: number[]; // [100, 80, 120, ...] screen pixels
-      }
-    >;
-  };
+  /**
+   * Worklet function to apply Y scale transformation for a specific axis.
+   * Can be called directly from UI thread worklets.
+   */
+  getYScaleWorklet: (value: number, yAxisId?: string) => number;
+
+  /**
+   * Worklet function to convert screen X coordinate back to data index.
+   * Can be called directly from UI thread worklets.
+   */
+  getDataIndexFromXWorklet: (screenX: number) => number;
+
+  /**
+   * Pre-resolved gradient configurations for worklet use.
+   * Maps series ID to resolved gradient config.
+   */
+  resolvedGradientConfigs: Record<string, any>;
 };
 
 export type ScrubberContextValue = {

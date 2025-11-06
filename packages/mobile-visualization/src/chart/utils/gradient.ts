@@ -4,6 +4,12 @@ import type { AxisBounds } from './chart';
 import { type ChartScaleFunction, isCategoricalScale, isNumericScale } from './scale';
 
 /**
+ * Worklet-compatible scale function type.
+ * Simple function that takes a value and returns a pixel position.
+ */
+export type ChartScaleWorkletFunction = (value: number | string) => number;
+
+/**
  * Defines a color transition point in the gradient
  */
 export type GradientStop = {
@@ -32,6 +38,17 @@ export type GradientDefinition = {
    * Can be an array of stop objects or a function that receives domain bounds.
    */
   stops: GradientStop[] | ((domain: AxisBounds) => GradientStop[]);
+};
+
+/**
+ * Pre-resolved gradient configuration for worklet use.
+ * Contains resolved stops and scale range information.
+ */
+export type ResolvedGradientConfig = {
+  stops: GradientStop[];
+  rangeMin: number;
+  rangeMax: number;
+  rangeSpan: number;
 };
 
 /**
@@ -128,6 +145,47 @@ export const getGradientScale = (
 };
 
 /**
+ * Resolves a gradient configuration for worklet use.
+ * This should be called on the JS thread to resolve function-based stops
+ * and extract scale range information.
+ */
+export const resolveGradientConfig = (
+  gradient: GradientDefinition,
+  scale: ChartScaleFunction,
+): ResolvedGradientConfig | undefined => {
+  // Extract domain from scale
+  const scaleDomain = scale.domain();
+  let domain: AxisBounds;
+
+  if (isCategoricalScale(scale)) {
+    const domainArray = scaleDomain as number[];
+    domain = { min: domainArray[0], max: domainArray[domainArray.length - 1] };
+  } else {
+    const [min, max] = scaleDomain as [number, number];
+    domain = { min, max };
+  }
+
+  // Resolve stops (this calls the function if needed)
+  const stops = getGradientStops(gradient.stops, domain);
+  if (stops.length === 0) return undefined;
+
+  // Extract range information
+  const scaleRange = scale.range();
+  const [rangeMin, rangeMax] = Array.isArray(scaleRange)
+    ? (scaleRange as [number, number])
+    : [scaleRange, scaleRange]; // fallback for band scales
+
+  const rangeSpan = Math.abs(rangeMax - rangeMin);
+
+  return {
+    stops,
+    rangeMin,
+    rangeMax,
+    rangeSpan,
+  };
+};
+
+/**
  * Interpolates between two colors using linear interpolation.
  * Returns an rgba string.
  */
@@ -144,61 +202,35 @@ const interpolateColor = (color1: string, color2: string, t: number): string => 
 };
 
 /**
- * Evaluates the color at a specific data value based on the gradient configuration.
- * Uses Skia color interpolation for smooth transitions.
+ * Evaluates the color at a specific data value based on pre-resolved gradient configuration.
+ * This function is worklet-compatible and uses pre-resolved gradient stops and scale information.
  *
- * Note: Opacity from gradient stops is ignored when evaluating colors at specific points.
- * Opacity should only be used in the gradient rendering itself (Skia LinearGradient).
- *
- * Returns an interpolated color that Skia can render.
- *
- * @param gradient - The GradientDefinition configuration
- * @param dataValue - The data value to evaluate (for band scales, this is the index)
- * @param scale - The scale to use for value mapping (handles log scales correctly)
- * @returns The color string at this data value (may be an interpolated color), or null if invalid
+ * @param dataValue - The data value to evaluate
+ * @param gradientConfig - Pre-resolved gradient configuration
+ * @param scaleWorklet - Worklet-compatible scale function
+ * @returns The color string at this data value, or undefined if invalid
  */
 export const evaluateGradientAtValue = (
-  gradient: GradientDefinition,
   dataValue: number,
-  scale: ChartScaleFunction,
+  gradientConfig: ResolvedGradientConfig,
+  scaleWorklet: ChartScaleWorkletFunction,
 ): string | undefined => {
-  // Extract domain from scale
-  const scaleDomain = scale.domain();
-  let domain: AxisBounds;
+  'worklet';
 
-  if (isCategoricalScale(scale)) {
-    const domainArray = scaleDomain as number[];
-    domain = { min: domainArray[0], max: domainArray[domainArray.length - 1] };
-  } else {
-    const [min, max] = scaleDomain as [number, number];
-    domain = { min, max };
-  }
+  const { stops, rangeMin, rangeMax, rangeSpan } = gradientConfig;
 
-  const stops = getGradientStops(gradient.stops, domain);
-  if (stops.length === 0) return;
-
-  // Use scale to map values to positions (handles log scales correctly)
-  // For numeric scales: scale(value) returns pixel position
-  // We normalize these positions to 0-1 based on the range
-  const scaleRange = scale.range();
-  const [rangeMin, rangeMax] = Array.isArray(scaleRange)
-    ? (scaleRange as [number, number])
-    : [scaleRange, scaleRange]; // fallback for band scales
-
-  const rangeSpan = Math.abs(rangeMax - rangeMin);
+  if (stops.length === 0) return undefined;
   if (rangeSpan === 0) return stops[0].color;
 
-  // Map dataValue through scale to get position
-  const dataPosition = scale(dataValue);
-  if (dataPosition === undefined) return stops[0].color;
+  // Map dataValue through worklet scale to get position
+  const dataPosition = scaleWorklet(dataValue);
 
   // Normalize to 0-1 based on range
   const normalizedValue = Math.max(0, Math.min(1, Math.abs(dataPosition - rangeMin) / rangeSpan));
 
-  // Map stop offsets through scale and normalize to 0-1
+  // Map stop offsets through worklet scale and normalize to 0-1
   const positions = stops.map((stop) => {
-    const stopPosition = scale(stop.offset);
-    if (stopPosition === undefined) return 0;
+    const stopPosition = scaleWorklet(stop.offset);
     return Math.max(0, Math.min(1, Math.abs(stopPosition - rangeMin) / rangeSpan));
   });
 

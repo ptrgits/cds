@@ -11,7 +11,6 @@ import {
   ScrubberContext,
   type ScrubberContextValue,
 } from '../utils';
-import { findClosestXIndexWorklet } from '../utils/coordinateWorklets';
 
 export type ScrubberProviderProps = Partial<Pick<ScrubberContextValue, 'enableScrubbing'>> & {
   children: React.ReactNode;
@@ -42,7 +41,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
     throw new Error('ScrubberProvider must be used within a ChartContext');
   }
 
-  const { getXScale, getXAxis, coordinateArrays } = chartContext;
+  const { getXScale, getXAxis, getDataIndexFromXWorklet } = chartContext;
   const scrubberPosition = useSharedValue<number | undefined>(undefined);
 
   const xAxis = useMemo(() => getXAxis(), [getXAxis]);
@@ -92,51 +91,9 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
   const getDataIndexFromX = useCallback(
     (touchX: number): number | undefined => {
       'worklet';
-
-      // Use optimized coordinate lookup if available
-      if (coordinateArrays.xOutputs.length > 0) {
-        return findClosestXIndexWorklet(coordinateArrays.xOutputs, touchX);
-      }
-
-      // Fallback to existing logic for compatibility
-      if (!dataIndexScaleValues) return undefined;
-
-      if (isXScaleCategorical) {
-        const bandwidth = categoricalXScaleBandwidth ?? 0;
-        let closestIndex = 0;
-        let closestDistance = Infinity;
-        const dataScaleValuesKeys = Object.keys(dataIndexScaleValues).map(Number);
-        for (const dataIndex of dataScaleValuesKeys) {
-          const xPos = dataIndexScaleValues[dataIndex];
-          if (xPos !== undefined) {
-            const distance = Math.abs(touchX - (xPos + bandwidth / 2));
-            if (distance < closestDistance) {
-              closestDistance = distance;
-              closestIndex = dataIndex;
-            }
-          }
-        }
-        return closestIndex;
-      } else {
-        let closestIndex = 0;
-        let closestDistance = Infinity;
-
-        const dataScaleValuesKeys = Object.keys(dataIndexScaleValues).map(Number);
-        for (const dataIndex of dataScaleValuesKeys) {
-          const xPos = dataIndexScaleValues[dataIndex];
-          if (xPos !== undefined) {
-            const distance = Math.abs(touchX - xPos);
-            if (distance < closestDistance) {
-              closestDistance = distance;
-              closestIndex = dataIndex;
-            }
-          }
-        }
-
-        return closestIndex;
-      }
+      return getDataIndexFromXWorklet(touchX);
     },
-    [coordinateArrays, dataIndexScaleValues, isXScaleCategorical, categoricalXScaleBandwidth],
+    [getDataIndexFromXWorklet],
   );
 
   // Gesture handler callbacks

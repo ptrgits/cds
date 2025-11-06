@@ -271,14 +271,14 @@ export const Line = memo<LineProps>(
               const pointConfig = pointResult === true ? {} : pointResult;
 
               // Evaluate colors from gradient if available (only if not explicitly set)
-              let pointFill = pointConfig.fill ?? stroke;
+              const pointFill = pointConfig.fill ?? stroke;
 
               if (gradientScale && seriesGradient && !pointConfig.fill) {
                 // Use the appropriate data value based on gradient axis
                 const axis = seriesGradient.axis ?? 'y';
                 const dataValue = axis === 'x' ? xValue : value;
 
-                const evaluatedColor = evaluateGradientAtValue(
+                /*const evaluatedColor = evaluateGradientAtValue(
                   seriesGradient,
                   dataValue,
                   gradientScale,
@@ -286,7 +286,7 @@ export const Line = memo<LineProps>(
                 if (evaluatedColor) {
                   // Apply gradient color to fill if not explicitly set
                   pointFill = evaluatedColor;
-                }
+                }*/
               }
 
               return (

@@ -2441,7 +2441,6 @@ export default () => {
       <Example title="Continuous Gradient 2">
         <LineChart
           enableScrubbing
-          showArea
           showYAxis
           AreaComponent={(props) => <DottedArea {...props} fillOpacity={0.5} />}
           curve="monotone"
@@ -2478,7 +2477,6 @@ export default () => {
       <Example title="Discrete Gradient">
         <LineChart
           enableScrubbing
-          showArea
           showYAxis
           AreaComponent={PartialSolidArea}
           curve="monotone"
@@ -2501,11 +2499,9 @@ export default () => {
             },
           ]}
           strokeWidth={4}
-          yAxis={{
-            showGrid: true,
-          }}
         >
-          <Scrubber />
+          <ReferenceLine dataY={10.5} />
+          <Scrubber hideOverlay />
         </LineChart>
       </Example>
       {/*<Example title="X Axis Gradient 2">

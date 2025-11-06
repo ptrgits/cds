@@ -16,19 +16,11 @@ import {
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
-import {
-  type AnimatedProp,
-  DashPathEffect,
-  Group,
-  Line,
-  Rect,
-  vec,
-} from '@shopify/react-native-skia';
+import { Group, Rect } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { ReferenceLine, type ReferenceLineProps } from '../line';
 import { type Series, useScrubberContext } from '../utils';
-import { getScreenXWorklet } from '../utils/coordinateWorklets';
 
 import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 import { ScrubberBeaconLabel, type ScrubberBeaconLabelProps } from './ScrubberBeaconLabel';
@@ -163,6 +155,7 @@ export const Scrubber = memo(
       ref,
     ) => {
       const ScrubberBeaconRefs = useRefMap<ScrubberBeaconRef>();
+      const theme = useTheme();
 
       // Track label dimensions for collision detection
       const [labelDimensions, setLabelDimensions] = useState<Map<string, LabelDimensions>>(
@@ -170,8 +163,17 @@ export const Scrubber = memo(
       );
 
       const { scrubberPosition } = useScrubberContext();
-      const { getXScale, getSeriesData, getXAxis, series, drawingArea, animate, coordinateArrays } =
-        useCartesianChartContext();
+      const {
+        getXScale,
+        getSeriesData,
+        getXAxis,
+        series,
+        drawingArea,
+        animate,
+        getXScaleWorklet,
+        getYScaleWorklet,
+        getSeries,
+      } = useCartesianChartContext();
 
       // Animation state for delayed scrubber rendering (matches web timing)
       const scrubberOpacity = useSharedValue(animate ? 0 : 1);
@@ -230,11 +232,11 @@ export const Scrubber = memo(
       const pixelX = useDerivedValue(() => {
         if (dataX.value === undefined) return undefined;
 
-        // Use optimized coordinate arrays
-        return getScreenXWorklet(coordinateArrays.xOutputs, dataX.value);
-      }, [coordinateArrays, dataX]);
+        // Use worklet scale function for direct coordinate conversion
+        return getXScaleWorklet(dataX.value);
+      }, [getXScaleWorklet, dataX]);
 
-      // Reactive overlay positioning using coordinate arrays
+      // Reactive overlay positioning using worklet scales
       const overlayX = useDerivedValue(() => {
         return pixelX.value ?? 0;
       }, [pixelX]);
@@ -256,14 +258,25 @@ export const Scrubber = memo(
         return map;
       }, [series, getSeriesData]);
 
-      /* const beaconPositions = useDerivedValue(() => {
-        if (
-          !xScale ||
-          dataX === undefined ||
-          dataIndex === undefined ||
-          seriesDataMap === undefined
-        )
+      // Pre-resolve labels on JS thread to avoid calling functions in worklets
+      const resolvedSeriesLabels = useMemo(() => {
+        if (!series || dataIndex.value === undefined) return new Map();
+
+        const labelMap = new Map<string, string | undefined>();
+        series.forEach((s) => {
+          if (seriesIds === undefined || seriesIds.includes(s.id)) {
+            const resolvedLabel =
+              typeof s.label === 'function' ? s.label(dataIndex.value) : s.label;
+            labelMap.set(s.id, resolvedLabel);
+          }
+        });
+        return labelMap;
+      }, [series, dataIndex, seriesIds]);
+
+      const beaconPositions = useDerivedValue(() => {
+        if (dataX.value === undefined || dataIndex.value === undefined || !series) {
           return [];
+        }
 
         return (
           series
@@ -273,38 +286,50 @@ export const Scrubber = memo(
             })
             ?.map((s) => {
               const sourceData = seriesDataMap[s.id];
+              if (!sourceData) return undefined;
+
               // Use dataIndex to get the y value from the series data array
-              const stuff = sourceData?.[dataIndex.value];
-              let dataY: number | undefined;
-              if (Array.isArray(stuff)) {
-                dataY = stuff[stuff.length - 1];
-              } else if (typeof stuff === 'number') {
-                dataY = stuff;
+              const dataPoint = sourceData[dataIndex.value];
+              if (!dataPoint) return undefined;
+
+              let dataY: number;
+              if (Array.isArray(dataPoint)) {
+                dataY = dataPoint[dataPoint.length - 1]; // Use top of stack for stacked data
+              } else if (typeof dataPoint === 'number') {
+                dataY = dataPoint;
+              } else {
+                return undefined;
               }
 
-              if (dataY !== undefined) {
-                /*const yScale = getYScale(s.yAxisId);
-                if (!yScale) {
-                  return undefined;
-                }* /
+              // Use worklet scale functions to get pixel coordinates
+              const pixelX = getXScaleWorklet(dataX.value);
+              const pixelY = getYScaleWorklet(dataY, s.yAxisId);
 
-                const pixelY = 0; //yScale(dataY);
-                const resolvedLabel = 'hello';
-                // typeof s.label === 'function' ? s.label(dataIndex.value) : s.label;
+              // Get pre-resolved label from JS thread
+              const resolvedLabel = resolvedSeriesLabels.get(s.id);
 
-                return {
-                  x: dataX,
-                  y: dataY,
-                  label: resolvedLabel,
-                  pixelY,
-                  targetSeries: s,
-                  gradient: s.gradient,
-                };
-              }
+              return {
+                x: dataX.value,
+                y: dataY,
+                pixelX,
+                pixelY,
+                label: resolvedLabel,
+                targetSeries: s,
+                gradient: s.gradient,
+              };
             })
-            .filter((beacon: any) => beacon !== undefined) ?? []
+            .filter((beacon): beacon is NonNullable<typeof beacon> => beacon !== undefined) ?? []
         );
-      }, [getXScale, getYScale, dataX, dataIndex, series, seriesIds, getSeriesData]);*/
+      }, [
+        dataX,
+        dataIndex,
+        series,
+        seriesIds,
+        seriesDataMap,
+        getXScaleWorklet,
+        getYScaleWorklet,
+        resolvedSeriesLabels,
+      ]);
 
       const createScrubberBeaconRef = useCallback(
         (seriesId: string) => {
@@ -663,10 +688,10 @@ export const Scrubber = memo(
               stroke={lineStroke}
             />
           )}
-          {/*beaconPositions.value.map((beacon: any) => {
+          {beaconPositions.value.map((beacon) => {
             if (!beacon) return null;
+
             const dotStroke = beacon.targetSeries?.color || theme.color.fgPrimary;
-            const adjustment = labelPositioning.value.adjustments.get(beacon.targetSeries.id);
 
             return (
               <Group key={beacon.targetSeries.id}>
@@ -681,40 +706,32 @@ export const Scrubber = memo(
                   seriesId={beacon.targetSeries.id}
                   testID={testID ? `${testID}-${beacon.targetSeries.id}-dot` : undefined}
                 />
-                {beacon.label &&
-                  pixelX !== undefined &&
-                  (() => {
-                    const finalAnchorX = adjustment?.x ?? pixelX;
-                    const finalAnchorY = adjustment?.y ?? beacon.pixelY;
-                    const finalSide = adjustment?.side ?? labelPositioning.value.strategy;
-
-                    return (
-                      <BeaconLabelComponent
-                        background={theme.color.bg}
-                        bounds={drawingArea}
-                        color={dotStroke}
-                        horizontalAlignment={finalSide === 'right' ? 'left' : 'right'}
-                        inset={{
-                          left: labelHorizontalInset,
-                          right: labelHorizontalInset,
-                          top: labelVerticalInset,
-                          bottom: labelVerticalInset,
-                        }}
-                        onDimensionsChange={(rect) =>
-                          registerLabelDimensions(beacon.targetSeries.id, rect.width, rect.height)
-                        }
-                        testID={testID ? `${testID}-${beacon.targetSeries.id}-label` : undefined}
-                        x={finalAnchorX}
-                        xOffset={finalSide === 'right' ? 16 : -16}
-                        y={finalAnchorY}
-                      >
-                        {beacon.label}
-                      </BeaconLabelComponent>
-                    );
-                  })()}
+                {beacon.label && (
+                  <BeaconLabelComponent
+                    background={theme.color.bg}
+                    bounds={drawingArea}
+                    color={dotStroke}
+                    horizontalAlignment="left"
+                    inset={{
+                      left: labelHorizontalInset,
+                      right: labelHorizontalInset,
+                      top: labelVerticalInset,
+                      bottom: labelVerticalInset,
+                    }}
+                    onDimensionsChange={(rect) =>
+                      registerLabelDimensions(beacon.targetSeries.id, rect.width, rect.height)
+                    }
+                    testID={testID ? `${testID}-${beacon.targetSeries.id}-label` : undefined}
+                    x={beacon.pixelX}
+                    xOffset={16}
+                    y={beacon.pixelY}
+                  >
+                    {beacon.label}
+                  </BeaconLabelComponent>
+                )}
               </Group>
             );
-          })*/}
+          })}
         </Group>
       );
     },

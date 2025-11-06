@@ -12,7 +12,6 @@ import { Circle, Group } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { projectPoint, useScrubberContext } from '../utils';
-import { getSeriesCoordinateAtIndexWorklet } from '../utils/coordinateWorklets';
 import { evaluateGradientAtValue, type GradientDefinition } from '../utils/gradient';
 import { buildTransition, defaultTransition, type TransitionConfig } from '../utils/transition';
 
@@ -121,7 +120,9 @@ export const ScrubberBeacon = memo(
         getSeriesData,
         animate,
         getSeriesGradientScale,
-        coordinateArrays,
+        getXScaleWorklet,
+        getYScaleWorklet,
+        resolvedGradientConfigs,
       } = useCartesianChartContext();
       const { scrubberPosition } = useScrubberContext();
 
@@ -179,36 +180,52 @@ export const ScrubberBeacon = memo(
           )
             return undefined;
 
-          const point = projectPoint({
-            x: dataX.value!,
-            y: dataY.value!,
-            xScale,
-            yScale,
-          });
+          const point = {
+            x: getXScaleWorklet(dataX.value!),
+            y: getYScaleWorklet(dataY.value!, targetSeries?.yAxisId),
+          };
 
-          // Return undefined if coordinates are invalid
           if (!point || isNaN(point.x) || isNaN(point.y)) return undefined;
 
           return point;
         }
 
-        // Use optimized coordinate lookup for scrubber-driven positioning
-        if (scrubberPosition.value === undefined || !seriesId) return undefined;
+        // Use worklet scale functions for scrubber-driven positioning
+        if (scrubberPosition.value === undefined || !seriesId || !sourceData) return undefined;
 
-        const coordinate = getSeriesCoordinateAtIndexWorklet(
-          coordinateArrays.xOutputs,
-          coordinateArrays.seriesCoordinates,
-          seriesId,
-          scrubberPosition.value
-        );
+        const dataPoint = sourceData[scrubberPosition.value];
+        if (!dataPoint) return undefined;
 
-        if (!coordinate) return undefined;
+        // Handle both array and number data formats
+        let xValue: number;
+        let yValue: number;
+
+        if (Array.isArray(dataPoint)) {
+          xValue = scrubberPosition.value; // Use index for X
+          yValue = dataPoint[dataPoint.length - 1]; // Use top of stack for Y
+        } else {
+          xValue = scrubberPosition.value; // Use index for X
+          yValue = dataPoint; // Use value for Y
+        }
 
         return {
-          x: coordinate.screenX,
-          y: coordinate.screenY,
+          x: getXScaleWorklet(xValue),
+          y: getYScaleWorklet(yValue, targetSeries?.yAxisId),
         };
-      }, [xScale, yScale, dataX, dataY, coordinateArrays, scrubberPosition, seriesId, dataXProp, dataYProp]);
+      }, [
+        getXScaleWorklet,
+        getYScaleWorklet,
+        scrubberPosition,
+        seriesId,
+        sourceData,
+        targetSeries,
+        dataXProp,
+        dataYProp,
+        xScale,
+        yScale,
+        dataX,
+        dataY,
+      ]);
 
       const pulseOpacity = useSharedValue(0);
 
@@ -265,26 +282,41 @@ export const ScrubberBeacon = memo(
       ]);*/
 
       const pointColor = useDerivedValue(() => {
-        if (gradient && gradientScale) {
+        /* if (gradient && seriesId) {
           const axis = gradient.axis ?? 'y';
           const dataValue = axis === 'x' ? dataX : dataY;
 
           if (dataValue.value !== undefined && dataValue.value !== null) {
-            const evaluatedColor = evaluateGradientAtValue(
-              gradient,
-              dataValue.value,
-              gradientScale,
-            );
-            if (evaluatedColor) {
-              return evaluatedColor;
+            // Get pre-resolved gradient config and appropriate worklet scale
+            const gradientConfig = resolvedGradientConfigs[seriesId];
+
+            if (gradientConfig) {
+              const scaleWorklet =
+                axis === 'x'
+                  ? getXScaleWorklet
+                  : (value: number | string) =>
+                      getYScaleWorklet(value as number, targetSeries?.yAxisId);
+
+              const evaluatedColor = evaluateGradientAtValue(
+                dataValue.value,
+                gradientConfig,
+                scaleWorklet,
+              );
+              if (evaluatedColor) {
+                return evaluatedColor;
+              }
             }
           }
-        }
+        }*/
 
         return color ?? targetSeries?.color ?? theme.color.fgPrimary;
       }, [
         gradient,
-        gradientScale,
+        seriesId,
+        resolvedGradientConfigs,
+        getXScaleWorklet,
+        getYScaleWorklet,
+        targetSeries,
         dataX,
         dataY,
         color,

@@ -12,12 +12,8 @@ import type {
   TextHorizontalAlignment,
   TextVerticalAlignment,
 } from '../text/ChartText';
+import { defaultAxisId } from '../utils';
 import { unwrapAnimatedValue } from '../utils/chart';
-import {
-  findClosestXIndexWorklet,
-  getScreenXWorklet,
-  getScreenYWorklet,
-} from '../utils/coordinateWorklets';
 
 import { DottedLine } from './DottedLine';
 import type { LineComponent } from './Line';
@@ -125,7 +121,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     labelProps,
   }) => {
     const theme = useTheme();
-    const { drawingArea, coordinateArrays } = useCartesianChartContext();
+    const { drawingArea, getXScaleWorklet, getYScaleWorklet } = useCartesianChartContext();
 
     const effectiveLineStroke = stroke ?? theme.color.bgLine;
 
@@ -151,46 +147,15 @@ export const ReferenceLine = memo<ReferenceLineProps>(
 
       const currentDataY = unwrapAnimatedValue(dataY);
 
-      // Use coordinate arrays only - no fallbacks
-      const availableSeries = Object.entries(coordinateArrays.seriesCoordinates);
-      if (availableSeries.length === 0) return 0;
+      return getYScaleWorklet(currentDataY, yAxisId);
+    }, [getYScaleWorklet, dataY, yAxisId]);
 
-      // For now, use the first series. In the future, we could match by yAxisId
-      const [, seriesData] = availableSeries[0];
-
-      // Find closest Y input value and use its corresponding output position
-      let closestIndex = 0;
-      let minDistance = Infinity;
-
-      seriesData.yInputs.forEach((inputValue, index) => {
-        if (inputValue) {
-          const distance = Math.abs(inputValue[1] - currentDataY); // Compare with top of stack
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestIndex = index;
-          }
-        }
-      });
-
-      return seriesData.yOutputs[closestIndex] ?? 0;
-    }, [coordinateArrays, dataY, yAxisId]);
-
-    const pixelX = useDerivedValue(() => {
-      if (dataX === undefined) return;
+    const xPixel = useDerivedValue(() => {
+      if (dataX === undefined) return undefined;
 
       const currentDataX = unwrapAnimatedValue(dataX);
-
-      return getScreenXWorklet(coordinateArrays.xOutputs, currentDataX);
-    }, [coordinateArrays, dataX]);
-
-    const pixelY = useDerivedValue(() => {
-      if (dataY === undefined) return;
-
-      const currentDataY = unwrapAnimatedValue(dataY);
-
-      return 0;
-      //return getScreenYWorklet(coordinateArrays.seriesCoordinates[seriesId].yOutputs, currentDataY);
-    }, [coordinateArrays, dataY]);
+      return getXScaleWorklet(currentDataX);
+    }, [getXScaleWorklet, dataX]);
 
     const horizontalPath = useDerivedValue(() => {
       if (yPixel.value === undefined) return '';
@@ -198,9 +163,9 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     }, [yPixel]);
 
     const verticalPath = useDerivedValue(() => {
-      if (pixelX.value === undefined) return '';
-      return `M${pixelX.value},${drawingArea.y} L${pixelX.value},${drawingArea.y + drawingArea.height}`;
-    }, [pixelX]);
+      if (xPixel.value === undefined) return '';
+      return `M${xPixel.value},${drawingArea.y} L${xPixel.value},${drawingArea.y + drawingArea.height}`;
+    }, [xPixel]);
 
     if (dataY !== undefined) {
       let labelX: number;
@@ -239,7 +204,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
         <>
           <LineComponent animate={false} d={verticalPath} stroke={effectiveLineStroke} />
           {label && (
-            <ChartText {...finalLabelProps} x={pixelX.value ?? 0} y={labelY}>
+            <ChartText {...finalLabelProps} x={xPixel.value ?? 0} y={labelY}>
               {label}
             </ChartText>
           )}

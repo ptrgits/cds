@@ -8,8 +8,12 @@ import { useContextBridge } from '@coinbase/cds-mobile/system';
 import { Canvas, Skia } from '@shopify/react-native-skia';
 
 import { ScrubberProvider, type ScrubberProviderProps } from './scrubber/ScrubberProvider';
-import { getGradientScale } from './utils/gradient';
+import type { GradientDefinition, ResolvedGradientConfig } from './utils/gradient';
+import { getGradientScale, resolveGradientConfig } from './utils/gradient';
+import { applyInverseWorkletScale } from './utils/inverseWorkletScales';
 import { getPointOnScale } from './utils/point';
+import { convertToWorkletScale } from './utils/scaleConversion';
+import { applyWorkletScale, type WorkletScale } from './utils/workletScales';
 import { CartesianChartProvider } from './ChartProvider';
 import {
   type AxisConfig,
@@ -329,74 +333,86 @@ export const CartesianChart = memo(
         [series, xScale, yScales],
       );
 
-      // Build coordinate arrays for fast lookups
-      const coordinateArrays = useMemo(() => {
-        if (!xScale || !chartRect || chartRect.width <= 0 || chartRect.height <= 0) {
-          return {
-            xInputs: [],
-            xOutputs: [],
-            seriesCoordinates: {},
-          };
-        }
+      // Pre-convert D3 scales to worklet-compatible scales when they change
+      const workletXScale = useMemo((): WorkletScale | undefined => {
+        if (!xScale) return undefined;
+        return convertToWorkletScale(xScale, 'x');
+      }, [xScale]);
 
-        // Build global X arrays
-        const maxLength = Math.max(...(series?.map((s) => s.data?.length ?? 0) ?? [0]));
-        const xInputs: number[] = [];
-        const xOutputs: number[] = [];
+      const workletYScales = useMemo((): Record<string, WorkletScale> => {
+        const converted: Record<string, WorkletScale> = {};
+        yScales.forEach((scale, id) => {
+          const workletScale = convertToWorkletScale(scale, 'y');
+          if (workletScale) {
+            converted[id] = workletScale;
+          }
+        });
+        return converted;
+      }, [yScales]);
 
-        for (let i = 0; i < maxLength; i++) {
-          let xValue: number;
+      // Create worklet scale functions that use pre-converted scales
+      const getXScaleWorklet = useCallback(
+        (value: number | string): number => {
+          'worklet';
 
-          // Handle both numeric and string axis data
-          if (xAxis?.data && Array.isArray(xAxis.data) && xAxis.data.length > i) {
-            const axisDataValue = xAxis.data[i];
-            if (typeof axisDataValue === 'number') {
-              xValue = axisDataValue;
-            } else {
-              // For string data, use the index
-              xValue = i;
-            }
+          if (!workletXScale) return 0;
+          return applyWorkletScale(value, workletXScale);
+        },
+        [workletXScale],
+      );
+
+      const getYScaleWorklet = useCallback(
+        (value: number, yAxisId?: string): number => {
+          'worklet';
+
+          const targetWorkletScale = workletYScales[yAxisId ?? defaultAxisId];
+          if (!targetWorkletScale) return 0;
+          return applyWorkletScale(value, targetWorkletScale);
+        },
+        [workletYScales],
+      );
+
+      const getDataIndexFromXWorklet = useCallback(
+        (screenX: number): number => {
+          'worklet';
+
+          if (!workletXScale) return 0;
+
+          // For band scales, this returns the band index directly
+          // For linear/log scales, this returns the data value, which we'll round to nearest index
+          const result = applyInverseWorkletScale(screenX, workletXScale);
+
+          if (workletXScale.type === 'band') {
+            return result; // Already an index
           } else {
-            // Default to index if no axis data
-            xValue = i;
+            return Math.round(result); // Round to nearest index for continuous scales
           }
+        },
+        [workletXScale],
+      );
 
-          xInputs.push(xValue);
-          xOutputs.push(getPointOnScale(xValue, xScale));
-        }
-
-        // Build per-series Y arrays
-        const seriesCoordinates: Record<
-          string,
-          {
-            yInputs: Array<[number, number] | null>;
-            yOutputs: number[];
-          }
-        > = {};
+      // Pre-resolve gradient configurations for all series
+      const resolvedGradientConfigs = useMemo((): Record<string, ResolvedGradientConfig> => {
+        const configs: Record<string, ResolvedGradientConfig> = {};
 
         series?.forEach((s) => {
-          const yScale = yScales.get(s.yAxisId ?? defaultAxisId);
-          if (!yScale || !s.data) return;
-
-          const stackedData = stackedDataMap.get(s.id) ?? [];
-          const yInputs: Array<[number, number] | null> = [];
-          const yOutputs: number[] = [];
-
-          stackedData.forEach((dataPoint) => {
-            yInputs.push(dataPoint);
-            if (dataPoint) {
-              // Use the top of the stack (dataPoint[1]) for positioning
-              yOutputs.push(getPointOnScale(dataPoint[1], yScale));
-            } else {
-              yOutputs.push(0);
+          if (s.gradient) {
+            const targetScale = getGradientScale(
+              s.gradient,
+              xScale,
+              yScales.get(s.yAxisId ?? defaultAxisId),
+            );
+            if (targetScale) {
+              const config = resolveGradientConfig(s.gradient, targetScale);
+              if (config) {
+                configs[s.id] = config;
+              }
             }
-          });
-
-          seriesCoordinates[s.id] = { yInputs, yOutputs };
+          }
         });
 
-        return { xInputs, xOutputs, seriesCoordinates };
-      }, [series, xScale, yScales, xAxis, stackedDataMap, chartRect]);
+        return configs;
+      }, [series, xScale, yScales]);
 
       const contextValue: CartesianChartContextValue = useMemo(
         () => ({
@@ -416,7 +432,10 @@ export const CartesianChart = memo(
           unregisterAxis,
           getAxisBounds,
           getSeriesGradientScale,
-          coordinateArrays,
+          getXScaleWorklet,
+          getYScaleWorklet,
+          getDataIndexFromXWorklet,
+          resolvedGradientConfigs,
         }),
         [
           series,
@@ -435,7 +454,10 @@ export const CartesianChart = memo(
           unregisterAxis,
           getAxisBounds,
           getSeriesGradientScale,
-          coordinateArrays,
+          getXScaleWorklet,
+          getYScaleWorklet,
+          getDataIndexFromXWorklet,
+          resolvedGradientConfigs,
         ],
       );
 
