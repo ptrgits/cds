@@ -1,8 +1,9 @@
 import { css } from '@linaria/core';
-import { type HeaderGroup } from '@tanstack/react-table';
+import type { HeaderGroup } from '@tanstack/react-table';
 import type { Virtualizer } from '@tanstack/react-virtual';
 
 import { cx } from '../../cx';
+import { TableRow } from '../TableRow';
 
 import { TableHeadCell } from './TableHeadCell';
 
@@ -43,7 +44,7 @@ export const TableHeadRow = ({
   const rightHeaders = headerGroup.headers.filter((h) => h.column.getIsPinned() === 'right');
 
   return (
-    <tr key={headerGroup.id} className={rowCss}>
+    <TableRow key={headerGroup.id} className={rowCss}>
       {/* Left pinned */}
       {leftHeaders.map((header) => (
         <TableHeadCell
@@ -90,6 +91,6 @@ export const TableHeadRow = ({
           header={header}
         />
       ))}
-    </tr>
+    </TableRow>
   );
 };

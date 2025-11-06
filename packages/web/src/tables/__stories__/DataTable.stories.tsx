@@ -20,6 +20,104 @@ const actionCellCss = css`
 
 type RowData = { rowId: string; children?: RowData[] } & Record<`col${number}`, number>;
 
+export const DefautlDataTableDesign = () => {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [virtualizeRows, setVirtualizeRows] = useState(true);
+  const [virtualizeColumns, setVirtualizeColumns] = useState(true);
+  const [stickyHeader, setStickyHeader] = useState(true);
+  const [rowSelection, setRowSelection] = useState({});
+  const [expanded, setExpanded] = useState<ExpandedState>({});
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
+    left: [ActionColumnIds.select, ActionColumnIds.expand],
+    right: [],
+  });
+  const actionColumns = useMemo<ColumnDef<RowData>[]>(
+    () => [expandColumnConfig, checkColumnConfig],
+    [],
+  );
+
+  const dataColumns = useMemo<ColumnDef<RowData>[]>(() => {
+    const cols: ColumnDef<RowData>[] = [];
+    for (let c = 0; c < 1000; c += 1) {
+      const key = `col${c}`;
+      cols.push({
+        accessorKey: key,
+        header: `Col ${c}`,
+        cell: (info) => info.getValue<number>(),
+      });
+    }
+    return cols;
+  }, []);
+
+  const columns = useMemo<ColumnDef<RowData>[]>(
+    () => [...actionColumns, ...dataColumns],
+    [actionColumns, dataColumns],
+  );
+
+  const data = useMemo<RowData[]>(() => {
+    const buildRow = (rowId: string, depth: number): RowData => {
+      const row: RowData = { rowId };
+      for (let c = 0; c < 1000; c += 1) {
+        row[`col${c}`] = depth * 1000 + Number(rowId.replace(/-/g, '')) + c;
+      }
+
+      if (depth < 2) {
+        row.children = new Array(3)
+          .fill(null)
+          .map((_, index) => buildRow(`${rowId}-${index}`, depth + 1));
+      }
+
+      return row;
+    };
+
+    return new Array(1000).fill(null).map((_, index) => buildRow(String(index), 0));
+  }, []);
+
+  return (
+    <VStack gap={3}>
+      <HStack alignItems="center" gap={4}>
+        <Checkbox checked={virtualizeRows} onChange={() => setVirtualizeRows((value) => !value)}>
+          Virtualize Rows
+        </Checkbox>
+        <Checkbox
+          checked={virtualizeColumns}
+          onChange={() => setVirtualizeColumns((value) => !value)}
+        >
+          Virtualize Columns
+        </Checkbox>
+        <Checkbox checked={stickyHeader} onChange={() => setStickyHeader((value) => !value)}>
+          Sticky Header
+        </Checkbox>
+      </HStack>
+      <DataTable
+        onColumnChange={({ ids }) => {
+          setColumnOrder(ids);
+        }}
+        stickyHeader={stickyHeader}
+        style={{ height: '400px' }}
+        tableOptions={{
+          data,
+          columns,
+          enableRowSelection: (row) => Number(row.original.rowId.split('-')[0]) % 2 === 0,
+          enableExpanding: true,
+          getSubRows: (row) => row.children,
+          onExpandedChange: setExpanded,
+          onRowSelectionChange: setRowSelection,
+          onColumnPinningChange: setColumnPinning,
+          state: { sorting, columnOrder, rowSelection, columnPinning, expanded },
+          onSortingChange: setSorting,
+          onColumnOrderChange: setColumnOrder,
+          getRowId: (row) => row.rowId,
+        }}
+        virtualizeColumns={virtualizeColumns}
+        virtualizeRows={virtualizeRows}
+      />
+      <Text>{`${Object.keys(rowSelection).length} rows selected`}</Text>
+    </VStack>
+  );
+};
+
 export const DataTableExample = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);

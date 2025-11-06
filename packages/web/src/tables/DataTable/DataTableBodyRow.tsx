@@ -1,8 +1,9 @@
 import { css } from '@linaria/core';
-import { type Row } from '@tanstack/react-table';
-import { type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
+import type { Row } from '@tanstack/react-table';
+import type { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 
 import { cx } from '../../cx';
+import { TableRow } from '../TableRow';
 
 import { DataTableBodyCell } from './DataTableBodyCell';
 
@@ -55,7 +56,7 @@ export const DataTableBodyRow = ({
   const firstCenterCellId = centerCells[0]?.id;
 
   return (
-    <tr
+    <TableRow
       key={row.id}
       ref={
         staticPosition || !rowVirtualizer || !virtualRow
@@ -124,6 +125,6 @@ export const DataTableBodyRow = ({
           selected={isSelected}
         />
       ))}
-    </tr>
+    </TableRow>
   );
 };

@@ -1,6 +1,8 @@
-import type { HTMLAttributes } from 'react';
+import { type HTMLAttributes, useMemo } from 'react';
 import { css } from '@linaria/core';
 import { type Cell, flexRender } from '@tanstack/react-table';
+
+import { cx } from '../../cx';
 
 import { getColumnPinningStyles } from './getColumnPinningStyles';
 
@@ -30,22 +32,31 @@ export const DataTableBodyCell = ({
   rowDepth = 0,
   selected,
   leftOffset,
+  className,
+  style,
   ...props
 }: DataTableBodyCellProps) => {
+  const pinningStyles = useMemo(
+    () =>
+      getColumnPinningStyles(cell.column, leftOffset, {
+        hasLeftOverflow,
+        hasRightOverflow,
+      }),
+    [cell.column, hasLeftOverflow, hasRightOverflow, leftOffset],
+  );
+
   return (
     <td
       key={cell.id}
       {...props}
-      className={bodyCellCss}
+      className={cx(bodyCellCss, className)}
       style={{
         backgroundColor: selected ? 'var(--color-bgAlternate)' : undefined,
         paddingInlineStart:
           isFirstCenterCell && rowDepth > 0 ? `var(--space-${subRowIndentPx})` : undefined,
         width: cell.column.getSize(),
-        ...getColumnPinningStyles(cell.column, leftOffset, {
-          hasLeftOverflow,
-          hasRightOverflow,
-        }),
+        ...pinningStyles,
+        ...style,
       }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}

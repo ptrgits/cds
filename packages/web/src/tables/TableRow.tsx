@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useRef } from 'react';
+import React, { forwardRef, memo, useCallback, useMemo, useRef } from 'react';
 import type { ThemeVars } from '@coinbase/cds-common/core/theme';
 import type { SharedProps } from '@coinbase/cds-common/types/SharedProps';
 import { css } from '@linaria/core';
@@ -85,18 +85,23 @@ const tableRowHoverCss = css`
 `;
 
 export const TableRow = memo(
-  ({
-    fullWidth,
-    disableHoverIndicator,
-    children,
-    backgroundColor,
-    color,
-    testID,
-    onClick,
-    outerSpacing,
-    innerSpacing,
-    ...props
-  }: TableRowProps) => {
+  forwardRef<HTMLTableRowElement, TableRowProps>(function TableRow(
+    {
+      fullWidth,
+      disableHoverIndicator,
+      children,
+      backgroundColor,
+      color,
+      testID,
+      onClick,
+      outerSpacing,
+      innerSpacing,
+      className,
+      style,
+      ...props
+    }: TableRowProps,
+    forwardedRef,
+  ) {
     const isBrowser = useIsBrowser();
     const tableSectionType = useTableSectionTag();
     const isCellInBody = tableSectionType === 'tbody';
@@ -106,21 +111,34 @@ export const TableRow = memo(
     const rowRef: TableRowRef = useRef(null);
     useTableRowListener(rowRef, onClick as () => void);
 
+    const setRef = useCallback(
+      (node: HTMLTableRowElement | null) => {
+        rowRef.current = node;
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(node);
+        } else if (forwardedRef) {
+          (forwardedRef as React.MutableRefObject<HTMLTableRowElement | null>).current = node;
+        }
+      },
+      [forwardedRef],
+    );
+
     const inlineStyles = useMemo(() => {
       return {
         color: color && `var(--color-${color})`,
         backgroundColor: backgroundColor && `var(--color-${backgroundColor})`,
         cursor: onClick ? 'pointer' : 'default',
+        ...style,
       };
-    }, [backgroundColor, color, onClick]);
+    }, [backgroundColor, color, onClick, style]);
 
     // @link https://nextjs.org/docs/messages/react-hydration-error
     const innerChildren = useMemo(() => (isBrowser ? children : ''), [children, isBrowser]);
 
     return (
       <tr
-        ref={rowRef} // click/event support
-        className={cx(tableRowCss, shouldIndicateHover && tableRowHoverCss)}
+        ref={setRef} // click/event support
+        className={cx(tableRowCss, shouldIndicateHover && tableRowHoverCss, className)}
         data-testid={testID}
         onClick={onClick}
         style={inlineStyles}
@@ -141,7 +159,7 @@ export const TableRow = memo(
         )}
       </tr>
     );
-  },
+  }),
 );
 
 TableRow.displayName = 'TableRow';

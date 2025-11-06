@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { Box } from '../../layout/Box';
+import { Table } from '../Table';
 
 import { DataTableBody } from './DataTableBody';
 import { DataTableHead } from './DataTableHead';
@@ -224,37 +224,41 @@ const DataTableBase = <TData,>(
   }, [updateOverflowIndicators]);
 
   return (
-    <Box ref={tableContainerRef} className={tableContainerCss} style={style}>
-      {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
-      <table ref={ref} className={dataTableCss} {...props}>
-        {/* Head renders pinned + center columns and needs overflow state to decide when to draw borders */}
-        <DataTableHead
-          columnVirtualizer={columnVirtualizer}
-          hasLeftOverflow={hasLeftOverflow}
-          hasRightOverflow={hasRightOverflow}
-          isSticky={stickyHeader}
-          sectionRef={headerRef}
-          table={table}
-          virtualPaddingLeft={virtualPaddingLeft}
-          virtualPaddingRight={virtualPaddingRight}
-          virtualizeColumns={virtualizeColumns}
-        />
-        {/* Body mirrors the head setup, forwarding virtualization + overflow metadata down to rows */}
-        <DataTableBody
-          columnVirtualizer={columnVirtualizer}
-          estimateVirtualRowHeight={estimateVirtualRowHeight}
-          hasLeftOverflow={hasLeftOverflow}
-          hasRightOverflow={hasRightOverflow}
-          headerOffsetTop={stickyHeader ? headerHeight : 0}
-          table={table}
-          tableContainerRef={tableContainerRef}
-          virtualPaddingLeft={virtualPaddingLeft}
-          virtualPaddingRight={virtualPaddingRight}
-          virtualizeColumns={virtualizeColumns}
-          virtualizeRows={virtualizeRows}
-        />
-      </table>
-    </Box>
+    <Table
+      ref={ref}
+      className={dataTableCss}
+      classNames={{ root: tableContainerCss }}
+      containerRef={tableContainerRef}
+      styles={{ root: style }}
+      {...props}
+    >
+      {/* Head renders pinned + center columns and needs overflow state to decide when to draw borders */}
+      <DataTableHead
+        columnVirtualizer={columnVirtualizer}
+        hasLeftOverflow={hasLeftOverflow}
+        hasRightOverflow={hasRightOverflow}
+        sectionRef={headerRef}
+        sticky={stickyHeader}
+        table={table}
+        virtualPaddingLeft={virtualPaddingLeft}
+        virtualPaddingRight={virtualPaddingRight}
+        virtualizeColumns={virtualizeColumns}
+      />
+      {/* Body mirrors the head setup, forwarding virtualization + overflow metadata down to rows */}
+      <DataTableBody
+        columnVirtualizer={columnVirtualizer}
+        estimateVirtualRowHeight={estimateVirtualRowHeight}
+        hasLeftOverflow={hasLeftOverflow}
+        hasRightOverflow={hasRightOverflow}
+        headerOffsetTop={stickyHeader ? headerHeight : 0}
+        table={table}
+        tableContainerRef={tableContainerRef}
+        virtualPaddingLeft={virtualPaddingLeft}
+        virtualPaddingRight={virtualPaddingRight}
+        virtualizeColumns={virtualizeColumns}
+        virtualizeRows={virtualizeRows}
+      />
+    </Table>
   );
 };
 

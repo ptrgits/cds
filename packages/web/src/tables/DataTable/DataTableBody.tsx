@@ -3,6 +3,7 @@ import { type Row, type Table } from '@tanstack/react-table';
 import { useVirtualizer, type Virtualizer } from '@tanstack/react-virtual';
 
 import { cx } from '../../cx';
+import { TableBody } from '../TableBody';
 
 import { defaultVirtualRowsOverscan } from './DataTable';
 import { DataTableBodyRow } from './DataTableBodyRow';
@@ -88,7 +89,7 @@ export const DataTableBody = ({
     <>
       {/* Top pinned rows */}
       {topRows.length > 0 && (
-        <tbody className={cx(pinnedSectionCss)} style={{ top: headerOffsetTop }}>
+        <TableBody className={cx(pinnedSectionCss)} style={{ top: headerOffsetTop }}>
           {topRows.map((row, i) => (
             <DataTableBodyRow
               key={row.id}
@@ -102,12 +103,12 @@ export const DataTableBody = ({
               virtualizeColumns={virtualizeColumns}
             />
           ))}
-        </tbody>
+        </TableBody>
       )}
 
       {/* Center rows */}
       {virtualizeRows ? (
-        <tbody
+        <TableBody
           className={virtualizedCenterSectionCss}
           style={{ height: `${virtualRowsTotalSize}px` }}
         >
@@ -128,9 +129,9 @@ export const DataTableBody = ({
               />
             );
           })}
-        </tbody>
+        </TableBody>
       ) : (
-        <tbody className={staticCenterSectionCss}>
+        <TableBody className={staticCenterSectionCss}>
           {centerRows.map((row) => (
             <DataTableBodyRow
               key={row.id}
@@ -144,12 +145,12 @@ export const DataTableBody = ({
               virtualizeColumns={virtualizeColumns}
             />
           ))}
-        </tbody>
+        </TableBody>
       )}
 
       {/* Bottom pinned rows */}
       {bottomRows.length > 0 && (
-        <tbody className={cx(pinnedSectionCss, stickyBottomSectionCss)}>
+        <TableBody className={cx(pinnedSectionCss, stickyBottomSectionCss)}>
           {bottomRows.map((row, i) => (
             <DataTableBodyRow
               key={row.id}
@@ -163,7 +164,7 @@ export const DataTableBody = ({
               virtualizeColumns={virtualizeColumns}
             />
           ))}
-        </tbody>
+        </TableBody>
       )}
     </>
   );

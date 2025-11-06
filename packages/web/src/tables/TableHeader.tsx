@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { forwardRef, memo } from 'react';
 import { zIndex } from '@coinbase/cds-common/tokens/zIndex';
 import { css } from '@linaria/core';
 
@@ -23,17 +23,23 @@ const tableStickyCss = css`
   z-index: ${zIndex.interactable};
 `;
 
-export const TableHeader = memo(({ children, sticky, testID, ...props }: TableHeaderProps) => {
-  return (
-    <TableSection
-      as="thead"
-      className={cx(tableHeaderStaticClassName, sticky && tableStickyCss)}
-      data-testid={testID}
-      {...props}
-    >
-      {children}
-    </TableSection>
-  );
-});
+export const TableHeader = memo(
+  forwardRef<HTMLTableSectionElement, TableHeaderProps>(function TableHeader(
+    { children, sticky, testID, className, ...props },
+    ref,
+  ) {
+    return (
+      <TableSection
+        ref={ref}
+        as="thead"
+        className={cx(tableHeaderStaticClassName, sticky && tableStickyCss, className)}
+        data-testid={testID}
+        {...props}
+      >
+        {children}
+      </TableSection>
+    );
+  }),
+);
 
 TableHeader.displayName = 'TableHeader';

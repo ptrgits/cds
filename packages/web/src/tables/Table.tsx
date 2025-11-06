@@ -1,4 +1,4 @@
-import React, { forwardRef, memo, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import type { DimensionValue } from '@coinbase/cds-common/types/DimensionStyles';
 import type { SharedAccessibilityProps } from '@coinbase/cds-common/types/SharedAccessibilityProps';
 import type { SharedProps } from '@coinbase/cds-common/types/SharedProps';
@@ -53,6 +53,37 @@ export type TableProps = SharedProps &
     height?: DimensionValue;
     /** Set a maximum height. */
     maxHeight?: DimensionValue;
+    /**
+     * Ref applied to the scroll container that wraps the table.
+     * This exposes overflow measurements to consumers without affecting the table ref.
+     */
+    containerRef?: React.Ref<HTMLDivElement>;
+    /**
+     * Class name applied to the scroll container that wraps the table.
+     */
+    classNames?: {
+      /**
+       * Class name applied to the scroll container that wraps the table.
+       */
+      root?: string;
+      /**
+       * Class name applied to the table element itself.
+       */
+      table?: string;
+    };
+    /**
+     * Inline styles applied to the scroll container that wraps the table.
+     */
+    styles?: {
+      /**
+       * Inline style override applied to the scroll container that wraps the table.
+       */
+      root?: React.CSSProperties;
+      /**
+       * Inline style override applied to the table element itself.
+       */
+      table?: React.CSSProperties;
+    };
     /**
      * @danger This is an escape hatch. It is not intended to be used normally.
      */
@@ -190,7 +221,11 @@ const TableWithRef = forwardRef<HTMLTableElement, TableProps>(function TableWith
     height,
     accessibilityLabelledBy,
     accessibilityLabel,
+    containerRef,
+    classNames,
+    styles,
     className,
+    style,
     ...props
   },
   ref,
@@ -206,22 +241,36 @@ const TableWithRef = forwardRef<HTMLTableElement, TableProps>(function TableWith
     [height, maxHeight],
   );
 
+  const setContainerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (typeof containerRef === 'function') {
+        containerRef(node);
+      } else if (containerRef && 'current' in containerRef) {
+        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [containerRef],
+  );
+
   return (
     <TableContext.Provider value={api}>
       <div
+        ref={setContainerRef}
         className={cx(
           tableContainerCss,
           bordered && tableContainerBorderCss,
           variant && tableVariantStyles[variant],
+          classNames?.root,
         )}
-        style={containerStyles}
+        style={{ ...containerStyles, ...styles?.root }}
       >
         <table
           ref={ref}
           aria-label={accessibilityLabel}
           aria-labelledby={accessibilityLabelledBy}
-          className={cx(tableCss, fixed && tableFixedCss, className)}
+          className={cx(tableCss, fixed && tableFixedCss, className, classNames?.table)}
           data-testid={testID}
+          style={{ ...style, ...styles?.table }}
           {...props}
         >
           {children}
