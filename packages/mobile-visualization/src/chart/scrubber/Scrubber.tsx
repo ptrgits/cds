@@ -7,15 +7,28 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+import {
+  type SharedValue,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
-import { DashPathEffect, Group, Line, Rect, vec } from '@shopify/react-native-skia';
+import {
+  type AnimatedProp,
+  DashPathEffect,
+  Group,
+  Line,
+  Rect,
+  vec,
+} from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { ReferenceLine, type ReferenceLineProps } from '../line';
 import { type Series, useScrubberContext } from '../utils';
+import { getScreenXWorklet } from '../utils/coordinateWorklets';
 
 import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 import { ScrubberBeaconLabel, type ScrubberBeaconLabelProps } from './ScrubberBeaconLabel';
@@ -27,6 +40,40 @@ type LabelDimensions = {
   width: number;
   height: number;
 };
+
+const OverlayRect = memo(
+  ({
+    dataX,
+    overlayOffset,
+    overlayWidth,
+    overlayX,
+  }: {
+    dataX: SharedValue<number | undefined>;
+    overlayOffset: number;
+    overlayWidth: SharedValue<number>;
+    overlayX: SharedValue<number>;
+  }) => {
+    const theme = useTheme();
+    const { drawingArea } = useCartesianChartContext();
+
+    const height = drawingArea.height + overlayOffset * 2;
+
+    const opacity = useDerivedValue(() => {
+      return dataX.value !== undefined ? 0.8 : 0;
+    }, [dataX]);
+
+    return (
+      <Rect
+        color={theme.color.bg}
+        height={height}
+        opacity={opacity}
+        width={overlayWidth}
+        x={overlayX}
+        y={drawingArea.y - overlayOffset}
+      />
+    );
+  },
+);
 
 /**
  * Configuration for scrubber functionality across chart components.
@@ -115,13 +162,7 @@ export const Scrubber = memo(
       },
       ref,
     ) => {
-      const theme = useTheme();
       const ScrubberBeaconRefs = useRefMap<ScrubberBeaconRef>();
-
-      // Shared values for overlay and scrubber line positions
-      const overlayX = useSharedValue(0);
-      const overlayWidth = useSharedValue(0);
-      const scrubberLineX = useSharedValue(0);
 
       // Track label dimensions for collision detection
       const [labelDimensions, setLabelDimensions] = useState<Map<string, LabelDimensions>>(
@@ -129,7 +170,7 @@ export const Scrubber = memo(
       );
 
       const { scrubberPosition } = useScrubberContext();
-      const { getXScale, getSeriesData, getXAxis, series, drawingArea, animate } =
+      const { getXScale, getSeriesData, getXAxis, series, drawingArea, animate, coordinateArrays } =
         useCartesianChartContext();
 
       // Animation state for delayed scrubber rendering (matches web timing)
@@ -186,33 +227,22 @@ export const Scrubber = memo(
         return result;
       });
 
-      const xScale = useMemo(() => getXScale(), [getXScale]);
-
-      const dataIndexScaleValues = useMemo(() => {
-        if (!xScale) return undefined;
-
-        // Precompute scale values for all possible data points
-        const scaleValues: Record<number, number> = {};
-
-        if (xDataArray) {
-          // If we have explicit x-axis data, precompute for those values
-          xDataArray.forEach((dataValue) => {
-            scaleValues[dataValue] = xScale(dataValue) ?? 0;
-          });
-        } else {
-          // If no explicit x-axis data, precompute for indices up to max series length
-          for (let i = 0; i <= maxSeriesDataLength; i++) {
-            scaleValues[i] = xScale(i) ?? 0;
-          }
-        }
-
-        return scaleValues;
-      }, [xScale, xDataArray, maxSeriesDataLength]);
-
       const pixelX = useDerivedValue(() => {
-        if (dataX.value === undefined || !dataIndexScaleValues) return undefined;
-        return dataIndexScaleValues[dataX.value];
-      });
+        if (dataX.value === undefined) return undefined;
+
+        // Use optimized coordinate arrays
+        return getScreenXWorklet(coordinateArrays.xOutputs, dataX.value);
+      }, [coordinateArrays, dataX]);
+
+      // Reactive overlay positioning using coordinate arrays
+      const overlayX = useDerivedValue(() => {
+        return pixelX.value ?? 0;
+      }, [pixelX]);
+
+      const overlayWidth = useDerivedValue(() => {
+        const currentPixelX = pixelX.value ?? 0;
+        return drawingArea.x + drawingArea.width - currentPixelX + overlayOffset;
+      }, [pixelX, drawingArea, overlayOffset]);
 
       const seriesDataMap = useMemo(() => {
         const map: Record<string, Array<[number, number] | null> | undefined> = {};
@@ -610,42 +640,21 @@ export const Scrubber = memo(
         }
       }, [pixelX, drawingArea, overlayOffset, scrubberLineX, overlayX, overlayWidth]);*/
 
-      const lineP1 = useDerivedValue(() => vec(pixelX.value ?? 50, drawingArea.y));
-      const lineP2 = useDerivedValue(() =>
-        vec(pixelX.value ?? 50, drawingArea.y + drawingArea.height),
-      );
-
       if (!defaultXScale) return null;
 
       return (
         <Group opacity={scrubberOpacity}>
-          {!hideOverlay &&
-            dataX !== undefined &&
-            scrubberPosition !== undefined &&
-            pixelX !== undefined && (
-              <Rect
-                color={theme.color.bg}
-                height={drawingArea.height + overlayOffset * 2}
-                opacity={0.8}
-                width={overlayWidth}
-                x={overlayX}
-                y={drawingArea.y - overlayOffset}
-              />
-            )}
-          <Line
-            color={theme.color.fgPrimary}
-            p1={lineP1}
-            p2={lineP2}
-            strokeCap="round"
-            strokeJoin="round"
-            strokeWidth={2}
-            style="stroke"
-          >
-            <DashPathEffect intervals={[0, 4]} />
-          </Line>
-          {!hideLine && dataX.value !== undefined && (
+          {!hideOverlay && (
+            <OverlayRect
+              dataX={scrubberPosition}
+              overlayOffset={overlayOffset}
+              overlayWidth={overlayWidth}
+              overlayX={overlayX}
+            />
+          )}
+          {!hideLine && (
             <LineComponent
-              dataX={dataX.value}
+              dataX={dataX}
               label={memoizedScrubberLabel.value}
               labelProps={{
                 verticalAlignment: 'middle',

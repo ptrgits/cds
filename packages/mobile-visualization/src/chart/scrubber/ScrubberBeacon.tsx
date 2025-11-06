@@ -12,6 +12,7 @@ import { Circle, Group } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { projectPoint, useScrubberContext } from '../utils';
+import { getSeriesCoordinateAtIndexWorklet } from '../utils/coordinateWorklets';
 import { evaluateGradientAtValue, type GradientDefinition } from '../utils/gradient';
 import { buildTransition, defaultTransition, type TransitionConfig } from '../utils/transition';
 
@@ -120,6 +121,7 @@ export const ScrubberBeacon = memo(
         getSeriesData,
         animate,
         getSeriesGradientScale,
+        coordinateArrays,
       } = useCartesianChartContext();
       const { scrubberPosition } = useScrubberContext();
 
@@ -165,28 +167,48 @@ export const ScrubberBeacon = memo(
       }, [sourceData, scrubberPosition]);
 
       const pixelCoordinate = useDerivedValue(() => {
-        if (
-          !xScale ||
-          !yScale ||
-          dataX === undefined ||
-          dataY === undefined ||
-          dataX.value === null ||
-          dataY.value === null
-        )
-          return undefined;
+        // If explicit coordinates are provided, fall back to the old method for now
+        if (dataXProp !== undefined || dataYProp !== undefined) {
+          if (
+            !xScale ||
+            !yScale ||
+            dataX === undefined ||
+            dataY === undefined ||
+            dataX.value === null ||
+            dataY.value === null
+          )
+            return undefined;
 
-        const point = projectPoint({
-          x: dataX.value!,
-          y: dataY.value!,
-          xScale,
-          yScale,
-        });
+          const point = projectPoint({
+            x: dataX.value!,
+            y: dataY.value!,
+            xScale,
+            yScale,
+          });
 
-        // Return undefined if coordinates are invalid
-        if (!point || isNaN(point.x) || isNaN(point.y)) return undefined;
+          // Return undefined if coordinates are invalid
+          if (!point || isNaN(point.x) || isNaN(point.y)) return undefined;
 
-        return point;
-      }, [xScale, yScale, dataX, dataY]);
+          return point;
+        }
+
+        // Use optimized coordinate lookup for scrubber-driven positioning
+        if (scrubberPosition.value === undefined || !seriesId) return undefined;
+
+        const coordinate = getSeriesCoordinateAtIndexWorklet(
+          coordinateArrays.xOutputs,
+          coordinateArrays.seriesCoordinates,
+          seriesId,
+          scrubberPosition.value
+        );
+
+        if (!coordinate) return undefined;
+
+        return {
+          x: coordinate.screenX,
+          y: coordinate.screenY,
+        };
+      }, [xScale, yScale, dataX, dataY, coordinateArrays, scrubberPosition, seriesId, dataXProp, dataYProp]);
 
       const pulseOpacity = useSharedValue(0);
 

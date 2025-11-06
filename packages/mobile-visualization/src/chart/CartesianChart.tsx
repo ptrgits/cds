@@ -9,6 +9,7 @@ import { Canvas, Skia } from '@shopify/react-native-skia';
 
 import { ScrubberProvider, type ScrubberProviderProps } from './scrubber/ScrubberProvider';
 import { getGradientScale } from './utils/gradient';
+import { getPointOnScale } from './utils/point';
 import { CartesianChartProvider } from './ChartProvider';
 import {
   type AxisConfig,
@@ -328,6 +329,75 @@ export const CartesianChart = memo(
         [series, xScale, yScales],
       );
 
+      // Build coordinate arrays for fast lookups
+      const coordinateArrays = useMemo(() => {
+        if (!xScale || !chartRect || chartRect.width <= 0 || chartRect.height <= 0) {
+          return {
+            xInputs: [],
+            xOutputs: [],
+            seriesCoordinates: {},
+          };
+        }
+
+        // Build global X arrays
+        const maxLength = Math.max(...(series?.map((s) => s.data?.length ?? 0) ?? [0]));
+        const xInputs: number[] = [];
+        const xOutputs: number[] = [];
+
+        for (let i = 0; i < maxLength; i++) {
+          let xValue: number;
+
+          // Handle both numeric and string axis data
+          if (xAxis?.data && Array.isArray(xAxis.data) && xAxis.data.length > i) {
+            const axisDataValue = xAxis.data[i];
+            if (typeof axisDataValue === 'number') {
+              xValue = axisDataValue;
+            } else {
+              // For string data, use the index
+              xValue = i;
+            }
+          } else {
+            // Default to index if no axis data
+            xValue = i;
+          }
+
+          xInputs.push(xValue);
+          xOutputs.push(getPointOnScale(xValue, xScale));
+        }
+
+        // Build per-series Y arrays
+        const seriesCoordinates: Record<
+          string,
+          {
+            yInputs: Array<[number, number] | null>;
+            yOutputs: number[];
+          }
+        > = {};
+
+        series?.forEach((s) => {
+          const yScale = yScales.get(s.yAxisId ?? defaultAxisId);
+          if (!yScale || !s.data) return;
+
+          const stackedData = stackedDataMap.get(s.id) ?? [];
+          const yInputs: Array<[number, number] | null> = [];
+          const yOutputs: number[] = [];
+
+          stackedData.forEach((dataPoint) => {
+            yInputs.push(dataPoint);
+            if (dataPoint) {
+              // Use the top of the stack (dataPoint[1]) for positioning
+              yOutputs.push(getPointOnScale(dataPoint[1], yScale));
+            } else {
+              yOutputs.push(0);
+            }
+          });
+
+          seriesCoordinates[s.id] = { yInputs, yOutputs };
+        });
+
+        return { xInputs, xOutputs, seriesCoordinates };
+      }, [series, xScale, yScales, xAxis, stackedDataMap, chartRect]);
+
       const contextValue: CartesianChartContextValue = useMemo(
         () => ({
           series: series ?? [],
@@ -346,6 +416,7 @@ export const CartesianChart = memo(
           unregisterAxis,
           getAxisBounds,
           getSeriesGradientScale,
+          coordinateArrays,
         }),
         [
           series,
@@ -364,6 +435,7 @@ export const CartesianChart = memo(
           unregisterAxis,
           getAxisBounds,
           getSeriesGradientScale,
+          coordinateArrays,
         ],
       );
 

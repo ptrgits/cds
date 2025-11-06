@@ -89,6 +89,24 @@ export type CartesianChartContextValue = {
    * @param seriesId - The series ID
    */
   getSeriesGradientScale: (seriesId: string) => ChartScaleFunction | undefined;
+  /**
+   * Pre-calculated coordinate arrays for fast lookups.
+   * Simple arrays that work identically on web and mobile.
+   */
+  coordinateArrays: {
+    // Global X coordinates (shared across all series)
+    xInputs: number[]; // [0, 1, 2, 3, ...] or [timestamp1, timestamp2, ...]
+    xOutputs: number[]; // [10, 20, 30, 40, ...] screen pixels
+
+    // Per-series Y coordinates
+    seriesCoordinates: Record<
+      string,
+      {
+        yInputs: Array<[number, number] | null>; // [[baseline, value], ...]
+        yOutputs: number[]; // [100, 80, 120, ...] screen pixels
+      }
+    >;
+  };
 };
 
 export type ScrubberContextValue = {

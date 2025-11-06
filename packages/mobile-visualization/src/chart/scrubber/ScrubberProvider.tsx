@@ -11,6 +11,7 @@ import {
   ScrubberContext,
   type ScrubberContextValue,
 } from '../utils';
+import { findClosestXIndexWorklet } from '../utils/coordinateWorklets';
 
 export type ScrubberProviderProps = Partial<Pick<ScrubberContextValue, 'enableScrubbing'>> & {
   children: React.ReactNode;
@@ -41,7 +42,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
     throw new Error('ScrubberProvider must be used within a ChartContext');
   }
 
-  const { getXScale, getXAxis } = chartContext;
+  const { getXScale, getXAxis, coordinateArrays } = chartContext;
   const scrubberPosition = useSharedValue<number | undefined>(undefined);
 
   const xAxis = useMemo(() => getXAxis(), [getXAxis]);
@@ -92,6 +93,12 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
     (touchX: number): number | undefined => {
       'worklet';
 
+      // Use optimized coordinate lookup if available
+      if (coordinateArrays.xOutputs.length > 0) {
+        return findClosestXIndexWorklet(coordinateArrays.xOutputs, touchX);
+      }
+
+      // Fallback to existing logic for compatibility
       if (!dataIndexScaleValues) return undefined;
 
       if (isXScaleCategorical) {
@@ -129,7 +136,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
         return closestIndex;
       }
     },
-    [dataIndexScaleValues, isXScaleCategorical, categoricalXScaleBandwidth],
+    [coordinateArrays, dataIndexScaleValues, isXScaleCategorical, categoricalXScaleBandwidth],
   );
 
   // Gesture handler callbacks

@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
+import type { AnimatedProp } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { Gradient } from '../gradient';
@@ -13,7 +14,7 @@ import { type TransitionConfig } from '../utils/transition';
  * Used by SolidLine, DottedLine, and other line variants.
  */
 export type LineComponentProps = {
-  d: string;
+  d: AnimatedProp<string>;
   stroke: string;
   strokeOpacity?: number;
   strokeWidth?: number;

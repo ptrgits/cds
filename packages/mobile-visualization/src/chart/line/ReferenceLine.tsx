@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import { runOnJS, useDerivedValue } from 'react-native-reanimated';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 import type { AnimatedProp } from '@shopify/react-native-skia';
@@ -11,7 +12,12 @@ import type {
   TextHorizontalAlignment,
   TextVerticalAlignment,
 } from '../text/ChartText';
-import { getPointOnScale } from '../utils';
+import { unwrapAnimatedValue } from '../utils/chart';
+import {
+  findClosestXIndexWorklet,
+  getScreenXWorklet,
+  getScreenYWorklet,
+} from '../utils/coordinateWorklets';
 
 import { DottedLine } from './DottedLine';
 import type { LineComponent } from './Line';
@@ -119,7 +125,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
     labelProps,
   }) => {
     const theme = useTheme();
-    const { getXScale, getYScale, drawingArea } = useCartesianChartContext();
+    const { drawingArea, coordinateArrays } = useCartesianChartContext();
 
     const effectiveLineStroke = stroke ?? theme.color.bgLine;
 
@@ -137,19 +143,66 @@ export const ReferenceLine = memo<ReferenceLineProps>(
       }),
       [dataY, labelProps, theme.color.fgMuted],
     );
-    // Horizontal reference line logic
+
+    // Pre-calculate pixel coordinates for both horizontal and vertical lines
+    // This ensures hooks are called in the same order every render
+    const yPixel = useDerivedValue(() => {
+      if (dataY === undefined) return undefined;
+
+      const currentDataY = unwrapAnimatedValue(dataY);
+
+      // Use coordinate arrays only - no fallbacks
+      const availableSeries = Object.entries(coordinateArrays.seriesCoordinates);
+      if (availableSeries.length === 0) return 0;
+
+      // For now, use the first series. In the future, we could match by yAxisId
+      const [, seriesData] = availableSeries[0];
+
+      // Find closest Y input value and use its corresponding output position
+      let closestIndex = 0;
+      let minDistance = Infinity;
+
+      seriesData.yInputs.forEach((inputValue, index) => {
+        if (inputValue) {
+          const distance = Math.abs(inputValue[1] - currentDataY); // Compare with top of stack
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = index;
+          }
+        }
+      });
+
+      return seriesData.yOutputs[closestIndex] ?? 0;
+    }, [coordinateArrays, dataY, yAxisId]);
+
+    const pixelX = useDerivedValue(() => {
+      if (dataX === undefined) return;
+
+      const currentDataX = unwrapAnimatedValue(dataX);
+
+      return getScreenXWorklet(coordinateArrays.xOutputs, currentDataX);
+    }, [coordinateArrays, dataX]);
+
+    const pixelY = useDerivedValue(() => {
+      if (dataY === undefined) return;
+
+      const currentDataY = unwrapAnimatedValue(dataY);
+
+      return 0;
+      //return getScreenYWorklet(coordinateArrays.seriesCoordinates[seriesId].yOutputs, currentDataY);
+    }, [coordinateArrays, dataY]);
+
+    const horizontalPath = useDerivedValue(() => {
+      if (yPixel.value === undefined) return '';
+      return `M${drawingArea.x},${yPixel.value} L${drawingArea.x + drawingArea.width},${yPixel.value}`;
+    }, [yPixel]);
+
+    const verticalPath = useDerivedValue(() => {
+      if (pixelX.value === undefined) return '';
+      return `M${pixelX.value},${drawingArea.y} L${pixelX.value},${drawingArea.y + drawingArea.height}`;
+    }, [pixelX]);
+
     if (dataY !== undefined) {
-      const yScale = getYScale(yAxisId);
-
-      // Don't render if we don't have a scale
-      if (!yScale) {
-        return null;
-      }
-
-      const yPixel = getPointOnScale(dataY, yScale);
-
-      if (yPixel === undefined) return null;
-
       let labelX: number;
       if (labelPosition === 'left') {
         labelX = drawingArea.x;
@@ -161,13 +214,9 @@ export const ReferenceLine = memo<ReferenceLineProps>(
 
       return (
         <>
-          <LineComponent
-            animate={false}
-            d={`M${drawingArea.x},${yPixel} L${drawingArea.x + drawingArea.width},${yPixel}`}
-            stroke={effectiveLineStroke}
-          />
+          <LineComponent animate={false} d={horizontalPath} stroke={effectiveLineStroke} />
           {label && (
-            <ChartText {...finalLabelProps} x={labelX} y={yPixel}>
+            <ChartText {...finalLabelProps} x={labelX} y={yPixel.value ?? 0}>
               {label}
             </ChartText>
           )}
@@ -177,17 +226,6 @@ export const ReferenceLine = memo<ReferenceLineProps>(
 
     // Vertical reference line logic
     if (dataX !== undefined) {
-      const xScale = getXScale();
-
-      // Don't render if we don't have scales
-      if (!xScale) {
-        return null;
-      }
-
-      const xPixel = getPointOnScale(dataX, xScale);
-
-      if (xPixel === undefined) return null;
-
       let labelY: number;
       if (labelPosition === 'top') {
         labelY = drawingArea.y;
@@ -199,21 +237,14 @@ export const ReferenceLine = memo<ReferenceLineProps>(
 
       return (
         <>
-          <LineComponent
-            animate={false}
-            d={`M${xPixel},${drawingArea.y} L${xPixel},${drawingArea.y + drawingArea.height}`}
-            stroke={effectiveLineStroke}
-          />
+          <LineComponent animate={false} d={verticalPath} stroke={effectiveLineStroke} />
           {label && (
-            <ChartText {...finalLabelProps} x={xPixel} y={labelY}>
+            <ChartText {...finalLabelProps} x={pixelX.value ?? 0} y={labelY}>
               {label}
             </ChartText>
           )}
         </>
       );
     }
-
-    // Should not reach here if types are correct
-    return null;
   },
 );
