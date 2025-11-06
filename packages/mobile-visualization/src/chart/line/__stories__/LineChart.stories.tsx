@@ -2185,7 +2185,7 @@ const LineChartStories = () => {
           <Scrubber hideOverlay />
         </LineChart>
       </Example>*/}
-      {/*} <Example title="Simple">
+      <Example title="Simple">
         <LineChart
           curve="monotone"
           height={defaultChartHeight}
@@ -2197,7 +2197,7 @@ const LineChartStories = () => {
           ]}
           type="dotted"
         />
-      </Example>*/}
+      </Example>
       <Example title="ColorMap - Discrete Thresholds">
         <LineChart
           enableScrubbing
@@ -2415,6 +2415,26 @@ export default () => {
       <Example title="Animated Gain/Loss">
         <AnimatedGainLossChart />
       </Example>*/}
+      <Example title="Basic">
+        <LineChart
+          enableScrubbing
+          showArea
+          showYAxis
+          curve="bump"
+          height={defaultChartHeight}
+          series={[
+            {
+              id: 'prices',
+              data: sampleData,
+            },
+          ]}
+          yAxis={{
+            showGrid: true,
+          }}
+        >
+          <Scrubber />
+        </LineChart>
+      </Example>
       <Example title="Continuous Gradient 2">
         <LineChart
           enableScrubbing

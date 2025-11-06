@@ -9,6 +9,7 @@ import { Canvas, Skia } from '@shopify/react-native-skia';
 
 import { ScrubberProvider, type ScrubberProviderProps } from './scrubber/ScrubberProvider';
 import { getGradientScale } from './utils/gradient';
+import { convertToSerializableScale, type SerializableScale } from './utils/scale';
 import { CartesianChartProvider } from './ChartProvider';
 import {
   type AxisConfig,
@@ -191,6 +192,11 @@ export const CartesianChart = memo(
         return { xAxis: finalAxisConfig, xScale: scale };
       }, [xAxisConfig, series, chartRect]);
 
+      const xSerializableScale = useMemo(() => {
+        if (!xScale) return;
+        return convertToSerializableScale(xScale);
+      }, [xScale]);
+
       const { yAxes, yScales } = useMemo(() => {
         const axes = new Map<string, AxisConfig>();
         const scales = new Map<string, ChartScaleFunction>();
@@ -245,10 +251,26 @@ export const CartesianChart = memo(
         return { yAxes: axes, yScales: scales };
       }, [yAxisConfig, series, chartRect]);
 
+      const ySerializableScales = useMemo(() => {
+        const serializableScales = new Map<string, SerializableScale>();
+        yScales.forEach((scale, id) => {
+          const serializableScale = convertToSerializableScale(scale);
+          if (serializableScale) {
+            serializableScales.set(id, serializableScale);
+          }
+        });
+        return serializableScales;
+      }, [yScales]);
+
       const getXAxis = useCallback(() => xAxis, [xAxis]);
       const getYAxis = useCallback((id?: string) => yAxes.get(id ?? defaultAxisId), [yAxes]);
       const getXScale = useCallback(() => xScale, [xScale]);
       const getYScale = useCallback((id?: string) => yScales.get(id ?? defaultAxisId), [yScales]);
+      const getXSerializableScale = useCallback(() => xSerializableScale, [xSerializableScale]);
+      const getYSerializableScale = useCallback(
+        (id?: string) => ySerializableScales.get(id ?? defaultAxisId),
+        [ySerializableScales],
+      );
       const getSeries = useCallback(
         (seriesId?: string) => series?.find((s) => s.id === seriesId),
         [series],
@@ -326,6 +348,7 @@ export const CartesianChart = memo(
         [renderedAxes, chartRect, userInset],
       );
 
+      // todo: we can probably drop this, not used on web
       const getSeriesGradientScale = useCallback(
         (seriesId: string) => {
           const targetSeries = series?.find((s) => s.id === seriesId);
@@ -351,6 +374,8 @@ export const CartesianChart = memo(
           getYAxis,
           getXScale,
           getYScale,
+          getXSerializableScale,
+          getYSerializableScale,
           drawingArea: chartRect,
           registerAxis,
           unregisterAxis,
@@ -369,6 +394,8 @@ export const CartesianChart = memo(
           getYAxis,
           getXScale,
           getYScale,
+          getXSerializableScale,
+          getYSerializableScale,
           chartRect,
           registerAxis,
           unregisterAxis,

@@ -4,7 +4,7 @@ import type { SkTypefaceFontProvider } from '@shopify/react-native-skia';
 
 import type { AxisConfig } from './axis';
 import type { Series } from './chart';
-import type { ChartScaleFunction } from './scale';
+import type { ChartScaleFunction, SerializableScale } from './scale';
 
 /**
  * Context value for Cartesian (X/Y) coordinate charts.
@@ -61,6 +61,15 @@ export type CartesianChartContextValue = {
    * @param id - The axis ID. Defaults to defaultAxisId.
    */
   getYScale: (id?: string) => ChartScaleFunction | undefined;
+  /**
+   * Get x-axis serializable scale function that can be used in worklets.
+   */
+  getXSerializableScale: () => SerializableScale | undefined;
+  /**
+   * Get y-axis serializable scale function by ID that can be used in worklets.
+   * @param id - The axis ID. Defaults to defaultAxisId.
+   */
+  getYSerializableScale: (id?: string) => SerializableScale | undefined;
   /**
    * Drawing area of the chart.
    */
