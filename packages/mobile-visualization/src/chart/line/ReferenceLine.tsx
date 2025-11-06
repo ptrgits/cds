@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
+import type { AnimatedProp } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { ChartText } from '../text';
@@ -75,7 +76,7 @@ type HorizontalReferenceLineProps = BaseReferenceLineProps & {
   /**
    * Y-value for horizontal reference line (data value).
    */
-  dataY: number;
+  dataY: AnimatedProp<number>;
   /**
    * The ID of the y-axis to use for positioning.
    * Defaults to defaultAxisId if not specified.
@@ -93,7 +94,7 @@ type VerticalReferenceLineProps = BaseReferenceLineProps & {
   /**
    * X-value for vertical reference line (data index).
    */
-  dataX: number;
+  dataX: AnimatedProp<number>;
   /**
    * Position of the label along the vertical line.
    * @default 'top'
@@ -145,7 +146,7 @@ export const ReferenceLine = memo<ReferenceLineProps>(
         return null;
       }
 
-      const yPixel = yScale(dataY);
+      const yPixel = getPointOnScale(dataY, yScale);
 
       if (yPixel === undefined) return null;
 

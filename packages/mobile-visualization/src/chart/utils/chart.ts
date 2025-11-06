@@ -1,3 +1,5 @@
+import { isSharedValue } from 'react-native-reanimated';
+import type { AnimatedProp } from '@shopify/react-native-skia';
 import { stack as d3Stack, stackOffsetDiverging, stackOrderNone } from 'd3-shape';
 
 import type { GradientDefinition } from './gradient';
@@ -332,4 +334,12 @@ export const getChartInset = (
     bottom: inset?.bottom ?? baseDefaults.bottom,
     right: inset?.right ?? baseDefaults.right,
   };
+};
+
+export const unwrapAnimatedValue = <T>(value: AnimatedProp<T>): T => {
+  'worklet';
+  if (isSharedValue<T>(value)) {
+    return value.value;
+  }
+  return value as T;
 };

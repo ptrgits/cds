@@ -1,17 +1,24 @@
 import { memo, type ReactNode, useEffect, useMemo } from 'react';
-import { useSharedValue, withTiming } from 'react-native-reanimated';
+import { useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import type { Rect, SharedProps } from '@coinbase/cds-common/types';
-import { Group, Path as SkiaPath, Skia, usePathInterpolation } from '@shopify/react-native-skia';
+import {
+  type AnimatedProp,
+  Group,
+  Path as SkiaPath,
+  Skia,
+  usePathInterpolation,
+} from '@shopify/react-native-skia';
 
 import type { TransitionConfig } from './utils/transition';
 import { usePathTransition } from './utils/transition';
 import { useCartesianChartContext } from './ChartProvider';
+import { unwrapAnimatedValue } from './utils';
 
 export type PathProps = SharedProps & {
   /**
    * The SVG path data string.
    */
-  d?: string;
+  d?: AnimatedProp<string>;
   /**
    * Initial path for enter animation.
    * When provided, the first animation will go from initialPath to d.
@@ -240,8 +247,8 @@ export const Path = memo<PathProps>((props) => {
   }, [hasExplicitClipPath, clipPathProp, animate, targetClipPath]);
 
   // Convert SVG path string to SkPath for static rendering
-  const staticPath = useMemo(() => {
-    return Skia.Path.MakeFromSVGString(d) ?? Skia.Path.Make();
+  const staticPath = useDerivedValue(() => {
+    return Skia.Path.MakeFromSVGString(unwrapAnimatedValue(d)) ?? Skia.Path.Make();
   }, [d]);
 
   const isFilled = fill !== undefined && fill !== 'none';

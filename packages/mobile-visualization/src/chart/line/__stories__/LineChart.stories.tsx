@@ -1125,6 +1125,7 @@ const AssetPriceDotted = () => {
           enableScrubbing
           showArea
           accessibilityLiveRegion="polite"
+          animate={false}
           areaType="dotted"
           height={defaultChartHeight}
           inset={{ top: 56 }}
@@ -1152,7 +1153,6 @@ const AssetPriceDotted = () => {
               update: { type: 'timing', duration: 1500 },
               pulse: { type: 'timing', duration: 5000 },
             }}
-            label={scrubberLabel}
             labelProps={{
               yOffset: -28, // Elevate label 16 pixels above the default position
               elevation: 1, // Add drop shadow for depth
@@ -2415,6 +2415,9 @@ export default () => {
       <Example title="Animated Gain/Loss">
         <AnimatedGainLossChart />
       </Example>*/}
+      <Example title="Dotted">
+        <AssetPriceDotted />
+      </Example>
       <Example title="Basic">
         <LineChart
           enableScrubbing
@@ -2460,7 +2463,7 @@ export default () => {
               id: 'prices3',
               data: data,
               color: `rgb(${theme.spectrum.chartreuse50})`,
-              label: (dataIndex: number) => `test ${data[dataIndex]}`,
+              label: 'test', // (dataIndex: number) => `test ${data[dataIndex]}`,
             },
           ]}
           strokeWidth={4}
