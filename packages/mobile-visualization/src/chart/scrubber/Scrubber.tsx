@@ -132,7 +132,7 @@ export const Scrubber = memo(
         new Map(),
       );
 
-      const { scrubberPosition: scrubberPosition } = useScrubberContext();
+      const { scrubberPosition } = useScrubberContext();
       const { getXScale, getYScale, getSeriesData, getXAxis, series, drawingArea, animate } =
         useCartesianChartContext();
 
