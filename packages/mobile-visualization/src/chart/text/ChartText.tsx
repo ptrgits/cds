@@ -4,6 +4,7 @@ import type { ThemeVars } from '@coinbase/cds-common/core/theme';
 import type { ElevationLevels, Rect, SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
 import {
+  type AnimatedProp,
   type Color,
   FontSlant,
   type FontWeight,
@@ -17,7 +18,7 @@ import {
 } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
-import { type ChartInset, getChartInset } from '../utils';
+import { type ChartInset, getChartInset, unwrapAnimatedValue } from '../utils';
 
 /**
  * Default font family for chart text rendering.
@@ -150,18 +151,18 @@ export type ChartTextProps = SharedProps & {
    * The desired x position in pixels.
    * @note Text will be automatically positioned to fit within bounds unless `disableRepositioning` is true.
    */
-  x: number;
+  x: AnimatedProp<number>;
   /**
    * The desired y position in pixels.
    * @note Text will be automatically positioned to fit within bounds unless `disableRepositioning` is true.
    */
-  y: number;
+  y: AnimatedProp<number>;
   /**
    * Horizontal offset in pixels to adjust the final x position.
    * Useful for fine-tuning placement without affecting alignment.
    * @default 0
    */
-  xOffset?: number;
+  xOffset?: AnimatedProp<number>;
   /**
    * Vertical offset in pixels to adjust the final y position.
    * Useful for fine-tuning placement or elevation (similar to dy in SVG).
@@ -171,7 +172,7 @@ export type ChartTextProps = SharedProps & {
    * // Elevate text 10 pixels above its calculated position
    * yOffset={-10}
    */
-  yOffset?: number;
+  yOffset?: AnimatedProp<number>;
   /**
    * Horizontal alignment of the text.
    * @default 'center'
@@ -476,17 +477,17 @@ export const ChartText = memo<ChartTextProps>(
     );
 
     // Calculate background rect position based on alignment
-    const backgroundRect = useMemo(() => {
-      let rectX = x;
-      let rectY = y;
+    const backgroundRect = useDerivedValue(() => {
+      let rectX = unwrapAnimatedValue(x);
+      let rectY = unwrapAnimatedValue(y);
 
       // Adjust for horizontal alignment
       switch (horizontalAlignment) {
         case 'center':
-          rectX = x - backgroundRectSize.width / 2;
+          rectX = rectX - backgroundRectSize.width / 2;
           break;
         case 'right':
-          rectX = x - backgroundRectSize.width;
+          rectX = rectX - backgroundRectSize.width;
           break;
         // 'left' is default, no adjustment needed
       }
@@ -494,10 +495,10 @@ export const ChartText = memo<ChartTextProps>(
       // Adjust for vertical alignment
       switch (verticalAlignment) {
         case 'middle':
-          rectY = y - backgroundRectSize.height / 2;
+          rectY = rectY - backgroundRectSize.height / 2;
           break;
         case 'bottom':
-          rectY = y - backgroundRectSize.height;
+          rectY = rectY - backgroundRectSize.height;
           break;
         // 'top' is default, no adjustment needed
       }
@@ -514,11 +515,11 @@ export const ChartText = memo<ChartTextProps>(
     // Note: Paragraph uses top-left positioning, not baseline like Text
     const textPosition = useDerivedValue(
       () => ({
-        x: backgroundRect.x + inset.left,
+        x: backgroundRect.value.x + inset.left,
         // Paragraph y is the top of the text box (not baseline like Text)
         // Center vertically within the background rect
         y:
-          backgroundRect.y +
+          backgroundRect.value.y +
           inset.top +
           (backgroundRectSize.height - inset.top - inset.bottom - textDimensions.height) / 2,
         width: textDimensions.width,
@@ -533,7 +534,7 @@ export const ChartText = memo<ChartTextProps>(
       [chartWidth, chartHeight],
     );
 
-    const overflowAmount = useMemo(() => {
+    const overflowAmount = useDerivedValue(() => {
       if (disableRepositioning) {
         return { x: 0, y: 0 };
       }
@@ -547,46 +548,60 @@ export const ChartText = memo<ChartTextProps>(
       let offsetY = 0;
 
       // X-axis overflow
-      if (backgroundRect.x < parentBounds.x) {
-        offsetX = parentBounds.x - backgroundRect.x;
-      } else if (backgroundRect.x + backgroundRect.width > parentBounds.x + parentBounds.width) {
-        offsetX = parentBounds.x + parentBounds.width - (backgroundRect.x + backgroundRect.width);
+      if (backgroundRect.value.x < parentBounds.x) {
+        offsetX = parentBounds.x - backgroundRect.value.x;
+      } else if (
+        backgroundRect.value.x + backgroundRect.value.width >
+        parentBounds.x + parentBounds.width
+      ) {
+        offsetX =
+          parentBounds.x +
+          parentBounds.width -
+          (backgroundRect.value.x + backgroundRect.value.width);
       }
 
       // Y-axis overflow
-      if (backgroundRect.y < parentBounds.y) {
-        offsetY = parentBounds.y - backgroundRect.y;
-      } else if (backgroundRect.y + backgroundRect.height > parentBounds.y + parentBounds.height) {
-        offsetY = parentBounds.y + parentBounds.height - (backgroundRect.y + backgroundRect.height);
+      if (backgroundRect.value.y < parentBounds.y) {
+        offsetY = parentBounds.y - backgroundRect.value.y;
+      } else if (
+        backgroundRect.value.y + backgroundRect.value.height >
+        parentBounds.y + parentBounds.height
+      ) {
+        offsetY =
+          parentBounds.y +
+          parentBounds.height -
+          (backgroundRect.value.y + backgroundRect.value.height);
       }
 
       return { x: offsetX, y: offsetY };
     }, [backgroundRect, fullChartBounds, bounds, disableRepositioning]);
 
     // Final adjusted positions
-    const adjustedBackgroundRect = useMemo(
-      () => ({
-        x: backgroundRect.x + overflowAmount.x + xOffset,
-        y: backgroundRect.y + overflowAmount.y + yOffset,
-        width: backgroundRect.width,
-        height: backgroundRect.height,
-      }),
-      [backgroundRect, overflowAmount, xOffset, yOffset],
-    );
+    const adjustedBackgroundRect = useDerivedValue(() => {
+      const offsetX = unwrapAnimatedValue(xOffset);
+      const offsetY = unwrapAnimatedValue(yOffset);
+      return {
+        x: backgroundRect.value.x + overflowAmount.value.x + offsetX,
+        y: backgroundRect.value.y + overflowAmount.value.y + offsetY,
+        width: backgroundRect.value.width,
+        height: backgroundRect.value.height,
+      };
+    }, [backgroundRect, overflowAmount, xOffset, yOffset]);
 
     const adjustedTextPositionX = useDerivedValue(
-      () => textPosition.value.x + overflowAmount.x + xOffset,
+      () => textPosition.value.x + overflowAmount.value.x + unwrapAnimatedValue(xOffset),
       [textPosition, overflowAmount, xOffset],
     );
 
     const adjustedTextPositionY = useDerivedValue(
-      () => textPosition.value.y + overflowAmount.y + yOffset,
+      () => textPosition.value.y + overflowAmount.value.y + unwrapAnimatedValue(yOffset),
       [textPosition, overflowAmount, yOffset],
     );
 
+    // todo: this might not be working, check out useAnimatedReaction
     useEffect(() => {
       if (onDimensionsChange && adjustedBackgroundRect !== null) {
-        onDimensionsChange(adjustedBackgroundRect);
+        onDimensionsChange(adjustedBackgroundRect.value);
       }
     }, [adjustedBackgroundRect, onDimensionsChange]);
 
@@ -623,17 +638,34 @@ export const ChartText = memo<ChartTextProps>(
     // but make it invisible if content isn't ready
     const finalOpacity = hasValidContent ? opacity : 0;
 
+    const backgroundRectHeight = useDerivedValue(
+      () => adjustedBackgroundRect.value.height,
+      [adjustedBackgroundRect],
+    );
+    const backgroundRectWidth = useDerivedValue(
+      () => adjustedBackgroundRect.value.width,
+      [adjustedBackgroundRect],
+    );
+    const backgroundRectX = useDerivedValue(
+      () => adjustedBackgroundRect.value.x,
+      [adjustedBackgroundRect],
+    );
+    const backgroundRectY = useDerivedValue(
+      () => adjustedBackgroundRect.value.y,
+      [adjustedBackgroundRect],
+    );
+
     return (
       <Group layer={<Paint opacity={finalOpacity} />}>
         {/* Background rectangle with shadow */}
         {background !== 'transparent' && (
           <RoundedRect
             color={background as Color}
-            height={adjustedBackgroundRect.height}
+            height={backgroundRectHeight}
             r={borderRadius}
-            width={adjustedBackgroundRect.width}
-            x={adjustedBackgroundRect.x}
-            y={adjustedBackgroundRect.y}
+            width={backgroundRectWidth}
+            x={backgroundRectX}
+            y={backgroundRectY}
           >
             {shouldRenderShadow && shadowConfig && shadowColor && (
               <Shadow

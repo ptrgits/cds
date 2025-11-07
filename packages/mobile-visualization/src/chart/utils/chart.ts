@@ -35,7 +35,7 @@ export type Series = {
   /**
    * The label of the series. Can be a React node or a function that receives the data index and returns a React node.
    */
-  label?: string | ((dataIndex: number) => string);
+  label?: string;
   /**
    * Solid color for the series.
    * Used when gradient is not provided.

@@ -11,15 +11,15 @@ import { useDerivedValue, useSharedValue, withTiming } from 'react-native-reanim
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
-import { Group, Line, Rect, vec } from '@shopify/react-native-skia';
+import { Group, Rect } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
 import { ReferenceLine, type ReferenceLineProps } from '../line';
-import { ChartText } from '../text';
 import { applySerializableScale, useScrubberContext } from '../utils';
 
 import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 import { ScrubberBeaconLabel, type ScrubberBeaconLabelProps } from './ScrubberBeaconLabel';
+import { ScrubberBeaconLabelGroup } from './ScrubberBeaconLabelGroup';
 
 const minGap = 2;
 
@@ -570,11 +570,14 @@ export const Scrubber = memo(
               testID={testID ? `${testID}-${s.id}-dot` : undefined}
             />
           ))}
-          {filteredSeries.map((s) => (
-            <ScrubberBeaconLabel x={100} y={100}>
-              Whoa
-            </ScrubberBeaconLabel>
-          ))}
+          <ScrubberBeaconLabelGroup
+            labels={filteredSeries
+              .filter((s) => s.label !== undefined && s.label.length > 0)
+              .map((s) => ({
+                id: s.id,
+                label: s.label!,
+              }))}
+          />
         </Group>
       );
     },
