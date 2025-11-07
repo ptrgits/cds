@@ -203,10 +203,8 @@ export function calculateLabelYPositions(
   const maxY = drawingArea.y + drawingArea.height - labelHeight / 2;
 
   for (const label of sortedLabels) {
-    // Clamp to bounds while preserving relative order
-    label.boundedY = Math.max(minY, Math.min(maxY, label.preferredY));
-    // Initialize finalY to the clamped position
-    label.finalY = label.boundedY;
+    // Clamp each label to the drawing area
+    label.finalY = Math.max(minY, Math.min(maxY, label.preferredY));
   }
 
   // Step 3: Find connected groups and redistribute in ONE pass
