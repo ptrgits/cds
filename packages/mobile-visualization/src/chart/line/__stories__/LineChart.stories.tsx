@@ -2344,8 +2344,8 @@ const PartialSolidArea = memo((props: AreaComponentProps) => (
 
 function MultipleSeriesChart() {
   const theme = useTheme();
-  const prices = [10, 22, 29, 45, 98, 45, 22, 52, 21, 4, 68, 20, 21, 58];
-  const volume = [4, 8, 11, 15, 16, 14, 16, 10, 12, 14, 16, 14, 16, 10];
+  const prices = [4000, 3000, 2000, 2780, 1890, 2390, 3490];
+  const volume = [2400, 1398, 9800, 3908, 4800, 3800, 4300];
 
   return (
     <LineChart
