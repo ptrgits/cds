@@ -87,7 +87,7 @@ export function convertToSerializableScale(
 
     return {
       type: 'band',
-      domain: domain as (string | number)[],
+      domain: [domain[0], domain[domain.length - 1]] as [number, number],
       range: [range[0], range[range.length - 1]] as [number, number],
       bandwidth,
     };
@@ -174,7 +174,7 @@ export type SerializableLogScale = {
 
 export type SerializableBandScale = {
   type: 'band';
-  domain: (string | number)[];
+  domain: [number, number];
   range: [number, number];
   bandwidth: number;
 };

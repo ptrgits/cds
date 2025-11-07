@@ -348,19 +348,6 @@ export const CartesianChart = memo(
         [renderedAxes, chartRect, userInset],
       );
 
-      // todo: we can probably drop this, not used on web
-      const getSeriesGradientScale = useCallback(
-        (seriesId: string) => {
-          const targetSeries = series?.find((s) => s.id === seriesId);
-          if (!targetSeries?.gradient) return undefined;
-
-          const yScale = yScales.get(targetSeries.yAxisId ?? defaultAxisId);
-
-          return getGradientScale(targetSeries.gradient, xScale, yScale);
-        },
-        [series, xScale, yScales],
-      );
-
       const contextValue: CartesianChartContextValue = useMemo(
         () => ({
           series: series ?? [],
@@ -380,7 +367,6 @@ export const CartesianChart = memo(
           registerAxis,
           unregisterAxis,
           getAxisBounds,
-          getSeriesGradientScale,
         }),
         [
           series,
@@ -400,7 +386,6 @@ export const CartesianChart = memo(
           registerAxis,
           unregisterAxis,
           getAxisBounds,
-          getSeriesGradientScale,
         ],
       );
 

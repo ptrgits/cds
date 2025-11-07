@@ -16,7 +16,7 @@ import { Group, Line, Rect, vec } from '@shopify/react-native-skia';
 import { useCartesianChartContext } from '../ChartProvider';
 import { ReferenceLine, type ReferenceLineProps } from '../line';
 import { ChartText } from '../text';
-import { applySerializableScale, type ChartScaleFunction, useScrubberContext } from '../utils';
+import { applySerializableScale, useScrubberContext } from '../utils';
 
 import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 import { ScrubberBeaconLabel, type ScrubberBeaconLabelProps } from './ScrubberBeaconLabel';
@@ -127,7 +127,7 @@ export const Scrubber = memo(
       const { scrubberPosition } = useScrubberContext();
       const {
         getXSerializableScale,
-        getYScale,
+        getYSerializableScale,
         getSeriesData,
         getXAxis,
         series,
@@ -161,6 +161,26 @@ export const Scrubber = memo(
         },
       }));
 
+      const filteredSeries = useMemo(() => {
+        return (
+          series?.filter((s) => {
+            if (seriesIds === undefined) return true;
+            return seriesIds.includes(s.id);
+          }) ?? []
+        );
+      }, [series, seriesIds]);
+
+      const createScrubberBeaconRef = useCallback(
+        (seriesId: string) => {
+          return (beaconRef: ScrubberBeaconRef | null) => {
+            if (beaconRef) {
+              ScrubberBeaconRefs.registerRef(seriesId, beaconRef);
+            }
+          };
+        },
+        [ScrubberBeaconRefs],
+      );
+
       const maxDataLength = useMemo(
         () =>
           series?.reduce((max: any, s: any) => {
@@ -182,89 +202,28 @@ export const Scrubber = memo(
         return dataIndex.value;
       }, [xAxis, dataIndex]);
 
-      /*const beaconPositions = useMemo(() => {
-        const xScale = getXScale() as ChartScaleFunction;
-
-        if (!xScale || dataX === undefined || dataIndex === undefined) return [];
-
-        return (
-          series
-            ?.filter((s) => {
-              if (seriesIds === undefined) return true;
-              return seriesIds.includes(s.id);
-            })
-            ?.map((s) => {
-              const sourceData = getSeriesData(s.id);
-              // Use dataIndex to get the y value from the series data array
-              const stuff = sourceData?.[dataIndex];
-              let dataY: number | undefined;
-              if (Array.isArray(stuff)) {
-                dataY = stuff[stuff.length - 1];
-              } else if (typeof stuff === 'number') {
-                dataY = stuff;
-              }
-
-              if (dataY !== undefined) {
-                const yScale = getYScale(s.yAxisId) as ChartScaleFunction;
-                if (!yScale) {
-                  return undefined;
-                }
-
-                const pixelY = yScale(dataY);
-                const resolvedLabel = typeof s.label === 'function' ? s.label(dataIndex) : s.label;
-
-                return {
-                  x: dataX,
-                  y: dataY,
-                  label: resolvedLabel,
-                  pixelY,
-                  targetSeries: s,
-                  gradient: s.gradient,
-                };
-              }
-            })
-            .filter((beacon: any) => beacon !== undefined) ?? []
-        );
-      }, [getXScale, getYScale, dataX, dataIndex, series, seriesIds, getSeriesData]);*/
-
-      const createScrubberBeaconRef = useCallback(
-        (seriesId: string) => {
-          return (beaconRef: ScrubberBeaconRef | null) => {
-            if (beaconRef) {
-              ScrubberBeaconRefs.registerRef(seriesId, beaconRef);
-            }
-          };
-        },
-        [ScrubberBeaconRefs],
-      );
-
-      const pixelX = useDerivedValue(() => {
-        return dataX.value !== undefined && xScale
-          ? applySerializableScale(dataX.value, xScale)
-          : undefined;
-      }, [dataX, xScale]);
-
-      /*const memoizedScrubberLabel: ReferenceLineProps['label'] = useMemo(() => {
+      /*const memoizedScrubberLabel = useDerivedValue(() => {
         if (typeof label === 'function') {
-          if (dataIndex === undefined) return undefined;
-          return label(dataIndex);
+          if (dataIndex.value === undefined) return undefined;
+          return label(dataIndex.value);
         }
         return label;
       }, [label, dataIndex]);*/
+      const memoizedScrubberLabel = 'test';
 
       const labelVerticalInset = 2;
       const labelHorizontalInset = 4;
 
       // Calculate optimal label positioning strategy with collision detection
-      /*const labelPositioning = useMemo(() => {
+      /*const labelPositioning = useDerivedValue(() => {
         // Build enriched dimensions with current beacon positions
-        const dimensions = beaconPositions
+        const dimensions = beaconPositions.value
           .map((beacon: any) => {
-            const dim = labelDimensions.get(beacon?.targetSeries.id);
+            const dim = labelDimensions.get(beacon?.targetSeries?.id ?? '');
             if (!dim) return null;
             return {
               ...dim,
-              preferredX: pixelX ?? 0,
+              preferredX: pixelX.value ?? 0,
               preferredY: beacon.pixelY,
             };
           })
@@ -524,7 +483,7 @@ export const Scrubber = memo(
       // Synchronize label positioning state when the position of any scrubber beacons change
       /*useEffect(() => {
         const currentBeaconIds = new Set(
-          beaconPositions.map((beacon: any) => beacon?.targetSeries.id).filter(Boolean),
+          beaconPositions.value.map((beacon: any) => beacon?.targetSeries.id).filter(Boolean),
         );
 
         setLabelDimensions((prev) => {
@@ -587,70 +546,31 @@ export const Scrubber = memo(
               y={drawingArea.y - overlayOffset}
             />
           )}
-          {/*
-             label={memoizedScrubberLabel}
-              labelProps={{
-                verticalAlignment: 'middle',
-                ...labelProps,
-              }}
-            */}
           {!hideLine && (
             <Group opacity={lineOpacity}>
-              <LineComponent dataX={dataX} />
+              <LineComponent
+                dataX={dataX}
+                label={memoizedScrubberLabel}
+                labelProps={{
+                  verticalAlignment: 'middle',
+                  ...labelProps,
+                }}
+              />
             </Group>
           )}
-          {/*beaconPositions.map((beacon: any) => {
-            if (!beacon) return null;
-            const dotStroke = beacon.targetSeries?.color || theme.color.fgPrimary;
-            const adjustment = labelPositioning.adjustments.get(beacon.targetSeries.id);
-
-            return (
-              <Group key={beacon.targetSeries.id}>
-                <BeaconComponent
-                  ref={createScrubberBeaconRef(beacon.targetSeries.id)}
-                  beaconTransitionConfig={beaconTransitionConfig}
-                  color={beacon.targetSeries?.color}
-                  dataX={beacon.x}
-                  dataY={beacon.y}
-                  gradient={beacon.gradient}
-                  idlePulse={idlePulse}
-                  seriesId={beacon.targetSeries.id}
-                  testID={testID ? `${testID}-${beacon.targetSeries.id}-dot` : undefined}
-                />
-                {beacon.label &&
-                  pixelX !== undefined &&
-                  (() => {
-                    const finalAnchorX = adjustment?.x ?? pixelX;
-                    const finalAnchorY = adjustment?.y ?? beacon.pixelY;
-                    const finalSide = adjustment?.side ?? labelPositioning.strategy;
-
-                    return (
-                      <BeaconLabelComponent
-                        background={theme.color.bg}
-                        bounds={drawingArea}
-                        color={dotStroke}
-                        horizontalAlignment={finalSide === 'right' ? 'left' : 'right'}
-                        inset={{
-                          left: labelHorizontalInset,
-                          right: labelHorizontalInset,
-                          top: labelVerticalInset,
-                          bottom: labelVerticalInset,
-                        }}
-                        onDimensionsChange={(rect) =>
-                          registerLabelDimensions(beacon.targetSeries.id, rect.width, rect.height)
-                        }
-                        testID={testID ? `${testID}-${beacon.targetSeries.id}-label` : undefined}
-                        x={finalAnchorX}
-                        xOffset={finalSide === 'right' ? 16 : -16}
-                        y={finalAnchorY}
-                      >
-                        {beacon.label}
-                      </BeaconLabelComponent>
-                    );
-                  })()}
-              </Group>
-            );
-          })*/}
+          {filteredSeries.map((s) => (
+            <Group key={s.id}>
+              <BeaconComponent
+                ref={createScrubberBeaconRef(s.id)}
+                beaconTransitionConfig={beaconTransitionConfig}
+                color={s.color}
+                gradient={s.gradient}
+                idlePulse={idlePulse}
+                seriesId={s.id}
+                testID={testID ? `${testID}-${s.id}-dot` : undefined}
+              />
+            </Group>
+          ))}
         </Group>
       );
     },

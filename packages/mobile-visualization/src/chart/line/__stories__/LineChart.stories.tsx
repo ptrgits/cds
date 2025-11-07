@@ -2350,8 +2350,6 @@ const PartialSolidArea = memo((props: AreaComponentProps) => (
 export default () => {
   const theme = useTheme();
 
-  const value = useCallback((dataIndex: number) => `test ${dataIndex}`, []);
-
   return (
     <ExampleScreen>
       {/*<Example title="Gradient line 6">
@@ -2451,7 +2449,7 @@ export default () => {
               id: 'prices',
               data: data.map((d) => d * 3),
               color: `rgb(${theme.spectrum.pink50})`,
-              label: value,
+              label: 'test',
             },
             {
               id: 'prices2',
@@ -2463,7 +2461,7 @@ export default () => {
               id: 'prices3',
               data: data,
               color: `rgb(${theme.spectrum.chartreuse50})`,
-              label: (dataIndex: number) => `test ${data[dataIndex]}`,
+              label: 'test',
             },
           ]}
           strokeWidth={4}
@@ -2472,7 +2470,7 @@ export default () => {
             tickLabelFormatter: (value) => `$${(value / 1000).toFixed(0)}k`,
           }}
         >
-          <Scrubber />
+          <Scrubber idlePulse />
         </LineChart>
       </Example>
       <Example title="Discrete Gradient">

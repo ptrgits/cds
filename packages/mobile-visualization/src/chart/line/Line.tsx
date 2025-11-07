@@ -215,8 +215,8 @@ export const Line = memo<LineProps>(
     }, [xAxis?.data]);
 
     const gradientScale = useMemo(() => {
-      if (!seriesGradient || !xScale || !yScale) return null;
-      return getGradientScale(seriesGradient, xScale, yScale);
+      if (!seriesGradient || !xScale || !yScale) return;
+      return seriesGradient.axis === 'x' ? xScale : yScale;
     }, [seriesGradient, xScale, yScale]);
 
     if (!xScale || !yScale) return;
