@@ -1,13 +1,22 @@
 import { useMemo, useState } from 'react';
 import { css } from '@linaria/core';
 import type { Meta } from '@storybook/react';
-import type { ColumnPinningState, ExpandedState } from '@tanstack/react-table';
+import type {
+  Column,
+  ColumnDef,
+  ColumnPinningState,
+  ExpandedState,
+  SortingState,
+  Table as TableInstance,
+} from '@tanstack/react-table';
 
 import { IconButton } from '../../buttons/IconButton';
 import { Checkbox, Select, SelectOption } from '../../controls';
+import { Dropdown } from '../../dropdown/Dropdown';
+import { Icon } from '../../icons/Icon';
 import { Box, HStack, VStack } from '../../layout';
+import { Pressable } from '../../system/Pressable';
 import { Text } from '../../typography/Text';
-import type { ColumnDef, SortingState } from '../DataTable';
 import {
   ActionColumnIds,
   checkColumnConfig,
@@ -17,6 +26,94 @@ import {
 } from '../DataTable';
 import { HeaderCell } from '../DataTable/HeaderCell';
 import type { TableVariant } from '../Table';
+
+const getColumnOrderSnapshot = (table: TableInstance<any>) => {
+  const currentOrder = table.getState().columnOrder;
+  if (currentOrder && currentOrder.length) {
+    return [...currentOrder];
+  }
+  return table.getAllLeafColumns().map((leaf) => leaf.id);
+};
+
+const moveColumn = (table: TableInstance<any>, columnId: string, direction: 'left' | 'right') => {
+  const order = getColumnOrderSnapshot(table);
+  const currentIndex = order.indexOf(columnId);
+  if (currentIndex === -1) return;
+  const targetIndex =
+    direction === 'left'
+      ? Math.max(0, currentIndex - 1)
+      : Math.min(order.length - 1, currentIndex + 1);
+  if (targetIndex === currentIndex) return;
+  const nextOrder = [...order];
+  nextOrder.splice(currentIndex, 1);
+  nextOrder.splice(targetIndex, 0, columnId);
+  table.setColumnOrder(nextOrder);
+};
+
+const togglePinColumn = (column: Column<any, unknown>) => {
+  if (column.getCanPin?.() === false) {
+    return;
+  }
+  const nextState = column.getIsPinned?.() ? false : 'left';
+  column.pin(nextState);
+};
+
+const ColumnHeaderMenu = ({
+  column,
+  table,
+}: {
+  column: Column<any, unknown>;
+  table: TableInstance<any>;
+}) => {
+  const order = getColumnOrderSnapshot(table);
+  const columnIndex = order.indexOf(column.id);
+  const moveLeftDisabled = columnIndex <= 0;
+  const moveRightDisabled = columnIndex === order.length - 1;
+  const pinDisabled = column.getCanPin?.() === false;
+  const pinLabel = column.getIsPinned?.() ? 'Unpin column' : 'Pin column';
+
+  const hasMenuOptions = !(moveLeftDisabled && moveRightDisabled && pinDisabled);
+
+  if (!hasMenuOptions) {
+    return <Icon name="caretDown" size="s" />;
+  }
+
+  return (
+    <Dropdown
+      content={
+        <>
+          <SelectOption
+            disabled={moveLeftDisabled}
+            media={<Icon active color="fg" name="arrowLeft" size="s" />}
+            onClick={() => moveColumn(table, column.id, 'left')}
+            title="Move left"
+            value="move-left"
+          />
+          <SelectOption
+            disabled={moveRightDisabled}
+            media={<Icon active color="fg" name="arrowRight" size="s" />}
+            onClick={() => moveColumn(table, column.id, 'right')}
+            title="Move right"
+            value="move-right"
+          />
+          <SelectOption
+            disabled={pinDisabled}
+            media={<Icon active color="fg" name="pin" size="s" />}
+            onClick={() => togglePinColumn(column)}
+            title={pinLabel}
+            value="pin"
+          />
+        </>
+      }
+      contentPosition={{ placement: 'bottom-end', gap: 1 }}
+      width="auto"
+    >
+      <Pressable aria-label="Open column menu">
+        <Icon color="fg" name="caretDown" size="s" />
+      </Pressable>
+    </Dropdown>
+  );
+};
 
 export default {
   title: 'Components/Table/DataTable',
@@ -54,8 +151,17 @@ export const DefautlDataTableDesign = () => {
       const key = `col${c}`;
       cols.push({
         accessorKey: key,
-        header: ({ column }) => <HeaderCell column={column} start={<Text>{`Col ${c}`}</Text>} />,
+        header: ({ column, table }) => {
+          return (
+            <HeaderCell
+              column={column}
+              end={<ColumnHeaderMenu column={column} table={table} />}
+              start={<Text>{`Col ${c}`}</Text>}
+            />
+          );
+        },
         cell: (info) => info.getValue<number>(),
+        size: 260,
       });
     }
     return cols;
@@ -218,7 +324,15 @@ export const DataTableExample = () => {
       const key = `col${c}`;
       cols.push({
         accessorKey: key,
-        header: `Col ${c}`,
+        header: ({ column, table }) => {
+          return (
+            <HeaderCell
+              column={column}
+              end={<ColumnHeaderMenu column={column} table={table} />}
+              start={<Text>{`Col ${c}`}</Text>}
+            />
+          );
+        },
         cell: (info) => info.getValue<number>(),
       });
     }

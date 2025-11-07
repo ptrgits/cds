@@ -6,7 +6,13 @@ import { Pressable } from '../../system/Pressable';
 import { TableCellSortIcon } from '../TableCellSortIcon';
 
 const endCss = css`
-  justify-self: flex-end;
+  align-items: center;
+  display: flex;
+  margin-inline-start: auto;
+`;
+
+const headerCellCss = css`
+  width: 100%;
 `;
 
 export type HeaderCellProps = HStackBaseProps & {
@@ -39,7 +45,12 @@ export const HeaderCell = ({
   alignItems = 'center',
 }: HeaderCellProps) => {
   return (
-    <HStack alignItems={alignItems} gap={2} justifyContent={justifyContent}>
+    <HStack
+      alignItems={alignItems}
+      className={headerCellCss}
+      gap={2}
+      justifyContent={justifyContent}
+    >
       {start && <Box>{start}</Box>}
 
       {column.getCanSort() ? (
