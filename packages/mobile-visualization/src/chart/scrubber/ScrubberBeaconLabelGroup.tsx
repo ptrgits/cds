@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import type { SharedValue } from 'react-native-reanimated';
 import { useDerivedValue } from 'react-native-reanimated';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { Group } from '@shopify/react-native-skia';
@@ -8,13 +9,17 @@ import { applySerializableScale, useScrubberContext } from '../utils';
 
 import { ScrubberBeaconLabel } from './ScrubberBeaconLabel';
 
-// Simple wrapper to extract position from positions array
+type LabelPosition = {
+  id: string;
+  x: number;
+  y: number;
+};
+
 const PositionedLabel = memo<{
-  seriesId: string;
   index: number;
-  positions: any;
+  positions: SharedValue<LabelPosition[]>;
   label: string;
-}>(({ seriesId, index, positions, label }) => {
+}>(({ index, positions, label }) => {
   const x = useDerivedValue(() => positions.value[index]?.x ?? 0, [positions, index]);
   const y = useDerivedValue(() => positions.value[index]?.y ?? 0, [positions, index]);
 
@@ -33,6 +38,15 @@ type ScrubberBeaconLabelSeries = {
 export type ScrubberBeaconLabelGroupProps = SharedProps & {
   labels: ScrubberBeaconLabelSeries[];
 };
+
+/*
+Algorithm for label positions (y based)
+1. Get the 'desired' y value
+2. Just to min and max values (factoring in height of the scrubber label) - we will base on a height of 21 for now, 11.5px above and below
+3. Move labels up and down to be out of the way of each other, factoring in the height of each label and a customizable gap between labels
+*/
+
+const minLabelGap = 4;
 
 /**
  * Simple component that positions labels at beacon locations.
@@ -137,15 +151,13 @@ export const ScrubberBeaconLabelGroup = memo<ScrubberBeaconLabelGroupProps>(({ l
       {seriesInfo.map((info, index) => {
         // Find the corresponding label from the original labels array
         const labelInfo = labels.find((label) => label.id === info.id);
-        const labelText = labelInfo?.label || '';
-
+        if (!labelInfo) return;
         return (
           <PositionedLabel
             key={info.id}
             index={index}
-            label={labelText}
+            label={labelInfo.label}
             positions={allLabelPositions}
-            seriesId={info.id}
           />
         );
       })}
