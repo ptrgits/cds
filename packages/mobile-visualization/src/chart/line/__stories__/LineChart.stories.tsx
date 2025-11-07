@@ -207,7 +207,7 @@ export const BasicLineChartWithPoints = () => {
   );
 };
 
-const data = sparklineInteractiveData.day.map((d) => d.value);
+const data = sparklineInteractiveData.all.map((d) => d.value);
 
 const ethData = data.map((value) => value * 2);
 const uniData = data.map((value) => value * 3);
@@ -954,7 +954,6 @@ function AnimatedGainLossChart() {
           <Line
             showArea
             AreaComponent={MyGradient}
-            curve="monotone"
             seriesId="prices"
             strokeWidth={3}
             type="solid"
@@ -1463,7 +1462,7 @@ const GainLossChart = () => {
       ]}
     >
       <YAxis showGrid requestedTickCount={2} tickLabelFormatter={tickLabelFormatter} />
-      <Line curve="monotone" seriesId="prices" strokeWidth={3} type="solid" />
+      <Line seriesId="prices" strokeWidth={3} type="solid" />
       <Scrubber hideOverlay />
       <TextComponent />
     </CartesianChart>
@@ -1486,21 +1485,18 @@ const ScrubberWithImperativeHandle = () => {
             data: [2400, 1398, 9800, 3908, 4800, 3800, 4300],
             label: 'Page Views',
             color: theme.color.accentBoldBlue,
-            curve: 'natural',
           },
           {
             id: 'priceB',
             data: [2000, 2491, 4501, 6049, 5019, 4930, 5910],
             label: 'Unique Visitors G',
             color: theme.color.accentBoldGreen,
-            curve: 'natural',
           },
           {
             id: 'priceC',
             data: [1000, 4910, 2300, 5910, 3940, 2940, 1940],
             label: 'Unique Visitors P',
             color: theme.color.accentBoldPurple,
-            curve: 'natural',
           },
         ]}
         xAxis={{
@@ -2187,7 +2183,6 @@ const LineChartStories = () => {
       </Example>*/}
       <Example title="Simple">
         <LineChart
-          curve="monotone"
           height={defaultChartHeight}
           series={[
             {
@@ -2288,7 +2283,7 @@ const LineChartStories = () => {
             domain: { min: 0 },
           }}
         >
-          <Line curve="monotone" seriesId="prices" type="solid" />
+          <Line seriesId="prices" type="solid" />
           <Scrubber idlePulse />
         </CartesianChart>
       </Example>
@@ -2442,26 +2437,25 @@ export default () => {
           showArea
           showYAxis
           AreaComponent={(props) => <DottedArea {...props} fillOpacity={0.5} />}
-          curve="monotone"
           height={250}
           series={[
             {
               id: 'prices',
               data: data.map((d) => d * 3),
               color: `rgb(${theme.spectrum.pink50})`,
-              label: 'test',
+              label: 'test 1',
             },
             {
               id: 'prices2',
               data: data.map((d) => d * 2),
               color: `rgb(${theme.spectrum.red50})`,
-              label: 'test',
+              label: 'test 2',
             },
             {
               id: 'prices3',
               data: data,
               color: `rgb(${theme.spectrum.chartreuse50})`,
-              label: 'test',
+              label: 'test 3',
             },
           ]}
           strokeWidth={4}
@@ -2473,13 +2467,12 @@ export default () => {
           <Scrubber idlePulse />
         </LineChart>
       </Example>
-      <Example title="Discrete Gradient">
+      <Example title="Discrete Gradient 2">
         <LineChart
           enableScrubbing
           showArea
           showYAxis
           AreaComponent={PartialSolidArea}
-          curve="monotone"
           height={150}
           renderPoints={() => true}
           series={[
@@ -2510,7 +2503,6 @@ export default () => {
         <LineChart
           enableScrubbing
           showYAxis
-          curve="monotone"
           height={150}
           renderPoints={() => true}
           series={[

@@ -23,7 +23,7 @@ export type LineProps = SharedProps & {
   seriesId: string;
   /**
    * The curve interpolation method to use for the line.
-   * @default 'linear'
+   * @default 'bump'
    */
   curve?: ChartPathCurveType;
   /**
@@ -92,7 +92,7 @@ export type LineProps = SharedProps & {
 export const Line = memo<LineProps>(
   ({
     seriesId,
-    curve = 'linear',
+    curve = 'bump',
     type = 'solid',
     areaType = 'gradient',
     areaBaseline,
