@@ -1,4 +1,4 @@
-import { type HTMLAttributes, useMemo } from 'react';
+import { type HTMLAttributes } from 'react';
 import { css } from '@linaria/core';
 import { type Cell, flexRender } from '@tanstack/react-table';
 
@@ -46,14 +46,11 @@ export const DataTableBodyCell = ({
   style,
   ...props
 }: DataTableBodyCellProps) => {
-  const pinningStyles = useMemo(
-    () =>
-      getColumnPinningStyles(cell.column, leftOffset, {
-        hasLeftOverflow,
-        hasRightOverflow,
-      }),
-    [cell.column, hasLeftOverflow, hasRightOverflow, leftOffset],
-  );
+  // note we don't memoize this because cell.column does not change when it is pinned/unpinned, so the pinningStyles will not update properly
+  const pinningStyles = getColumnPinningStyles(cell.column, leftOffset, {
+    hasLeftOverflow,
+    hasRightOverflow,
+  });
 
   return (
     <td

@@ -52,6 +52,7 @@ export const TableHeadCell = ({
   ...props
 }: TableHeadCellProps) => {
   const isPinned = header.column.getIsPinned();
+  // note we don't memoize this because cell.column does not change when it is pinned/unpinned, so the pinningStyles will not update properly
   const pinningStyles = getColumnPinningStyles(header.column, leftOffset, {
     hasLeftOverflow,
     hasRightOverflow,
