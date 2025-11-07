@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 
 <!-- template-start -->
 
+## 8.20.2 (11/7/2025 PST)
+
+#### 🐞 Fixes
+
+- Deprecated `media` in favor of `start` prop in ListCell. [[#136](https://github.com/coinbase/cds/pull/136)]
+
 ## 8.20.1 (11/7/2025 PST)
 
 #### 🐞 Fixes
