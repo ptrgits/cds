@@ -559,17 +559,21 @@ export const Scrubber = memo(
             </Group>
           )}
           {filteredSeries.map((s) => (
-            <Group key={s.id}>
-              <BeaconComponent
-                ref={createScrubberBeaconRef(s.id)}
-                beaconTransitionConfig={beaconTransitionConfig}
-                color={s.color}
-                gradient={s.gradient}
-                idlePulse={idlePulse}
-                seriesId={s.id}
-                testID={testID ? `${testID}-${s.id}-dot` : undefined}
-              />
-            </Group>
+            <BeaconComponent
+              key={s.id}
+              ref={createScrubberBeaconRef(s.id)}
+              beaconTransitionConfig={beaconTransitionConfig}
+              color={s.color}
+              gradient={s.gradient}
+              idlePulse={idlePulse}
+              seriesId={s.id}
+              testID={testID ? `${testID}-${s.id}-dot` : undefined}
+            />
+          ))}
+          {filteredSeries.map((s) => (
+            <ScrubberBeaconLabel x={100} y={100}>
+              Whoa
+            </ScrubberBeaconLabel>
           ))}
         </Group>
       );

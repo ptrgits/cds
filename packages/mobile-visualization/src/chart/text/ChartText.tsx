@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useMemo } from 'react';
+import { useDerivedValue } from 'react-native-reanimated';
 import type { ThemeVars } from '@coinbase/cds-common/core/theme';
 import type { ElevationLevels, Rect, SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile/hooks/useTheme';
@@ -511,7 +512,7 @@ export const ChartText = memo<ChartTextProps>(
 
     // Calculate text position within the background rect
     // Note: Paragraph uses top-left positioning, not baseline like Text
-    const textPosition = useMemo(
+    const textPosition = useDerivedValue(
       () => ({
         x: backgroundRect.x + inset.left,
         // Paragraph y is the top of the text box (not baseline like Text)
@@ -573,12 +574,14 @@ export const ChartText = memo<ChartTextProps>(
       [backgroundRect, overflowAmount, xOffset, yOffset],
     );
 
-    const adjustedTextPosition = useMemo(
-      () => ({
-        x: textPosition.x + overflowAmount.x + xOffset,
-        y: textPosition.y + overflowAmount.y + yOffset,
-      }),
-      [textPosition, overflowAmount, xOffset, yOffset],
+    const adjustedTextPositionX = useDerivedValue(
+      () => textPosition.value.x + overflowAmount.x + xOffset,
+      [textPosition, overflowAmount, xOffset],
+    );
+
+    const adjustedTextPositionY = useDerivedValue(
+      () => textPosition.value.y + overflowAmount.y + yOffset,
+      [textPosition, overflowAmount, yOffset],
     );
 
     useEffect(() => {
@@ -647,8 +650,8 @@ export const ChartText = memo<ChartTextProps>(
           <Paragraph
             paragraph={paragraph}
             width={maxWidth}
-            x={adjustedTextPosition.x}
-            y={adjustedTextPosition.y}
+            x={adjustedTextPositionX}
+            y={adjustedTextPositionY}
           />
         )}
       </Group>
