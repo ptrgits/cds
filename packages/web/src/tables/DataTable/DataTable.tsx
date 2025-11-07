@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { forwardRef, memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { css } from '@linaria/core';
 import {
   getCoreRowModel,
@@ -284,6 +284,7 @@ const DataTableBase = <TData,>(
   );
 };
 
-export const DataTable = forwardRef(DataTableBase) as <TData>(
+// TODO: discuss memoization. It's tricky to memoize internal components since tanstack's table states are stable references.
+export const DataTable = memo(forwardRef(DataTableBase)) as <TData>(
   props: DataTableProps<TData> & { ref?: React.Ref<HTMLTableElement> },
 ) => React.ReactElement;

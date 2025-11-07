@@ -1,4 +1,4 @@
-import { type HTMLAttributes, memo } from 'react';
+import { type HTMLAttributes } from 'react';
 import { css } from '@linaria/core';
 import { type Cell, flexRender } from '@tanstack/react-table';
 
@@ -34,43 +34,41 @@ export type DataTableBodyCellProps = HTMLAttributes<HTMLTableCellElement> & {
   compact?: boolean;
 };
 
-export const DataTableBodyCellContainer = memo(
-  ({
-    cell,
-    compact,
+export const DataTableBodyCellContainer = ({
+  cell,
+  compact,
+  hasLeftOverflow,
+  hasRightOverflow,
+  isFirstCenterCell,
+  rowDepth = 0,
+  selected,
+  expanded,
+  leftOffset,
+  className,
+  style,
+  ...props
+}: DataTableBodyCellProps) => {
+  // note we don't memoize this because cell.column does not change when it is pinned/unpinned, so the pinningStyles will not update properly
+  const pinningStyles = getColumnPinningStyles(cell.column, leftOffset, {
     hasLeftOverflow,
     hasRightOverflow,
-    isFirstCenterCell,
-    rowDepth = 0,
-    selected,
-    expanded,
-    leftOffset,
-    className,
-    style,
-    ...props
-  }: DataTableBodyCellProps) => {
-    // note we don't memoize this because cell.column does not change when it is pinned/unpinned, so the pinningStyles will not update properly
-    const pinningStyles = getColumnPinningStyles(cell.column, leftOffset, {
-      hasLeftOverflow,
-      hasRightOverflow,
-    });
+  });
 
-    return (
-      <td
-        key={cell.id}
-        {...props}
-        className={cx(bodyCellCss, className, compact ? compactPaddingCss : defaultPaddingCss)}
-        style={{
-          backgroundColor: selected ? 'var(--color-bgAlternate)' : undefined,
-          paddingInlineStart:
-            isFirstCenterCell && rowDepth > 0 ? `var(--space-${subRowIndentPx})` : undefined,
-          width: cell.column.getSize(),
-          ...pinningStyles,
-          ...style,
-        }}
-      >
-        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-      </td>
-    );
-  },
-);
+  return (
+    <td
+      key={cell.id}
+      {...props}
+      className={cx(bodyCellCss, className, compact ? compactPaddingCss : defaultPaddingCss)}
+      style={{
+        backgroundColor: selected ? 'var(--color-bgAlternate)' : undefined,
+        paddingInlineStart:
+          isFirstCenterCell && rowDepth > 0 ? `var(--space-${subRowIndentPx})` : undefined,
+        width: cell.column.getSize(),
+        ...pinningStyles,
+        ...style,
+      }}
+    >
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </td>
+  );
+};
