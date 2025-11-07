@@ -42,24 +42,22 @@ export const expandColumnConfig = {
   id: ActionColumnIds.expand,
   header: () => null,
   cell: ({ row }) => {
-    const canExpand = row.getCanExpand?.();
-
-    if (!canExpand) {
+    if (!row.getCanExpand()) {
       return <Box className={actionCellCss} />;
     }
 
     return (
       <Pressable
-        aria-label={row.getIsExpanded?.() ? 'Collapse row' : 'Expand row'}
+        aria-label={row.getIsExpanded() ? 'Collapse row' : 'Expand row'}
         className={actionCellCss}
         onClick={() => {
-          row.toggleExpanded?.();
+          row.toggleExpanded();
         }}
       >
         <Icon
           className={iconPaddingCss}
           color="fg"
-          name={row.getIsExpanded?.() ? 'caretDown' : 'caretRight'}
+          name={row.getIsExpanded() ? 'caretDown' : 'caretRight'}
           size="s"
         />
       </Pressable>

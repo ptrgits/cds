@@ -5,7 +5,7 @@ import type { Virtualizer } from '@tanstack/react-virtual';
 import { cx } from '../../cx';
 import { TableRow } from '../TableRow';
 
-import { TableHeadCell } from './TableHeadCell';
+import { DataTableHeadCellContainer } from './DataTableHeadCellContainer';
 
 export type TableHeadRowProps = {
   hasLeftOverflow: boolean;
@@ -31,7 +31,7 @@ const pinnedHeaderCellCss = css`
   z-index: 3;
 `;
 
-export const TableHeadRow = ({
+export const DataTableHeadRow = ({
   hasLeftOverflow,
   hasRightOverflow,
   columnVirtualizer,
@@ -49,7 +49,7 @@ export const TableHeadRow = ({
     <TableRow key={headerGroup.id} className={rowCss}>
       {/* Left pinned */}
       {leftHeaders.map((header) => (
-        <TableHeadCell
+        <DataTableHeadCellContainer
           key={header.id}
           className={cx(spacerCellCss, pinnedHeaderCellCss)}
           compact={compact}
@@ -66,7 +66,7 @@ export const TableHeadRow = ({
             const header = centerHeaders[virtualColumn.index];
             if (!header) return null;
             return (
-              <TableHeadCell
+              <DataTableHeadCellContainer
                 key={header.id}
                 compact={compact}
                 hasLeftOverflow={hasLeftOverflow}
@@ -76,7 +76,7 @@ export const TableHeadRow = ({
             );
           })
         : centerHeaders.map((header) => (
-            <TableHeadCell
+            <DataTableHeadCellContainer
               key={header.id}
               compact={compact}
               hasLeftOverflow={hasLeftOverflow}
@@ -89,7 +89,7 @@ export const TableHeadRow = ({
       ) : null}
       {/* Right pinned */}
       {rightHeaders.map((header) => (
-        <TableHeadCell
+        <DataTableHeadCellContainer
           key={header.id}
           compact={compact}
           hasLeftOverflow={hasLeftOverflow}

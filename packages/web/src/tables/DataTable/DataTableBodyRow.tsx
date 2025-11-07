@@ -5,7 +5,7 @@ import type { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { cx } from '../../cx';
 import { TableRow } from '../TableRow';
 
-import { DataTableBodyCell } from './DataTableBodyCell';
+import { DataTableBodyCellContainer } from './DataTableBodyCellContainer';
 
 const bodyRowCss = css`
   display: flex;
@@ -54,6 +54,8 @@ export const DataTableBodyRow = ({
   const centerCells = visibleCells.filter((c) => !c.column.getIsPinned());
   const rightCells = visibleCells.filter((c) => c.column.getIsPinned() === 'right');
   const isSelected = !!row.getIsSelected?.();
+  // Memoized cell containers will otherwise never see the expanded state update.
+  const isExpanded = !!row.getIsExpanded?.();
   const rowDepth = row.depth ?? 0;
   const firstCenterCellId = centerCells[0]?.id;
 
@@ -74,10 +76,11 @@ export const DataTableBodyRow = ({
     >
       {/* Left pinned */}
       {leftCells.map((cell) => (
-        <DataTableBodyCell
+        <DataTableBodyCellContainer
           key={cell.id}
           cell={cell}
           compact={compact}
+          expanded={isExpanded}
           hasLeftOverflow={hasLeftOverflow}
           hasRightOverflow={hasRightOverflow}
           rowDepth={rowDepth}
@@ -92,10 +95,11 @@ export const DataTableBodyRow = ({
             const cell = centerCells[virtualColumn.index];
             if (!cell) return null;
             return (
-              <DataTableBodyCell
+              <DataTableBodyCellContainer
                 key={cell.id}
                 cell={cell}
                 compact={compact}
+                expanded={isExpanded}
                 hasLeftOverflow={hasLeftOverflow}
                 hasRightOverflow={hasRightOverflow}
                 isFirstCenterCell={cell.id === firstCenterCellId}
@@ -105,10 +109,11 @@ export const DataTableBodyRow = ({
             );
           })
         : centerCells.map((cell) => (
-            <DataTableBodyCell
+            <DataTableBodyCellContainer
               key={cell.id}
               cell={cell}
               compact={compact}
+              expanded={isExpanded}
               hasLeftOverflow={hasLeftOverflow}
               hasRightOverflow={hasRightOverflow}
               isFirstCenterCell={cell.id === firstCenterCellId}
@@ -121,10 +126,11 @@ export const DataTableBodyRow = ({
       ) : null}
       {/* Right pinned */}
       {rightCells.map((cell) => (
-        <DataTableBodyCell
+        <DataTableBodyCellContainer
           key={cell.id}
           cell={cell}
           compact={compact}
+          expanded={isExpanded}
           hasLeftOverflow={hasLeftOverflow}
           hasRightOverflow={hasRightOverflow}
           rowDepth={rowDepth}

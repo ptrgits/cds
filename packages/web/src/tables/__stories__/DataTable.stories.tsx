@@ -15,6 +15,7 @@ import {
   dragColumnConfig,
   expandColumnConfig,
 } from '../DataTable';
+import { HeaderCell } from '../DataTable/HeaderCell';
 import type { TableVariant } from '../Table';
 
 export default {
@@ -53,7 +54,7 @@ export const DefautlDataTableDesign = () => {
       const key = `col${c}`;
       cols.push({
         accessorKey: key,
-        header: `Col ${c}`,
+        header: ({ column }) => <HeaderCell column={column} start={<Text>{`Col ${c}`}</Text>} />,
         cell: (info) => info.getValue<number>(),
       });
     }

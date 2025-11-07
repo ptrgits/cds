@@ -5,7 +5,7 @@ import type { Virtualizer } from '@tanstack/react-virtual';
 
 import { TableHeader } from '../TableHeader';
 
-import { TableHeadRow } from './TableHeadRow';
+import { DataTableHeadRow } from './DataTableHeadRow';
 
 export type DataTableHeadProps = {
   hasLeftOverflow: boolean;
@@ -40,7 +40,7 @@ export const DataTableHead = ({
   return (
     <TableHeader ref={sectionRef} className={tableHeadBaseCss} sticky={sticky}>
       {table.getHeaderGroups().map((headerGroup) => (
-        <TableHeadRow
+        <DataTableHeadRow
           key={headerGroup.id}
           columnVirtualizer={columnVirtualizer}
           compact={compact}
