@@ -20,12 +20,13 @@ const PositionedLabel = memo<{
   index: number;
   positions: SharedValue<LabelPosition[]>;
   label: string;
-}>(({ index, positions, label }) => {
+  color?: string;
+}>(({ index, positions, label, color }) => {
   const x = useDerivedValue(() => positions.value[index]?.x ?? 0, [positions, index]);
   const y = useDerivedValue(() => positions.value[index]?.y ?? 0, [positions, index]);
 
   return (
-    <ScrubberBeaconLabel horizontalAlignment="right" x={x} xOffset={-16} y={y}>
+    <ScrubberBeaconLabel color={color} horizontalAlignment="right" x={x} xOffset={-16} y={y}>
       {label}
     </ScrubberBeaconLabel>
   );
@@ -34,6 +35,7 @@ const PositionedLabel = memo<{
 type ScrubberBeaconLabelSeries = {
   id: string;
   label: string;
+  color?: string;
 };
 
 export type ScrubberBeaconLabelGroupProps = SharedProps & {
@@ -193,6 +195,7 @@ export const ScrubberBeaconLabelGroup = memo<ScrubberBeaconLabelGroupProps>(({ l
         return (
           <PositionedLabel
             key={info.id}
+            color={labelInfo.color}
             index={index}
             label={labelInfo.label}
             positions={allLabelPositions}

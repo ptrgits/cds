@@ -576,6 +576,7 @@ export const Scrubber = memo(
               .map((s) => ({
                 id: s.id,
                 label: s.label!,
+                color: s.color,
               }))}
           />
         </Group>
