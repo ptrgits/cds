@@ -1,24 +1,15 @@
 import { forwardRef, memo, useImperativeHandle, useMemo } from 'react';
-import {
-  cancelAnimation,
-  useDerivedValue,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-} from 'react-native-reanimated';
-import { usePreviousValue } from '@coinbase/cds-common/hooks/usePreviousValue';
+import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
-import { type AnimatedProp, Circle, Group } from '@shopify/react-native-skia';
+import { Circle, Group } from '@shopify/react-native-skia';
 
 import { useCartesianChartContext } from '../ChartProvider';
-import { applySerializableScale, unwrapAnimatedValue, useScrubberContext } from '../utils';
+import { applySerializableScale, useScrubberContext } from '../utils';
 import {
   evaluateGradientAtValueWithPrecomputedStops,
-  evaluateGradientAtValueWithSerializableScale,
   getGradientStops,
   type GradientDefinition,
-  type GradientStop,
 } from '../utils/gradient';
 import { convertToSerializableScale } from '../utils/scale';
 import { buildTransition, defaultTransition, type TransitionConfig } from '../utils/transition';
