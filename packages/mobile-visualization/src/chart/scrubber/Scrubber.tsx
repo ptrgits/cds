@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useState,
 } from 'react';
 import { useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useRefMap } from '@coinbase/cds-common/hooks/useRefMap';
@@ -20,12 +19,6 @@ import { applySerializableScale, useScrubberContext } from '../utils';
 import { ScrubberBeacon, type ScrubberBeaconProps, type ScrubberBeaconRef } from './ScrubberBeacon';
 import { ScrubberBeaconLabel, type ScrubberBeaconLabelProps } from './ScrubberBeaconLabel';
 import { ScrubberBeaconLabelGroup } from './ScrubberBeaconLabelGroup';
-
-type LabelDimensions = {
-  id: string;
-  width: number;
-  height: number;
-};
 
 /**
  * Configuration for scrubber functionality across chart components.
@@ -117,21 +110,9 @@ export const Scrubber = memo(
       const theme = useTheme();
       const ScrubberBeaconRefs = useRefMap<ScrubberBeaconRef>();
 
-      // Track label dimensions for collision detection
-      const [labelDimensions, setLabelDimensions] = useState<Map<string, LabelDimensions>>(
-        new Map(),
-      );
-
       const { scrubberPosition } = useScrubberContext();
-      const {
-        getXSerializableScale,
-        getYSerializableScale,
-        getSeriesData,
-        getXAxis,
-        series,
-        drawingArea,
-        animate,
-      } = useCartesianChartContext();
+      const { getXSerializableScale, getSeriesData, getXAxis, series, drawingArea, animate } =
+        useCartesianChartContext();
 
       const xAxis = useMemo(() => getXAxis(), [getXAxis]);
       const xScale = useMemo(() => getXSerializableScale(), [getXSerializableScale]);

@@ -1,5 +1,11 @@
-import { forwardRef, memo, useImperativeHandle, useMemo } from 'react';
-import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import { forwardRef, memo, useEffect, useImperativeHandle, useMemo } from 'react';
+import {
+  cancelAnimation,
+  useDerivedValue,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+} from 'react-native-reanimated';
 import type { SharedProps } from '@coinbase/cds-common/types';
 import { useTheme } from '@coinbase/cds-mobile';
 import { Circle, Group } from '@shopify/react-native-skia';
@@ -198,7 +204,7 @@ export const ScrubberBeacon = memo(
         },
       }));
 
-      /*useEffect(() => {
+      useEffect(() => {
         if (animate && idlePulse) {
           // Use a derived value to control pulse based on scrubber state
           const shouldPulse = scrubberPosition.value === undefined;
@@ -220,7 +226,7 @@ export const ScrubberBeacon = memo(
           cancelAnimation(pulseOpacity);
           pulseOpacity.value = buildTransition(0, pulseTransitionConfig);
         }
-      }, [animate, idlePulse, pulseOpacity, pulseTransitionConfig, scrubberPosition]);*/
+      }, [animate, idlePulse, pulseOpacity, pulseTransitionConfig, scrubberPosition]);
 
       // Update position when data coordinates change
       /*useEffect(() => {
@@ -283,15 +289,19 @@ export const ScrubberBeacon = memo(
 
       const scrubberPoint = useDerivedValue(() => {
         const pixelX =
-          dataX.value !== undefined && xScale ? applySerializableScale(dataX.value, xScale) : 25;
+          dataX.value !== undefined && xScale
+            ? applySerializableScale(dataX.value, xScale)
+            : undefined;
         const pixelY =
-          dataY.value !== undefined && yScale ? applySerializableScale(dataY.value, yScale) : 25;
-        if (pixelX === undefined || pixelY === undefined) return { x: 25, y: 50 };
+          dataY.value !== undefined && yScale
+            ? applySerializableScale(dataY.value, yScale)
+            : undefined;
+        if (pixelX === undefined || pixelY === undefined) return;
         return { x: pixelX, y: pixelY };
       }, [dataX, dataY, xScale, yScale]);
 
       const scrubberStateOpacity = useDerivedValue(() => {
-        return isIdleState.value ? 1 : 0;
+        return isIdleState.value ? 0 : 1;
       }, [isIdleState]);
 
       const idleStatePoint = useDerivedValue(() => {
@@ -303,12 +313,12 @@ export const ScrubberBeacon = memo(
           dataY.value !== undefined && yScale
             ? applySerializableScale(dataY.value, yScale)
             : undefined;
-        if (pixelX === undefined || pixelY === undefined) return { x: 50, y: 25 };
+        if (pixelX === undefined || pixelY === undefined) return;
         return { x: pixelX, y: pixelY };
       }, [dataX, dataY, xScale, yScale]);
 
       const idleStateOpacity = useDerivedValue(() => {
-        return isIdleState.value ? 0 : 1;
+        return isIdleState.value ? 1 : 0;
       }, [isIdleState]);
 
       return (
