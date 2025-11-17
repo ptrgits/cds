@@ -11,6 +11,7 @@ import { useHasMounted } from '../../hooks/useHasMounted';
 import { Box, type BoxDefaultElement, type BoxProps } from '../../layout/Box';
 import { Portal } from '../../overlays/Portal';
 import { modalContainerId } from '../../overlays/PortalProvider';
+import type { TrayProps } from '../../overlays/tray/Tray';
 import type { InteractableBlendStyles } from '../../system/Interactable';
 import type { PressableDefaultElement, PressableProps } from '../../system/Pressable';
 
@@ -238,6 +239,7 @@ export type SelectDropdownProps<
 > = SelectState<Type, SelectOptionValue> &
   Pick<SharedAccessibilityProps, 'accessibilityLabel'> &
   Omit<BoxProps<BoxDefaultElement>, 'onChange'> &
+  Pick<TrayProps, 'header' | 'footer'> &
   Pick<SelectOptionProps<Type>, 'accessory' | 'media' | 'end'> & {
     /** Whether this is for single or multi-select */
     type?: Type;

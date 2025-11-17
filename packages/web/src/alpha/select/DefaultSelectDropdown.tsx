@@ -43,6 +43,8 @@ const DefaultSelectDropdownComponent = memo(
         classNames,
         compact,
         label,
+        header,
+        footer,
         end,
         selectAllLabel = 'Select all',
         emptyOptionsLabel = 'No options available',
@@ -257,6 +259,7 @@ const DefaultSelectDropdownComponent = memo(
                 onEscPress={handleEscPress}
               >
                 <motion.div animate={animateStyle} exit={initialStyle} initial={initialStyle}>
+                  {header}
                   <Box
                     bordered
                     borderRadius={400}
@@ -330,6 +333,7 @@ const DefaultSelectDropdownComponent = memo(
                       />
                     )}
                   </Box>
+                  {footer}
                 </motion.div>
               </FocusTrap>
             </Box>

@@ -5,8 +5,9 @@ import type { SharedAccessibilityProps } from '@coinbase/cds-common/types';
 
 import type { CellBaseProps } from '../../cells/Cell';
 import type { InputStackBaseProps } from '../../controls/InputStack';
-import type { BoxProps } from '../../layout';
-import type { DrawerRefBaseProps } from '../../overlays';
+import type { BoxProps } from '../../layout/Box';
+import type { DrawerRefBaseProps } from '../../overlays/drawer/Drawer';
+import type { TrayProps } from '../../overlays/tray/Tray';
 import type { InteractableBlendStyles } from '../../system/Interactable';
 import type { PressableProps } from '../../system/Pressable';
 
@@ -193,6 +194,7 @@ export type SelectDropdownProps<
 > = SelectState<Type, SelectOptionValue> &
   Pick<SharedAccessibilityProps, 'accessibilityLabel'> &
   Omit<BoxProps, 'onChange'> &
+  Pick<TrayProps, 'header' | 'footer'> &
   Pick<SelectOptionProps<Type, SelectOptionValue>, 'accessory' | 'media' | 'end'> & {
     /** Whether this is for single or multi-select */
     type?: Type;
