@@ -141,6 +141,8 @@ export type SelectControlProps<
     placeholder?: React.ReactNode;
     /** Helper text displayed below the select */
     helperText?: React.ReactNode;
+    /** Content node displayed below the selected values */
+    contentNode?: React.ReactNode;
     /** Whether this is for single or multi-select */
     type?: Type;
     /** Whether the dropdown is currently open */
