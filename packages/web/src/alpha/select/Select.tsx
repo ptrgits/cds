@@ -537,7 +537,7 @@ const SelectBase = memo(
         SelectAllOptionComponent = DefaultSelectAllOption,
         SelectDropdownComponent = DefaultSelectDropdown,
         SelectControlComponent = DefaultSelectControl,
-        SelectEmptyDropdownContentsComponent = DefaultSelectEmptyDropdownContents as SelectEmptyDropdownContentComponent,
+        SelectEmptyDropdownContentsComponent = DefaultSelectEmptyDropdownContents,
         style,
         styles,
         className,
