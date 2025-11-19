@@ -218,6 +218,7 @@ const DefaultSelectDropdownComponent = memo(
                       const defaultMedia = isMultiSelect ? (
                         <Checkbox
                           checked={selected}
+                          disabled={disabled || option.disabled}
                           onPress={() => {
                             onChange(option.value as ValueType);
                           }}
@@ -225,6 +226,7 @@ const DefaultSelectDropdownComponent = memo(
                       ) : (
                         <Radio
                           checked={selected}
+                          disabled={disabled || option.disabled}
                           onPress={() => {
                             onChange(option.value as ValueType);
                             setOpen(false);
