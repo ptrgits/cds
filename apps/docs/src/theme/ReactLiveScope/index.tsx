@@ -34,6 +34,7 @@ import { useSparklinePath } from '@coinbase/cds-common/visualizations/useSparkli
 import * as CDSLottie from '@coinbase/cds-lottie-files';
 import { Accordion } from '@coinbase/cds-web/accordion/Accordion';
 import { AccordionItem } from '@coinbase/cds-web/accordion/AccordionItem';
+import { Combobox } from '@coinbase/cds-web/alpha/combobox/Combobox';
 import { Select } from '@coinbase/cds-web/alpha/select/Select';
 import { TabbedChips } from '@coinbase/cds-web/alpha/tabbed-chips/TabbedChips';
 import { Lottie, LottieStatusAnimation } from '@coinbase/cds-web/animation';
@@ -173,6 +174,7 @@ const ReactLiveScope: Record<string, unknown> = {
   ...CDSButtons,
   ...CDSControls,
   Select,
+  Combobox,
   OldSelect,
   useMultiSelect,
   ...CDSSystem,

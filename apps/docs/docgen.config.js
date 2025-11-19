@@ -44,6 +44,7 @@ module.exports = {
    * Plese add sourceFiles in alphabetical order.
    */
   sourceFiles: [
+    'alpha/combobox/Combobox',
     'alpha/select/Select',
     'alpha/tabbed-chips/TabbedChips',
     'animation/Lottie',
