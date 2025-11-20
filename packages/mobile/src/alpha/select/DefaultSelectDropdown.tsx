@@ -143,6 +143,7 @@ const DefaultSelectDropdownComponent = memo(
                 <Checkbox
                   checked={isAllOptionsSelected}
                   indeterminate={indeterminate}
+                  onPress={toggleSelectAll}
                   tabIndex={-1}
                 />
               )
