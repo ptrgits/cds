@@ -191,80 +191,78 @@ const DefaultSelectDropdownComponent = memo(
           title={label}
           verticalDrawerPercentageOfView={0.9}
         >
-          <VStack {...props}>
-            <ScrollView showsVerticalScrollIndicator={true}>
-              {/* TO DO: can we remove this VStack? */}
-              <VStack>
-                {!hideSelectAll && isMultiSelect && options.length > 0 && SelectAllOption}
-                {options.length > 0 ? (
-                  options.map(
-                    ({
-                      Component,
-                      media: optionMedia,
-                      accessory: optionAccessory,
-                      end: optionEnd,
-                      ...option
-                    }) => {
-                      const RenderedSelectOption = Component ?? SelectOptionComponent;
-                      const selected =
-                        option.value !== null && isMultiSelect
-                          ? (value as string[]).includes(option.value)
-                          : value === option.value;
-                      /** onPress handlers are passed so that when the media is pressed,
-                       * the onChange handler is called. Since the <RenderedSelectOption>
-                       * has an accessibilityRole, the inner media won't be detected by a screen reader
-                       * so this behavior matches web
-                       * */
-                      const defaultMedia = isMultiSelect ? (
-                        <Checkbox
-                          checked={selected}
-                          disabled={disabled || option.disabled}
-                          onPress={() => {
-                            onChange(option.value as ValueType);
-                          }}
-                        />
-                      ) : (
-                        <Radio
-                          checked={selected}
-                          disabled={disabled || option.disabled}
-                          onPress={() => {
-                            onChange(option.value as ValueType);
-                            setOpen(false);
-                          }}
-                        />
-                      );
-                      return (
-                        <RenderedSelectOption
-                          key={option.value}
-                          accessibilityRole={accessibilityRoles?.option}
-                          accessory={optionAccessory ?? accessory}
-                          blendStyles={styles?.optionBlendStyles}
-                          compact={compact}
-                          disabled={option.disabled || disabled}
-                          end={optionEnd ?? end}
-                          media={optionMedia ?? media ?? defaultMedia}
-                          onPress={(newValue) => {
-                            onChange(newValue as ValueType);
-                            if (!isMultiSelect) setOpen(false);
-                          }}
-                          selected={selected}
-                          style={styles?.option}
-                          styles={optionStyles}
-                          type={type}
-                          {...option}
-                        />
-                      );
-                    },
-                  )
-                ) : (
-                  <SelectEmptyDropdownContentsComponent
-                    label={emptyOptionsLabel}
-                    styles={emptyDropdownContentsStyles}
-                  />
-                )}
-              </VStack>
-            </ScrollView>
-          </VStack>
+          <ScrollView showsVerticalScrollIndicator={true}>
+            {/* TO DO: can we remove this VStack? */}
+            <VStack {...props}>
+              {!hideSelectAll && isMultiSelect && options.length > 0 && SelectAllOption}
+              {options.length > 0 ? (
+                options.map(
+                  ({
+                    Component,
+                    media: optionMedia,
+                    accessory: optionAccessory,
+                    end: optionEnd,
+                    ...option
+                  }) => {
+                    const RenderedSelectOption = Component ?? SelectOptionComponent;
+                    const selected =
+                      option.value !== null && isMultiSelect
+                        ? (value as string[]).includes(option.value)
+                        : value === option.value;
+                    /** onPress handlers are passed so that when the media is pressed,
+                     * the onChange handler is called. Since the <RenderedSelectOption>
+                     * has an accessibilityRole, the inner media won't be detected by a screen reader
+                     * so this behavior matches web
+                     * */
+                    const defaultMedia = isMultiSelect ? (
+                      <Checkbox
+                        checked={selected}
+                        disabled={disabled || option.disabled}
+                        onPress={() => {
+                          onChange(option.value as ValueType);
+                        }}
+                      />
+                    ) : (
+                      <Radio
+                        checked={selected}
+                        disabled={disabled || option.disabled}
+                        onPress={() => {
+                          onChange(option.value as ValueType);
+                          setOpen(false);
+                        }}
+                      />
+                    );
+                    return (
+                      <RenderedSelectOption
+                        key={option.value}
+                        accessibilityRole={accessibilityRoles?.option}
+                        accessory={optionAccessory ?? accessory}
+                        blendStyles={styles?.optionBlendStyles}
+                        compact={compact}
+                        disabled={option.disabled || disabled}
+                        end={optionEnd ?? end}
+                        media={optionMedia ?? media ?? defaultMedia}
+                        onPress={(newValue) => {
+                          onChange(newValue as ValueType);
+                          if (!isMultiSelect) setOpen(false);
+                        }}
+                        selected={selected}
+                        style={styles?.option}
+                        styles={optionStyles}
+                        type={type}
+                        {...option}
+                      />
+                    );
+                  },
+                )
+              ) : (
+                <SelectEmptyDropdownContentsComponent
+                  label={emptyOptionsLabel}
+                  styles={emptyDropdownContentsStyles}
+                />
+              )}
+            </VStack>
+          </ScrollView>
         </Tray>
       );
     },
