@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import type { Rect } from '@coinbase/cds-common/types';
+import { Group } from '@shopify/react-native-skia';
 
 import { ChartText, type ChartTextChildren, type ChartTextProps } from './ChartText';
 
@@ -27,13 +28,13 @@ export type TextLabelData = {
 
 export type TextLabelDataWithKey = TextLabelData & { key: string };
 
-export type SmartChartTextGroupProps = {
+export type ChartTextGroupBaseProps = {
   /**
    * Array of text labels to display
    */
   labels: TextLabelData[];
   /**
-   * Minimum gap between labels in pixels
+   * Minimum gap between labels
    * @default 8
    */
   minGap?: number;
@@ -46,7 +47,14 @@ export type SmartChartTextGroupProps = {
    * Common props to apply to all ChartText components
    */
   chartTextProps?: Partial<ChartTextProps>;
+  /**
+   * Custom component to render each label
+   * @default ChartText
+   */
+  LabelComponent?: React.FC<ChartTextProps>;
 };
+
+export type ChartTextGroupProps = ChartTextGroupBaseProps;
 
 /**
  * Overlap check that enforces a minimum pixel gap between two rectangles.
@@ -71,8 +79,14 @@ const EPSILON_PX = 0.5;
  *
  * The component focuses solely on overlap prevention logic for better separation of concerns.
  */
-export const SmartChartTextGroup = memo<SmartChartTextGroupProps>(
-  ({ labels, minGap = 8, prioritizeEndLabels = true, chartTextProps }) => {
+export const ChartTextGroup = memo<ChartTextGroupProps>(
+  ({
+    labels,
+    minGap = 8,
+    prioritizeEndLabels = true,
+    chartTextProps,
+    LabelComponent = ChartText,
+  }) => {
     const [boundingBoxes, setBoundingBoxes] = useState<Map<string, Rect>>(new Map());
     const { onDimensionsChange: propsOnDimensionsChange, ...restChartTextProps } =
       chartTextProps ?? {};
@@ -233,38 +247,26 @@ export const SmartChartTextGroup = memo<SmartChartTextGroupProps>(
     }, [isReady, boundingBoxes, minGap, prioritizeEndLabels, labelsWithKeys]);
 
     return (
-      <g>
+      <Group>
         {labelsWithKeys.map((labelData) => {
           const hasMeasurement = boundingBoxes.has(labelData.key);
           const isVisible = hasMeasurement && isReady && visibleKeySet?.has(labelData.key);
 
-          const mergedStyles: ChartTextProps['styles'] = {
-            text: {
-              ...(restChartTextProps?.styles?.text ?? {}),
-              ...(labelData.chartTextProps?.styles?.text ?? {}),
-              ...(!isVisible ? { visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : {}),
-            },
-            backgroundRect: {
-              ...(restChartTextProps?.styles?.backgroundRect ?? {}),
-              ...(labelData.chartTextProps?.styles?.backgroundRect ?? {}),
-              ...(!isVisible ? { display: 'none' } : {}),
-            },
-          };
           return (
-            <ChartText
+            <LabelComponent
               key={labelData.key}
+              opacity={isVisible ? 1 : 0}
               x={labelData.x}
               y={labelData.y}
               {...restChartTextProps}
               {...labelData.chartTextProps}
               onDimensionsChange={onDimensionsChangeByKey.get(labelData.key)}
-              styles={mergedStyles}
             >
               {labelData.label}
-            </ChartText>
+            </LabelComponent>
           );
         })}
-      </g>
+      </Group>
     );
   },
 );
