@@ -193,7 +193,6 @@ const DefaultSelectDropdownComponent = memo(
           verticalDrawerPercentageOfView={0.9}
         >
           <ScrollView showsVerticalScrollIndicator={true}>
-            {/* TO DO: can we remove this VStack? */}
             <VStack {...props}>
               {!hideSelectAll && isMultiSelect && options.length > 0 && SelectAllOption}
               {options.length > 0 ? (
