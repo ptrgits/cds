@@ -189,7 +189,7 @@ const CoinbaseOneRewardsChart = () => {
             thirdSectionEnd={thirdSectionEnd}
             thirdSectionStart={thirdSectionStart}
           />
-          <PiePlot clipPathId="background-clip" cornerRadius={100} />
+          <PiePlot clipPathId="background-clip" cornerRadius={100} strokeWidth={0} />
         </PolarChart>
       </Box>
     </VStack>
