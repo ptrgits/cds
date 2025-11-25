@@ -304,7 +304,7 @@ const DefaultSelectControlComponent = memo(
                 overflow="auto"
                 paddingTop={labelVariant === 'inside' ? 0 : undefined}
                 paddingX={1}
-                paddingY={labelVariant === 'inside' || compact ? 0.5 : 1.5}
+                paddingY={labelVariant === 'inside' || compact ? 1 : 1.5}
                 style={styles?.controlValueNode}
               >
                 {valueNode}
@@ -348,7 +348,7 @@ const DefaultSelectControlComponent = memo(
               className={classNames?.controlEndNode}
               flexGrow={1}
               paddingX={2}
-              paddingY={labelVariant === 'inside' || compact ? 0.5 : 1.5}
+              paddingY={labelVariant === 'inside' || compact ? 1 : 1.5}
               style={styles?.controlEndNode}
             >
               {customEndNode ? (
