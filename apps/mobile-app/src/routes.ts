@@ -2,6 +2,7 @@
  * DO NOT MODIFY
  * Generated from scripts/codegen/main.ts
  */
+/* eslint-disable global-require */
 
 export const routes = [
   {
@@ -39,11 +40,27 @@ export const routes = [
     getComponent: () =>
       require('@coinbase/cds-mobile/overlays/__stories__/AlertVerticalActions.stories').default,
   },
-
+  {
+    key: 'AlphaSelect',
+    getComponent: () =>
+      require('@coinbase/cds-mobile/alpha/select/__stories__/AlphaSelect.stories').default,
+  },
+  {
+    key: 'AlphaTabbedChips',
+    getComponent: () =>
+      require('@coinbase/cds-mobile/alpha/tabbed-chips/__stories__/AlphaTabbedChips.stories')
+        .default,
+  },
   {
     key: 'AnimatedCaret',
     getComponent: () =>
       require('@coinbase/cds-mobile/motion/__stories__/AnimatedCaret.stories').default,
+  },
+  {
+    key: 'AreaChart',
+    getComponent: () =>
+      require('@coinbase/cds-mobile-visualization/chart/area/__stories__/AreaChart.stories')
+        .default,
   },
   {
     key: 'Avatar',
@@ -55,8 +72,23 @@ export const routes = [
       require('@coinbase/cds-mobile/buttons/__stories__/AvatarButton.stories').default,
   },
   {
+    key: 'Axis',
+    getComponent: () =>
+      require('@coinbase/cds-mobile-visualization/chart/axis/__stories__/Axis.stories').default,
+  },
+  {
     key: 'Banner',
     getComponent: () => require('@coinbase/cds-mobile/banner/__stories__/Banner.stories').default,
+  },
+  {
+    key: 'BannerActions',
+    getComponent: () =>
+      require('@coinbase/cds-mobile/banner/__stories__/BannerActions.stories').default,
+  },
+  {
+    key: 'BannerLayout',
+    getComponent: () =>
+      require('@coinbase/cds-mobile/banner/__stories__/BannerLayout.stories').default,
   },
   {
     key: 'BarChart',
@@ -107,9 +139,9 @@ export const routes = [
         .default,
   },
   {
-    key: 'ChartAxis',
+    key: 'Chart',
     getComponent: () =>
-      require('@coinbase/cds-mobile-visualization/chart/axis/__stories__/Axis.stories').default,
+      require('@coinbase/cds-mobile-visualization/chart/__stories__/Chart.stories').default,
   },
   {
     key: 'Checkbox',
@@ -238,10 +270,6 @@ export const routes = [
     key: 'HintMotion',
     getComponent: () =>
       require('@coinbase/cds-mobile/motion/__stories__/HintMotion.stories').default,
-  },
-  {
-    key: 'Icon',
-    getComponent: () => require('@coinbase/cds-mobile/icons/__stories__/Icon.stories').default,
   },
   {
     key: 'IconButton',
@@ -461,25 +489,25 @@ export const routes = [
       require('@coinbase/cds-mobile/visualizations/__stories__/ProgressCircle.stories').default,
   },
   {
-    key: 'RadioGroup',
-    getComponent: () =>
-      require('@coinbase/cds-mobile/controls/__stories__/RadioGroup.stories').default,
-  },
-  {
     key: 'RadioCell',
     getComponent: () =>
       require('@coinbase/cds-mobile/controls/__stories__/RadioCell.stories').default,
   },
   {
-    key: 'RemoteImage',
+    key: 'RadioGroup',
     getComponent: () =>
-      require('@coinbase/cds-mobile/media/__stories__/RemoteImage.stories').default,
+      require('@coinbase/cds-mobile/controls/__stories__/RadioGroup.stories').default,
   },
   {
     key: 'ReferenceLine',
     getComponent: () =>
       require('@coinbase/cds-mobile-visualization/chart/line/__stories__/ReferenceLine.stories')
         .default,
+  },
+  {
+    key: 'RemoteImage',
+    getComponent: () =>
+      require('@coinbase/cds-mobile/media/__stories__/RemoteImage.stories').default,
   },
   {
     key: 'RemoteImageGroup',
@@ -508,8 +536,7 @@ export const routes = [
   },
   {
     key: 'Select',
-    getComponent: () =>
-      require('@coinbase/cds-mobile/alpha/select/__stories__/Select.stories').default,
+    getComponent: () => require('@coinbase/cds-mobile/controls/__stories__/Select.stories').default,
   },
   {
     key: 'SelectChip',
@@ -604,7 +631,7 @@ export const routes = [
   {
     key: 'TabbedChips',
     getComponent: () =>
-      require('@coinbase/cds-mobile/alpha/tabbed-chips/__stories__/TabbedChips.stories').default,
+      require('@coinbase/cds-mobile/chips/__stories__/TabbedChips.stories').default,
   },
   {
     key: 'TabIndicator',
