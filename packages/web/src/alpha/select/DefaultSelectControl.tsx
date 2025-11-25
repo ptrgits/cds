@@ -18,7 +18,6 @@ import type { SelectControlProps, SelectOption, SelectType } from './Select';
 
 // The height is smaller for the inside label variant since the label takes
 // up space above the input.
-const LABEL_VARIANT_INSIDE_HEIGHT = 32;
 const COMPACT_HEIGHT = 40;
 const DEFAULT_HEIGHT = 56;
 
@@ -61,7 +60,6 @@ const DefaultSelectControlComponent = memo(
         variant,
         helperText,
         label,
-        labelVariant,
         contentNode,
         startNode,
         endNode: customEndNode,
@@ -142,31 +140,18 @@ const DefaultSelectControlComponent = memo(
 
       const labelNode = useMemo(
         () =>
-          typeof label === 'string' && labelVariant === 'inside' ? (
-            <Pressable
-              noScaleOnPress
+          typeof label === 'string' ? (
+            <InputLabel
               className={classNames?.controlLabelNode}
-              disabled={disabled}
-              height={28}
-              onClick={() => setOpen((s) => !s)}
+              color="fg"
               style={styles?.controlLabelNode}
-              tabIndex={-1}
             >
-              <InputLabel color="fg" paddingBottom={0} paddingTop={1} paddingX={2}>
-                {label}
-              </InputLabel>
-            </Pressable>
+              {label}
+            </InputLabel>
           ) : (
             label
           ),
-        [
-          label,
-          labelVariant,
-          disabled,
-          setOpen,
-          classNames?.controlLabelNode,
-          styles?.controlLabelNode,
-        ],
+        [label, classNames?.controlLabelNode, styles?.controlLabelNode],
       );
 
       const valueNode = useMemo(() => {
@@ -254,13 +239,7 @@ const DefaultSelectControlComponent = memo(
             className={cx(noFocusOutlineCss, classNames?.controlInputNode)}
             disabled={disabled}
             focusable={false}
-            minHeight={
-              labelVariant === 'inside'
-                ? LABEL_VARIANT_INSIDE_HEIGHT
-                : compact
-                  ? COMPACT_HEIGHT
-                  : DEFAULT_HEIGHT
-            }
+            minHeight={compact ? COMPACT_HEIGHT : DEFAULT_HEIGHT}
             onClick={() => setOpen((s) => !s)}
             paddingStart={1}
             style={styles?.controlInputNode}
@@ -302,9 +281,8 @@ const DefaultSelectControlComponent = memo(
                 gap={1}
                 justifyContent={shouldShowCompactLabel ? 'flex-end' : 'flex-start'}
                 overflow="auto"
-                paddingTop={labelVariant === 'inside' ? 0 : undefined}
                 paddingX={1}
-                paddingY={labelVariant === 'inside' || compact ? 1 : 1.5}
+                paddingY={compact ? 1 : 1.5}
                 style={styles?.controlValueNode}
               >
                 {valueNode}
@@ -327,7 +305,6 @@ const DefaultSelectControlComponent = memo(
           startNode,
           shouldShowCompactLabel,
           label,
-          labelVariant,
           compact,
           valueNode,
           contentNode,
@@ -348,7 +325,7 @@ const DefaultSelectControlComponent = memo(
               className={classNames?.controlEndNode}
               flexGrow={1}
               paddingX={2}
-              paddingY={labelVariant === 'inside' || compact ? 1 : 1.5}
+              paddingY={compact ? 1 : 1.5}
               style={styles?.controlEndNode}
             >
               {customEndNode ? (
@@ -364,7 +341,6 @@ const DefaultSelectControlComponent = memo(
         ),
         [
           classNames?.controlEndNode,
-          labelVariant,
           compact,
           styles?.controlEndNode,
           customEndNode,
@@ -383,7 +359,6 @@ const DefaultSelectControlComponent = memo(
           helperTextNode={helperTextNode}
           inputNode={inputNode}
           labelNode={shouldShowCompactLabel ? null : labelNode}
-          labelVariant={labelVariant}
           variant={variant}
           {...props}
         />

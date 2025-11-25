@@ -154,10 +154,7 @@ export type SelectControlProps<
   SelectOptionValue extends string = string,
 > = Pick<SharedAccessibilityProps, 'accessibilityLabel'> &
   Omit<BoxProps<BoxDefaultElement>, 'borderWidth' | 'onChange'> &
-  Pick<
-    InputStackBaseProps,
-    'disabled' | 'startNode' | 'variant' | 'labelVariant' | 'testID' | 'endNode'
-  > &
+  Pick<InputStackBaseProps, 'disabled' | 'startNode' | 'variant' | 'testID' | 'endNode'> &
   SelectState<Type, SelectOptionValue> & {
     /** Array of options to display in the select dropdown */
     options: (SelectOption<SelectOptionValue> & SelectOptionCustomUI<Type, SelectOptionValue>)[];
@@ -354,7 +351,6 @@ export type SelectBaseProps<
     | 'startNode'
     | 'variant'
     | 'disabled'
-    | 'labelVariant'
     | 'endNode'
   > &
   Pick<SelectOptionProps<Type>, 'accessory' | 'media' | 'end'> &
@@ -517,7 +513,6 @@ const SelectBase = memo(
         helperText,
         compact,
         label,
-        labelVariant,
         accessibilityLabel = 'Select control',
         accessibilityRoles = defaultAccessibilityRoles,
         controlAccessibilityLabel,
@@ -700,7 +695,6 @@ const SelectBase = memo(
             helperText={helperText}
             hiddenSelectedOptionsLabel={hiddenSelectedOptionsLabel}
             label={label}
-            labelVariant={labelVariant}
             maxSelectedOptionsToShow={maxSelectedOptionsToShow}
             onChange={onChange}
             open={open}
