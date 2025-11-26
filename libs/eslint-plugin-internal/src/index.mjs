@@ -1,5 +1,5 @@
+import exampleScreenContainsExampleRule from './example-screen-contains-example/index.mjs';
 import exampleScreenDefaultRule from './example-screen-default/index.mjs';
-import exampleSingleChildRule from './example-single-child/index.mjs';
 import safelySpreadPropsRule from './safely-spread-props/index.mjs';
 import importAutofixRule from './import-autofix.mjs';
 
@@ -9,7 +9,7 @@ const plugin = {
     'import-autofix': importAutofixRule,
     'safely-spread-props': safelySpreadPropsRule,
     'example-screen-default': exampleScreenDefaultRule,
-    'example-single-child': exampleSingleChildRule,
+    'example-screen-contains-example': exampleScreenContainsExampleRule,
   },
   configs: {},
 };
@@ -43,7 +43,7 @@ Object.assign(plugin.configs, {
     },
     rules: {
       'internal/example-screen-default': 'warn',
-      'internal/example-single-child': 'warn',
+      'internal/example-screen-contains-example': 'warn',
     },
   },
 });

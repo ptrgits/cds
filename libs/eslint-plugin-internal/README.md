@@ -24,6 +24,6 @@ At this time this rule is intended to only be used within this repo in the cds-w
 
 Ensures every Storybook file default-exports a component whose rendered output is rooted in `ExampleScreen`. This keeps documentation consistent and aligns with the patterns showcased in the mobile package.
 
-### example-single-child
+### example-screen-contains-example
 
-Requires that every `<Example>` component wraps exactly one direct child element. This is to help encourge examples to be lean and focused on a single idea at a time.
+Validates that any `ExampleScreen` Storybook story ultimately renders at least one `<Example>` component. The rule looks through components defined in the same file to make sure examples exist even when they are encapsulated in helper components.
