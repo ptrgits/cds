@@ -254,7 +254,7 @@ export default tseslint.config(
   {
     files: ['**/*.{ts,tsx}'],
     settings: sharedSettings,
-    extends: [...sharedExtends, ...typescriptExtends, internalPlugin.configs.allRules],
+    extends: [...sharedExtends, ...typescriptExtends, internalPlugin.configs.importRules],
     plugins: {
       ...sharedPlugins,
       ...typescriptPlugins,
@@ -262,7 +262,6 @@ export default tseslint.config(
     rules: {
       ...typescriptRules,
       ...sharedRules,
-      // 'internal/safely-spread-props': 'warn',
     },
   },
   {
@@ -280,7 +279,7 @@ export default tseslint.config(
       'packages/**/*.spec.*',
     ],
     settings: sharedSettings,
-    extends: [...sharedExtends, ...typescriptExtends, internalPlugin.configs.allRules],
+    extends: [...sharedExtends, ...typescriptExtends, internalPlugin.configs.importRules],
     plugins: {
       ...sharedPlugins,
       ...typescriptPlugins,
@@ -289,7 +288,6 @@ export default tseslint.config(
       ...sharedRules,
       ...typescriptRules,
       ...packageProductionRules,
-      // 'internal/safely-spread-props': 'warn',
     },
   },
   {
@@ -305,6 +303,11 @@ export default tseslint.config(
       ...sharedRules,
       ...typescriptRules,
     },
+  },
+  // Rules specific to mobile story files
+  {
+    files: ['packages/mobile/**/*.stories.tsx'],
+    extends: [internalPlugin.configs.mobileStoryRules],
   },
   {
     files: ['**/*.test.{ts,tsx}', '**/__tests__/**', '**/setup.js'],
