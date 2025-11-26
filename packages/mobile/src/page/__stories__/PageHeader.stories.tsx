@@ -1,5 +1,4 @@
 import React from 'react';
-import { View } from 'react-native';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
 import { NoopFn } from '@coinbase/cds-common/utils/mockUtils';
 
@@ -127,94 +126,92 @@ const PageHeaderScreen = () => {
   };
 
   return (
-    <View>
-      <ExampleScreen>
-        <VStack gap={3}>
-          <PageHeader
-            background="bgPrimaryWash"
-            end={exampleProps.end2}
-            start={exampleProps.logoMark2}
-            styles={shiftEndStyles}
-            title={exampleProps.title1}
-          />
-          <Divider />
-          <PageHeader
-            background="bgPrimaryWash"
-            end={exampleProps.end2}
-            styles={shiftEndStyles}
-            title={exampleProps.title1}
-          />
-          <Divider />
-          <PageHeader
-            background="bgPrimaryWash"
-            start={exampleProps.logoMark2}
-            title={exampleProps.title1}
-          />
-          <Divider />
-          <PageHeader
-            background="bgPrimaryWash"
-            end={exampleProps.end2}
-            start={exampleProps.logoMark2}
-            styles={shiftEndStyles}
-            title={exampleProps.intermediary1}
-          />
-          <Divider />
-          <PageHeader
-            background="bgPrimaryWash"
-            end={exampleProps.end2}
-            start={exampleProps.logoMark2}
-            styles={shiftEndStyles}
-            title={exampleProps.title2}
-          />
-          <Divider />
-          <PageHeader
-            background="bg"
-            end={exampleProps.end3}
-            start={exampleProps.start1}
-            styles={{ ...shiftStartStyles, ...shiftEndStyles }}
-            title={exampleProps.intermediary1}
-          />
-          <Divider />
-          <PageHeader
-            background="bg"
-            end={exampleProps.end4}
-            start={exampleProps.start1}
-            styles={{ ...shiftStartStyles, ...shiftEndStyles }}
-            title={exampleProps.title1}
-          />
-          <Divider />
-          <PageHeader
-            background="bg"
-            end={exampleProps.end4}
-            start={exampleProps.start1}
-            styles={{ ...shiftStartStyles, ...shiftEndStyles }}
-            title={exampleProps.title2}
-          />
-          <Divider />
-          <PageHeader
-            background="bg"
-            end={exampleProps.end4}
-            start={exampleProps.start1}
-            styles={{ ...shiftStartStyles, ...shiftEndStyles }}
-          />
-          <Divider />
-          <PageHeader
-            background="bgPrimaryWash"
-            end={exampleProps.end3}
-            styles={shiftEndStyles}
-            title={exampleProps.intermediary1}
-          />
-          <Divider />
-          <PageHeader
-            background="bgPrimaryWash"
-            end={exampleProps.end2}
-            start={exampleProps.logoMark2}
-            styles={shiftEndStyles}
-            title={exampleProps.intermediary2}
-          />
-        </VStack>
-      </ExampleScreen>
-    </View>
+    <ExampleScreen>
+      <VStack gap={3}>
+        <PageHeader
+          background="bgPrimaryWash"
+          end={exampleProps.end2}
+          start={exampleProps.logoMark2}
+          styles={shiftEndStyles}
+          title={exampleProps.title1}
+        />
+        <Divider />
+        <PageHeader
+          background="bgPrimaryWash"
+          end={exampleProps.end2}
+          styles={shiftEndStyles}
+          title={exampleProps.title1}
+        />
+        <Divider />
+        <PageHeader
+          background="bgPrimaryWash"
+          start={exampleProps.logoMark2}
+          title={exampleProps.title1}
+        />
+        <Divider />
+        <PageHeader
+          background="bgPrimaryWash"
+          end={exampleProps.end2}
+          start={exampleProps.logoMark2}
+          styles={shiftEndStyles}
+          title={exampleProps.intermediary1}
+        />
+        <Divider />
+        <PageHeader
+          background="bgPrimaryWash"
+          end={exampleProps.end2}
+          start={exampleProps.logoMark2}
+          styles={shiftEndStyles}
+          title={exampleProps.title2}
+        />
+        <Divider />
+        <PageHeader
+          background="bg"
+          end={exampleProps.end3}
+          start={exampleProps.start1}
+          styles={{ ...shiftStartStyles, ...shiftEndStyles }}
+          title={exampleProps.intermediary1}
+        />
+        <Divider />
+        <PageHeader
+          background="bg"
+          end={exampleProps.end4}
+          start={exampleProps.start1}
+          styles={{ ...shiftStartStyles, ...shiftEndStyles }}
+          title={exampleProps.title1}
+        />
+        <Divider />
+        <PageHeader
+          background="bg"
+          end={exampleProps.end4}
+          start={exampleProps.start1}
+          styles={{ ...shiftStartStyles, ...shiftEndStyles }}
+          title={exampleProps.title2}
+        />
+        <Divider />
+        <PageHeader
+          background="bg"
+          end={exampleProps.end4}
+          start={exampleProps.start1}
+          styles={{ ...shiftStartStyles, ...shiftEndStyles }}
+        />
+        <Divider />
+        <PageHeader
+          background="bgPrimaryWash"
+          end={exampleProps.end3}
+          styles={shiftEndStyles}
+          title={exampleProps.intermediary1}
+        />
+        <Divider />
+        <PageHeader
+          background="bgPrimaryWash"
+          end={exampleProps.end2}
+          start={exampleProps.logoMark2}
+          styles={shiftEndStyles}
+          title={exampleProps.intermediary2}
+        />
+      </VStack>
+    </ExampleScreen>
   );
 };
 

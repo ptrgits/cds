@@ -1,12 +1,11 @@
 import React from 'react';
-import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoopFn } from '@coinbase/cds-common/utils/mockUtils';
 
 import { Button, ButtonGroup } from '../../buttons';
 import { ExampleScreen } from '../../examples/ExampleScreen';
 import { Icon } from '../../icons';
-import { VStack } from '../../layout';
+import { Box, VStack } from '../../layout';
 import { Text } from '../../typography/Text';
 import { PageFooter } from '../PageFooter';
 
@@ -39,25 +38,22 @@ const PageFooterInPageScreen = () => {
   const inset = useSafeAreaInsets();
 
   return (
-    <View>
-      <ExampleScreen>
-        <VStack
-          alignContent="center"
-          alignItems="center"
-          dangerouslySetBackground="#FADADD"
-          flexGrow={1}
-          gap={0}
-          justifyContent="center"
-          left={0}
-          padding={10}
-        >
-          <Text font="title1">Primary Content</Text>
-        </VStack>
-      </ExampleScreen>
-      <View style={{ position: 'absolute', bottom: inset.bottom / 2, left: 0, right: 0 }}>
+    <ExampleScreen>
+      <VStack
+        alignContent="center"
+        alignItems="center"
+        dangerouslySetBackground="#FADADD"
+        gap={0}
+        justifyContent="center"
+        left={0}
+        padding={10}
+      >
+        <Text font="title1">Primary Content</Text>
+      </VStack>
+      <Box style={{ position: 'absolute', bottom: inset.bottom / 2, left: 0, right: 0 }}>
         <PageFooter action={exampleProps.endButtons2} />
-      </View>
-    </View>
+      </Box>
+    </ExampleScreen>
   );
 };
 export default PageFooterInPageScreen;

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
 import type { SectionHeaderProps } from '@coinbase/cds-common';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
 import { NoopFn } from '@coinbase/cds-common/utils/mockUtils';
@@ -50,71 +49,69 @@ const SelectChipDropdown = () => {
 
 const SectionHeaderScreen = () => {
   return (
-    <View>
-      <ExampleScreen>
-        <SectionHeader title="SectionHeader" />
-        <Divider />
-        <SectionHeader
-          {...defaultProps}
-          end={
-            <HStack paddingTop={1}>
-              <SearchInput compact onChangeText={NoopFn} placeholder="Placeholder" value="" />
-            </HStack>
-          }
-        />
-        <Divider />
-        <SectionHeader {...defaultProps} end={<SelectChipDropdown />} />
-        <Divider />
-        <SectionHeader
-          end={
-            <HStack paddingTop={1}>
-              <SearchInput compact onChangeText={NoopFn} placeholder="Placeholder" value="" />
-            </HStack>
-          }
-          title={defaultProps.title}
-        />
-        <Divider />
-        <SectionHeader
-          {...defaultProps}
-          balance={null}
-          end={
-            <Button compact variant="secondary">
-              Button
-            </Button>
-          }
-        />
-        <Divider />
-        <SectionHeader
-          {...defaultProps}
-          balance={null}
-          end={
-            <HStack gap={1}>
-              <IconButton name="caretLeft" />
-              <IconButton name="caretRight" />
-            </HStack>
-          }
-        />
-        <Divider />
-        <SectionHeader
-          {...defaultProps}
-          balance={null}
-          end={
-            <Text font="headline">
-              <Link to="http://www.coinbase.com">See all</Link>
-            </Text>
-          }
-        />
-        <Divider />
-        <SectionHeader
-          {...defaultProps}
-          end={<IconButton name="upload" />}
-          padding={0}
-          title="CompactHeader"
-        />
-        <Divider />
-        <SectionHeader {...defaultProps} balance={null} end={<IconButton name="upload" />} />
-      </ExampleScreen>
-    </View>
+    <ExampleScreen>
+      <SectionHeader title="SectionHeader" />
+      <Divider />
+      <SectionHeader
+        {...defaultProps}
+        end={
+          <HStack paddingTop={1}>
+            <SearchInput compact onChangeText={NoopFn} placeholder="Placeholder" value="" />
+          </HStack>
+        }
+      />
+      <Divider />
+      <SectionHeader {...defaultProps} end={<SelectChipDropdown />} />
+      <Divider />
+      <SectionHeader
+        end={
+          <HStack paddingTop={1}>
+            <SearchInput compact onChangeText={NoopFn} placeholder="Placeholder" value="" />
+          </HStack>
+        }
+        title={defaultProps.title}
+      />
+      <Divider />
+      <SectionHeader
+        {...defaultProps}
+        balance={null}
+        end={
+          <Button compact variant="secondary">
+            Button
+          </Button>
+        }
+      />
+      <Divider />
+      <SectionHeader
+        {...defaultProps}
+        balance={null}
+        end={
+          <HStack gap={1}>
+            <IconButton name="caretLeft" />
+            <IconButton name="caretRight" />
+          </HStack>
+        }
+      />
+      <Divider />
+      <SectionHeader
+        {...defaultProps}
+        balance={null}
+        end={
+          <Text font="headline">
+            <Link to="http://www.coinbase.com">See all</Link>
+          </Text>
+        }
+      />
+      <Divider />
+      <SectionHeader
+        {...defaultProps}
+        end={<IconButton name="upload" />}
+        padding={0}
+        title="CompactHeader"
+      />
+      <Divider />
+      <SectionHeader {...defaultProps} balance={null} end={<IconButton name="upload" />} />
+    </ExampleScreen>
   );
 };
 

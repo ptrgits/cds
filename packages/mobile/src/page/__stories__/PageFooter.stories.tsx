@@ -1,5 +1,4 @@
 import React from 'react';
-import { View } from 'react-native';
 import { NoopFn } from '@coinbase/cds-common/utils/mockUtils';
 
 import { Button, ButtonGroup } from '../../buttons';
@@ -31,15 +30,13 @@ const exampleProps = {
 
 const PageFooterScreen = () => {
   return (
-    <View>
-      <ExampleScreen>
-        <PageFooter action={exampleProps.endButton} background="bgPrimaryWash" />
-        <Divider />
-        <PageFooter action={exampleProps.endButtons} />
-        <Divider />
-        <PageFooter action={exampleProps.endButtons2} />
-      </ExampleScreen>
-    </View>
+    <ExampleScreen>
+      <PageFooter action={exampleProps.endButton} background="bgPrimaryWash" />
+      <Divider />
+      <PageFooter action={exampleProps.endButtons} />
+      <Divider />
+      <PageFooter action={exampleProps.endButtons2} />
+    </ExampleScreen>
   );
 };
 export default PageFooterScreen;

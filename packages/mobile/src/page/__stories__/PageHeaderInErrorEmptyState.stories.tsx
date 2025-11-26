@@ -1,5 +1,4 @@
 import React from 'react';
-import { View } from 'react-native';
 import { assets } from '@coinbase/cds-common/internal/data/assets';
 import { NoopFn } from '@coinbase/cds-common/utils/mockUtils';
 
@@ -21,31 +20,29 @@ const exampleProps = {
 
 const PageHeaderInErrorEmptyState = () => {
   return (
-    <View>
-      <ExampleScreen>
-        <VStack gap={0} width="100%">
-          <PageHeader background="bg" position="sticky" start={exampleProps.logoMark2} top="0" />
-          <Box background="bgPrimaryWash">
-            <VStack
-              alignContent="center"
-              alignItems="center"
-              flexGrow={1}
-              flexShrink={1}
-              gap={2}
-              justifyContent="center"
-              paddingX={4}
-              paddingY={10}
-            >
-              <SpotSquare name="frameEmpty" />
-              <Text font="title1">You need to X before you Y</Text>
-              <Text align="center" font="body">
-                You&apos;ll need to [add funds] before you can [complete this transaction]
-              </Text>
-            </VStack>
-          </Box>
-        </VStack>
-      </ExampleScreen>
-    </View>
+    <ExampleScreen>
+      <VStack gap={0} width="100%">
+        <PageHeader background="bg" position="sticky" start={exampleProps.logoMark2} top="0" />
+        <Box background="bgPrimaryWash">
+          <VStack
+            alignContent="center"
+            alignItems="center"
+            flexGrow={1}
+            flexShrink={1}
+            gap={2}
+            justifyContent="center"
+            paddingX={4}
+            paddingY={10}
+          >
+            <SpotSquare name="frameEmpty" />
+            <Text font="title1">You need to X before you Y</Text>
+            <Text align="center" font="body">
+              You&apos;ll need to [add funds] before you can [complete this transaction]
+            </Text>
+          </VStack>
+        </Box>
+      </VStack>
+    </ExampleScreen>
   );
 };
 

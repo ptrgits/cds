@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { ScrollView, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import type { PaddingProps } from '@coinbase/cds-common/types';
 
 import { useTheme } from '../hooks/useTheme';
@@ -53,28 +54,26 @@ export const Example = ({ children, inline, title, titlePadding, ...props }: Exa
   return content;
 };
 
-const Screen: React.FC<React.PropsWithChildren<unknown>> = ({ children }) => {
-  const theme = useTheme();
+export const ExampleScreen = React.forwardRef<ScrollView, React.PropsWithChildren<unknown>>(
+  ({ children }, ref) => {
+    const theme = useTheme();
 
-  return (
-    <ScrollView
-      keyboardShouldPersistTaps="always"
-      persistentScrollbar={false}
-      showsVerticalScrollIndicator={false}
-      style={{ backgroundColor: theme.color.bg, height: '100%' }}
-      testID="mobile-playground-scrollview"
-    >
-      {children}
-      <Divider testID="mobile-playground-scrollview-end" />
-    </ScrollView>
-  );
-};
-
-export const ExampleScreen: React.FC<React.PropsWithChildren<unknown>> = ({ children }) => {
-  return (
-    <VStack testID="mobile-playground-screen">
-      <Divider />
-      <Screen>{children}</Screen>
-    </VStack>
-  );
-};
+    return (
+      <View testID="mobile-playground-screen">
+        <ScrollView
+          ref={ref}
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="always"
+          persistentScrollbar={false}
+          showsVerticalScrollIndicator={false}
+          style={{ backgroundColor: theme.color.bg, height: '100%' }}
+        >
+          <Divider testID="mobile-playground-scrollview-start" />
+          {children}
+          <Divider testID="mobile-playground-scrollview-end" />
+        </ScrollView>
+      </View>
+    );
+  },
+);
+ExampleScreen.displayName = 'ExampleScreen';
