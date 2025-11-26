@@ -13,7 +13,11 @@ import { DefaultSelectAllOption } from './DefaultSelectAllOption';
 import { DefaultSelectEmptyDropdownContents } from './DefaultSelectEmptyDropdownContents';
 import { DefaultSelectOption } from './DefaultSelectOption';
 import type { SelectDropdownProps, SelectType } from './Select';
-import { defaultAccessibilityRoles } from './Select';
+
+const defaultAccessibilityRoles: SelectDropdownProps['accessibilityRoles'] = {
+  dropdown: 'listbox',
+  option: 'option',
+};
 
 const initialStyle = { opacity: 0, y: 0 };
 const animateStyle = { opacity: 1, y: 4 };

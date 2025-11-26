@@ -12,7 +12,10 @@ import { DefaultSelectAllOption } from './DefaultSelectAllOption';
 import { DefaultSelectEmptyDropdownContents } from './DefaultSelectEmptyDropdownContents';
 import { DefaultSelectOption } from './DefaultSelectOption';
 import type { SelectDropdownProps, SelectType } from './Select';
-import { defaultAccessibilityRoles } from './Select';
+
+const defaultAccessibilityRoles: SelectDropdownProps['accessibilityRoles'] = {
+  option: 'menuitem',
+};
 
 type DefaultSelectDropdownBase = <
   Type extends SelectType = 'single',

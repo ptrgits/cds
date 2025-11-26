@@ -17,7 +17,7 @@ import { DefaultSelectDropdown } from './DefaultSelectDropdown';
 import { DefaultSelectEmptyDropdownContents } from './DefaultSelectEmptyDropdownContents';
 import { DefaultSelectOption } from './DefaultSelectOption';
 
-export const defaultAccessibilityRoles: SelectDropdownProps['accessibilityRoles'] = {
+const defaultAccessibilityRoles: SelectDropdownProps['accessibilityRoles'] = {
   option: 'menuitem',
 };
 
