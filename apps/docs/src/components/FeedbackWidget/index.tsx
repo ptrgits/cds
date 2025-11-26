@@ -149,17 +149,17 @@ export function FeedbackWidget() {
 
       if (!selectedOption) return;
 
-      postMetric('cdsDocs', {
-        command: selectedOption.command,
-        arguments: additionalDetails.trim() || undefined,
-        context: location.pathname,
+      trackGtagEvent({
+        action: selectedOption.command,
+        category: 'Documentation',
+        label: additionalDetails.trim() || undefined,
       });
 
       setSubmitted(true);
     } catch (error) {
       console.error('Error submitting feedback:', error);
     }
-  }, [category, feedback, additionalDetails, location.pathname, postMetric]);
+  }, [category, feedback, additionalDetails, trackGtagEvent]);
 
   const handleSkip = useCallback(() => {
     // Still submit if we have a category
