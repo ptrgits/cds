@@ -295,7 +295,6 @@ const DefaultSelectControlComponent = memo(
           styles?.controlStartNode,
           styles?.controlValueNode,
           startNode,
-          label,
           compact,
           valueNode,
           contentNode,
