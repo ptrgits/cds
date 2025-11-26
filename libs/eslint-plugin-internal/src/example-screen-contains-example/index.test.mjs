@@ -79,6 +79,24 @@ describe("'example-screen-contains-example' rule", () => {
         `,
         filename: 'Deep.stories.tsx',
       },
+      {
+        code: `
+          const items = ['a', 'b'];
+
+          export default function ExampleStories() {
+            return (
+              <ExampleScreen>
+                {items.map((item) => (
+                  <Example key={item} title={item}>
+                    <Text>{item}</Text>
+                  </Example>
+                ))}
+              </ExampleScreen>
+            );
+          }
+        `,
+        filename: 'MapValid.stories.tsx',
+      },
     ],
     invalid: [
       {
@@ -112,6 +130,23 @@ describe("'example-screen-contains-example' rule", () => {
           }
         `,
         filename: 'ConditionalMissingExample.stories.tsx',
+        errors: [{ messageId: 'missingExample' }],
+      },
+      {
+        code: `
+          const items = ['a', 'b'];
+
+          export default function ExampleStories() {
+            return (
+              <ExampleScreen>
+                {items.map((item) => (
+                  <Text key={item}>{item}</Text>
+                ))}
+              </ExampleScreen>
+            );
+          }
+        `,
+        filename: 'MapMissingExample.stories.tsx',
         errors: [{ messageId: 'missingExample' }],
       },
     ],

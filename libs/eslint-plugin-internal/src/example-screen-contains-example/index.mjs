@@ -169,6 +169,13 @@ function expressionContainsElement(expression, elementName) {
     );
   }
 
+  if (expr.type === 'CallExpression') {
+    return (
+      expr.arguments.some((arg) => expressionContainsElement(arg, elementName)) ||
+      expressionContainsElement(expr.callee, elementName)
+    );
+  }
+
   return false;
 }
 
@@ -225,6 +232,20 @@ function expressionContainsExample(expression, context) {
   if (expr.type === 'ArrayExpression') {
     return expr.elements.some(
       (element) => element && expressionContainsExample(element, context),
+    );
+  }
+
+  if (expr.type === 'CallExpression') {
+    const callbackContainsExample = expr.arguments.some(
+      (arg) => isFunctionLike(arg) && functionContainsExample(arg, context),
+    );
+    if (callbackContainsExample) {
+      return true;
+    }
+
+    return (
+      expressionContainsExample(expr.callee, context) ||
+      expr.arguments.some((arg) => expressionContainsExample(arg, context))
     );
   }
 
