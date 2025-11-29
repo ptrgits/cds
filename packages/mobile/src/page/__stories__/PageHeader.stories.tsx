@@ -3,7 +3,7 @@ import { assets } from '@coinbase/cds-common/internal/data/assets';
 import { NoopFn } from '@coinbase/cds-common/utils/mockUtils';
 
 import { Button, ButtonGroup, IconButton } from '../../buttons';
-import { ExampleScreen } from '../../examples/ExampleScreen';
+import { Example, ExampleScreen } from '../../examples/ExampleScreen';
 import { useTheme } from '../../hooks/useTheme';
 import { LogoMark } from '../../icons';
 import { Box, Divider, HStack, VStack } from '../../layout';
@@ -127,7 +127,8 @@ const PageHeaderScreen = () => {
 
   return (
     <ExampleScreen>
-      <VStack gap={3}>
+      <Example title="PageHeader Variants">
+        <VStack gap={3}>
         <PageHeader
           background="bgPrimaryWash"
           end={exampleProps.end2}
@@ -210,7 +211,8 @@ const PageHeaderScreen = () => {
           styles={shiftEndStyles}
           title={exampleProps.intermediary2}
         />
-      </VStack>
+        </VStack>
+      </Example>
     </ExampleScreen>
   );
 };

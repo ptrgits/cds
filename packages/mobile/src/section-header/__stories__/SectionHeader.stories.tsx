@@ -6,7 +6,7 @@ import { NoopFn } from '@coinbase/cds-common/utils/mockUtils';
 import { Button, IconButton } from '../../buttons';
 import { SelectChip } from '../../chips/SelectChip';
 import { SearchInput, SelectOption } from '../../controls';
-import { ExampleScreen } from '../../examples/ExampleScreen';
+import { Example, ExampleScreen } from '../../examples/ExampleScreen';
 import { Icon } from '../../icons';
 import { Divider, HStack } from '../../layout';
 import { RemoteImage } from '../../media';
@@ -50,67 +50,69 @@ const SelectChipDropdown = () => {
 const SectionHeaderScreen = () => {
   return (
     <ExampleScreen>
-      <SectionHeader title="SectionHeader" />
-      <Divider />
-      <SectionHeader
-        {...defaultProps}
-        end={
-          <HStack paddingTop={1}>
-            <SearchInput compact onChangeText={NoopFn} placeholder="Placeholder" value="" />
-          </HStack>
-        }
-      />
-      <Divider />
-      <SectionHeader {...defaultProps} end={<SelectChipDropdown />} />
-      <Divider />
-      <SectionHeader
-        end={
-          <HStack paddingTop={1}>
-            <SearchInput compact onChangeText={NoopFn} placeholder="Placeholder" value="" />
-          </HStack>
-        }
-        title={defaultProps.title}
-      />
-      <Divider />
-      <SectionHeader
-        {...defaultProps}
-        balance={null}
-        end={
-          <Button compact variant="secondary">
-            Button
-          </Button>
-        }
-      />
-      <Divider />
-      <SectionHeader
-        {...defaultProps}
-        balance={null}
-        end={
-          <HStack gap={1}>
-            <IconButton name="caretLeft" />
-            <IconButton name="caretRight" />
-          </HStack>
-        }
-      />
-      <Divider />
-      <SectionHeader
-        {...defaultProps}
-        balance={null}
-        end={
-          <Text font="headline">
-            <Link to="http://www.coinbase.com">See all</Link>
-          </Text>
-        }
-      />
-      <Divider />
-      <SectionHeader
-        {...defaultProps}
-        end={<IconButton name="upload" />}
-        padding={0}
-        title="CompactHeader"
-      />
-      <Divider />
-      <SectionHeader {...defaultProps} balance={null} end={<IconButton name="upload" />} />
+      <Example title="SectionHeader Variants">
+        <SectionHeader title="SectionHeader" />
+        <Divider />
+        <SectionHeader
+          {...defaultProps}
+          end={
+            <HStack paddingTop={1}>
+              <SearchInput compact onChangeText={NoopFn} placeholder="Placeholder" value="" />
+            </HStack>
+          }
+        />
+        <Divider />
+        <SectionHeader {...defaultProps} end={<SelectChipDropdown />} />
+        <Divider />
+        <SectionHeader
+          end={
+            <HStack paddingTop={1}>
+              <SearchInput compact onChangeText={NoopFn} placeholder="Placeholder" value="" />
+            </HStack>
+          }
+          title={defaultProps.title}
+        />
+        <Divider />
+        <SectionHeader
+          {...defaultProps}
+          balance={null}
+          end={
+            <Button compact variant="secondary">
+              Button
+            </Button>
+          }
+        />
+        <Divider />
+        <SectionHeader
+          {...defaultProps}
+          balance={null}
+          end={
+            <HStack gap={1}>
+              <IconButton name="caretLeft" />
+              <IconButton name="caretRight" />
+            </HStack>
+          }
+        />
+        <Divider />
+        <SectionHeader
+          {...defaultProps}
+          balance={null}
+          end={
+            <Text font="headline">
+              <Link to="http://www.coinbase.com">See all</Link>
+            </Text>
+          }
+        />
+        <Divider />
+        <SectionHeader
+          {...defaultProps}
+          end={<IconButton name="upload" />}
+          padding={0}
+          title="CompactHeader"
+        />
+        <Divider />
+        <SectionHeader {...defaultProps} balance={null} end={<IconButton name="upload" />} />
+      </Example>
     </ExampleScreen>
   );
 };
