@@ -386,6 +386,24 @@ export const CartesianChart = memo(
       );
       const rootStyles = useMemo(() => ({ ...style, ...styles?.root }), [style, styles?.root]);
 
+      const { svgChildren, htmlChildren } = useMemo(() => {
+        const svg: React.ReactNode[] = [];
+        const html: React.ReactNode[] = [];
+
+        React.Children.forEach(children, (child) => {
+          if (React.isValidElement(child)) {
+            // Check for static property cdsRole
+            const role = (child.type as any).cdsRole;
+            if (role === 'legend' || role === 'tooltip') {
+              html.push(child);
+            } else {
+              svg.push(child);
+            }
+          }
+        });
+        return { svgChildren: svg, htmlChildren: html };
+      }, [children]);
+
       return (
         <CartesianChartProvider value={contextValue}>
           <ScrubberProvider
@@ -424,8 +442,9 @@ export const CartesianChart = memo(
                 tabIndex={enableScrubbing ? 0 : undefined}
                 width="100%"
               >
-                {children}
+                {svgChildren}
               </Box>
+              {htmlChildren}
             </Box>
           </ScrubberProvider>
         </CartesianChartProvider>

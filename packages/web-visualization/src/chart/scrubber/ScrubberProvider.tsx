@@ -31,6 +31,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
 
   const { getXScale, getXAxis, series } = chartContext;
   const [scrubberPosition, setScrubberPosition] = useState<number | undefined>(undefined);
+  const scrubberClientCoordsRef = React.useRef<{ x: number; y: number } | null>(null);
 
   const getDataIndexFromX = useCallback(
     (mouseX: number): number => {
@@ -88,7 +89,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
   );
 
   const handlePointerMove = useCallback(
-    (clientX: number, target: SVGSVGElement) => {
+    (clientX: number, clientY: number, target: SVGSVGElement) => {
       if (!enableScrubbing || !series || series.length === 0) return;
 
       const rect = target.getBoundingClientRect();
@@ -100,6 +101,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
         setScrubberPosition(dataIndex);
         onScrubberPositionChange?.(dataIndex);
       }
+      scrubberClientCoordsRef.current = { x: clientX, y: clientY };
     },
     [enableScrubbing, series, getDataIndexFromX, scrubberPosition, onScrubberPositionChange],
   );
@@ -107,7 +109,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
       const target = event.currentTarget as SVGSVGElement;
-      handlePointerMove(event.clientX, target);
+      handlePointerMove(event.clientX, event.clientY, target);
     },
     [handlePointerMove],
   );
@@ -119,7 +121,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
       event.preventDefault();
       const touch = event.touches[0];
       const target = event.currentTarget as SVGSVGElement;
-      handlePointerMove(touch.clientX, target);
+      handlePointerMove(touch.clientX, touch.clientY, target);
     },
     [handlePointerMove],
   );
@@ -130,7 +132,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
       // Handle initial touch
       const touch = event.touches[0];
       const target = event.currentTarget as SVGSVGElement;
-      handlePointerMove(touch.clientX, target);
+      handlePointerMove(touch.clientX, touch.clientY, target);
     },
     [enableScrubbing, handlePointerMove],
   );
@@ -138,6 +140,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
   const handlePointerLeave = useCallback(() => {
     if (!enableScrubbing) return;
     setScrubberPosition(undefined);
+    scrubberClientCoordsRef.current = null;
     onScrubberPositionChange?.(undefined);
   }, [enableScrubbing, onScrubberPositionChange]);
 
@@ -228,6 +231,7 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
   const handleBlur = useCallback(() => {
     if (!enableScrubbing || scrubberPosition === undefined) return;
     setScrubberPosition(undefined);
+    scrubberClientCoordsRef.current = null;
     onScrubberPositionChange?.(undefined);
   }, [enableScrubbing, onScrubberPositionChange, scrubberPosition]);
 
@@ -273,9 +277,11 @@ export const ScrubberProvider: React.FC<ScrubberProviderProps> = ({
     () => ({
       enableScrubbing: !!enableScrubbing,
       scrubberPosition,
+      scrubberClientCoordsRef,
       onScrubberPositionChange: setScrubberPosition,
+      svgRef: svgRef || undefined,
     }),
-    [enableScrubbing, scrubberPosition],
+    [enableScrubbing, scrubberPosition, svgRef],
   );
 
   return <ScrubberContext.Provider value={contextValue}>{children}</ScrubberContext.Provider>;

@@ -46,6 +46,7 @@
     "react-dom": "^18.3.1"
   },
   "dependencies": {
+    "@floating-ui/react-dom": "^2.1.1",
     "d3-color": "^3.1.0",
     "d3-interpolate": "^3.0.1",
     "d3-interpolate-path": "^2.3.0",

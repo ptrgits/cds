@@ -99,6 +99,15 @@ export type ScrubberContextValue = {
    * Receives the dataIndex of the scrubber or undefined when not scrubbing.
    */
   onScrubberPositionChange: (index: number | undefined) => void;
+  /**
+   * Reference to the chart SVG element.
+   */
+  svgRef?: React.RefObject<SVGSVGElement>;
+  /**
+   * Reference to the last known client coordinates of the scrubber interaction.
+   * Useful for initializing tooltips without triggering re-renders on every mouse move.
+   */
+  scrubberClientCoordsRef?: React.MutableRefObject<{ x: number; y: number } | null>;
 };
 
 export const ScrubberContext = createContext<ScrubberContextValue | undefined>(undefined);
