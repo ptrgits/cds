@@ -3,6 +3,7 @@ export * from './area/index';
 export * from './axis/index';
 export * from './bar/index';
 export * from './CartesianChart';
+export * from './ChartOverlay';
 export * from './ChartProvider';
 export * from './ChartTooltip';
 export * from './gradient/index';

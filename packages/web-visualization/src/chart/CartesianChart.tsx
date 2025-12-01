@@ -123,6 +123,20 @@ export const CartesianChart = memo(
     ) => {
       const { observe, width: chartWidth, height: chartHeight } = useDimensions();
       const svgRef = useRef<SVGSVGElement | null>(null);
+      const topSlotRef = useRef<HTMLDivElement | null>(null);
+      const bottomSlotRef = useRef<HTMLDivElement | null>(null);
+      const leftSlotRef = useRef<HTMLDivElement | null>(null);
+      const rightSlotRef = useRef<HTMLDivElement | null>(null);
+
+      const slotRefs = useMemo(
+        () => ({
+          topRef: topSlotRef,
+          bottomRef: bottomSlotRef,
+          leftRef: leftSlotRef,
+          rightRef: rightSlotRef,
+        }),
+        [],
+      );
 
       const calculatedInset = useMemo(() => getChartInset(inset, defaultChartInset), [inset]);
 
@@ -361,6 +375,7 @@ export const CartesianChart = memo(
           unregisterAxis,
           getAxisBounds,
           svgRef,
+          slotRefs,
         }),
         [
           series,
@@ -379,6 +394,7 @@ export const CartesianChart = memo(
           unregisterAxis,
           getAxisBounds,
           svgRef,
+          slotRefs,
         ],
       );
 
@@ -386,7 +402,17 @@ export const CartesianChart = memo(
         () => cx(className, classNames?.root),
         [className, classNames],
       );
-      const rootStyles = useMemo(() => ({ ...style, ...styles?.root }), [style, styles?.root]);
+
+      const rootStyles = useMemo(
+        (): React.CSSProperties => ({
+          ...style,
+          ...styles?.root,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }),
+        [style, styles?.root],
+      );
 
       return (
         <CartesianChartProvider value={contextValue}>
@@ -396,38 +422,48 @@ export const CartesianChart = memo(
             svgRef={svgRef}
           >
             <Box
-              ref={(node) => {
-                observe(node as unknown as HTMLElement);
-              }}
               className={rootClassNames}
               height={height}
               style={rootStyles}
               width={width}
               {...props}
             >
-              <Box
-                ref={(node) => {
-                  const svgElement = node as unknown as SVGSVGElement;
-                  svgRef.current = svgElement;
-                  // Forward the ref to the user
-                  if (ref) {
-                    if (typeof ref === 'function') {
-                      ref(svgElement);
-                    } else {
-                      (ref as React.MutableRefObject<SVGSVGElement | null>).current = svgElement;
+              {/* Top slot */}
+              <Box ref={topSlotRef} />
+              {/* Middle row - Left, Center (SVG), Right */}
+              <Box style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+                {/* Left slot */}
+                <Box ref={leftSlotRef} />
+                {/* Center - Chart SVG */}
+                <Box
+                  ref={(node) => {
+                    const svgElement = node as unknown as SVGSVGElement;
+                    svgRef.current = svgElement;
+                    observe(node as unknown as HTMLElement);
+                    // Forward the ref to the user
+                    if (ref) {
+                      if (typeof ref === 'function') {
+                        ref(svgElement);
+                      } else {
+                        (ref as React.MutableRefObject<SVGSVGElement | null>).current = svgElement;
+                      }
                     }
-                  }
-                }}
-                aria-live="polite"
-                as="svg"
-                className={cx(enableScrubbing && focusStylesCss, classNames?.chart)}
-                height="100%"
-                style={styles?.chart}
-                tabIndex={enableScrubbing ? 0 : undefined}
-                width="100%"
-              >
-                {children}
+                  }}
+                  aria-live="polite"
+                  as="svg"
+                  className={cx(enableScrubbing && focusStylesCss, classNames?.chart)}
+                  height="100%"
+                  style={{ flex: 1, minWidth: 0, ...styles?.chart }}
+                  tabIndex={enableScrubbing ? 0 : undefined}
+                  width="100%"
+                >
+                  {children}
+                </Box>
+                {/* Right slot */}
+                <Box ref={rightSlotRef} />
               </Box>
+              {/* Bottom slot */}
+              <Box ref={bottomSlotRef} />
             </Box>
           </ScrubberProvider>
         </CartesianChartProvider>

@@ -1,0 +1,582 @@
+export const toc = [
+  { value: 'Basics', id: 'basics', level: 2 },
+  { value: 'Positioning', id: 'positioning', level: 2 },
+  { value: 'Legend Shapes', id: 'legend-shapes', level: 2 },
+  { value: 'Multiple Series', id: 'multiple-series', level: 2 },
+  { value: 'Bar Chart', id: 'bar-chart', level: 2 },
+  { value: 'Custom Styling', id: 'custom-styling', level: 2 },
+  { value: 'With Scrubber', id: 'with-scrubber', level: 2 },
+];
+
+## Basics
+
+The Legend component displays series labels with their corresponding colors and shapes. By default, it appears at the top of the chart.
+
+```jsx live
+<LineChart
+  height={{ base: 200, tablet: 225, desktop: 250 }}
+  series={[
+    {
+      id: 'btc',
+      label: 'Bitcoin',
+      color: 'var(--color-accentBoldBlue)',
+      data: [10, 20, 15, 25, 30, 28, 35],
+      legendShape: 'pill',
+    },
+    {
+      id: 'eth',
+      label: 'Ethereum',
+      color: 'var(--color-accentBoldPurple)',
+      data: [5, 15, 10, 20, 25, 22, 28],
+      legendShape: 'circle',
+    },
+  ]}
+  showArea
+  showXAxis
+  showYAxis
+  xAxis={{
+    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    scaleType: 'point',
+    showGrid: true,
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend />
+</LineChart>
+```
+
+## Positioning
+
+The `position` prop controls where the legend appears. The chart automatically adjusts to make room for the legend.
+
+### Top Position (Default)
+
+```jsx live
+<LineChart
+  height={{ base: 200, tablet: 225, desktop: 250 }}
+  series={[
+    {
+      id: 'revenue',
+      label: 'Revenue',
+      color: 'var(--color-accentBoldGreen)',
+      data: [455, 520, 380, 455, 285, 235],
+      legendShape: 'pill',
+    },
+    {
+      id: 'expenses',
+      label: 'Expenses',
+      color: 'var(--color-accentBoldRed)',
+      data: [320, 380, 290, 340, 250, 200],
+      legendShape: 'circle',
+    },
+  ]}
+  showYAxis
+  xAxis={{
+    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    scaleType: 'point',
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend position="top" />
+</LineChart>
+```
+
+### Bottom Position
+
+```jsx live
+<LineChart
+  height={{ base: 200, tablet: 225, desktop: 250 }}
+  series={[
+    {
+      id: 'revenue',
+      label: 'Revenue',
+      color: 'var(--color-accentBoldGreen)',
+      data: [455, 520, 380, 455, 285, 235],
+      legendShape: 'pill',
+    },
+    {
+      id: 'expenses',
+      label: 'Expenses',
+      color: 'var(--color-accentBoldRed)',
+      data: [320, 380, 290, 340, 250, 200],
+      legendShape: 'circle',
+    },
+  ]}
+  showYAxis
+  xAxis={{
+    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    scaleType: 'point',
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend position="bottom" />
+</LineChart>
+```
+
+### Left Position
+
+```jsx live
+<LineChart
+  height={{ base: 200, tablet: 225, desktop: 250 }}
+  series={[
+    {
+      id: 'revenue',
+      label: 'Revenue',
+      color: 'var(--color-accentBoldGreen)',
+      data: [455, 520, 380, 455, 285, 235],
+      legendShape: 'pill',
+    },
+    {
+      id: 'expenses',
+      label: 'Expenses',
+      color: 'var(--color-accentBoldRed)',
+      data: [320, 380, 290, 340, 250, 200],
+      legendShape: 'circle',
+    },
+  ]}
+  showYAxis
+  xAxis={{
+    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    scaleType: 'point',
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend position="left" />
+</LineChart>
+```
+
+### Right Position
+
+```jsx live
+<LineChart
+  height={{ base: 200, tablet: 225, desktop: 250 }}
+  series={[
+    {
+      id: 'revenue',
+      label: 'Revenue',
+      color: 'var(--color-accentBoldGreen)',
+      data: [455, 520, 380, 455, 285, 235],
+      legendShape: 'pill',
+    },
+    {
+      id: 'expenses',
+      label: 'Expenses',
+      color: 'var(--color-accentBoldRed)',
+      data: [320, 380, 290, 340, 250, 200],
+      legendShape: 'circle',
+    },
+  ]}
+  showYAxis
+  xAxis={{
+    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    scaleType: 'point',
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend position="right" />
+</LineChart>
+```
+
+## Legend Shapes
+
+Series can use different shapes for their legend indicators via the `legendShape` property. Available shapes are `pill`, `circle`, `square`, and `squircle`.
+
+```jsx live
+<LineChart
+  height={{ base: 200, tablet: 225, desktop: 250 }}
+  series={[
+    {
+      id: 'pill',
+      label: 'Pill Shape',
+      color: 'var(--color-accentBoldBlue)',
+      data: [10, 20, 15, 25, 30],
+      legendShape: 'pill',
+    },
+    {
+      id: 'circle',
+      label: 'Circle Shape',
+      color: 'var(--color-accentBoldGreen)',
+      data: [8, 18, 13, 23, 28],
+      legendShape: 'circle',
+    },
+    {
+      id: 'square',
+      label: 'Square Shape',
+      color: 'var(--color-accentBoldYellow)',
+      data: [6, 16, 11, 21, 26],
+      legendShape: 'square',
+    },
+    {
+      id: 'squircle',
+      label: 'Squircle Shape',
+      color: 'var(--color-accentBoldPurple)',
+      data: [4, 14, 9, 19, 24],
+      legendShape: 'squircle',
+    },
+  ]}
+  showYAxis
+  xAxis={{
+    data: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5'],
+    scaleType: 'point',
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend />
+</LineChart>
+```
+
+## Multiple Series
+
+Legend works great with many series, displaying all series labels in an organized layout.
+
+```jsx live
+function MultipleSeries() {
+  const pages = useMemo(
+    () => ['Page A', 'Page B', 'Page C', 'Page D', 'Page E', 'Page F', 'Page G'],
+    [],
+  );
+  const pageViews = useMemo(() => [2400, 1398, 9800, 3908, 4800, 3800, 4300], []);
+  const uniqueVisitors = useMemo(() => [4000, 3000, 2000, 2780, 1890, 2390, 3490], []);
+
+  const chartAccessibilityLabel = `Website visitors across ${pageViews.length} pages.`;
+
+  const scrubberAccessibilityLabel = useCallback(
+    (index: number) => {
+      return `${pages[index]} has ${pageViews[index]} views and ${uniqueVisitors[index]} unique visitors.`;
+    },
+    [pages, pageViews, uniqueVisitors],
+  );
+
+  const numberFormatter = useCallback(
+    (value: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value),
+    [],
+  );
+
+  return (
+    <LineChart
+      enableScrubbing
+      showArea
+      showXAxis
+      showYAxis
+      accessibilityLabel={chartAccessibilityLabel}
+      height={{ base: 200, tablet: 225, desktop: 250 }}
+      series={[
+        {
+          id: 'pageViews',
+          data: pageViews,
+          color: 'var(--color-accentBoldGreen)',
+          label: 'Page Views',
+          legendShape: 'pill',
+        },
+        {
+          id: 'uniqueVisitors',
+          data: uniqueVisitors,
+          color: 'var(--color-accentBoldPurple)',
+          label: 'Unique Visitors',
+          legendShape: 'circle',
+          areaType: 'dotted',
+        },
+      ]}
+      xAxis={{
+        data: pages,
+      }}
+      yAxis={{
+        showGrid: true,
+        tickLabelFormatter: numberFormatter,
+      }}
+    >
+      <Legend />
+      <Scrubber accessibilityLabel={scrubberAccessibilityLabel} hideOverlay />
+    </LineChart>
+  );
+}
+```
+
+Here's an example with many series showing different market segments:
+
+```jsx live
+<LineChart
+  height={{ base: 250, tablet: 300, desktop: 350 }}
+  series={[
+    {
+      id: 'technology',
+      label: 'Technology',
+      color: 'var(--color-accentBoldBlue)',
+      data: [45, 52, 48, 55, 60, 58, 65, 70],
+      legendShape: 'pill',
+    },
+    {
+      id: 'healthcare',
+      label: 'Healthcare',
+      color: 'var(--color-accentBoldGreen)',
+      data: [32, 35, 38, 42, 45, 43, 48, 52],
+      legendShape: 'circle',
+    },
+    {
+      id: 'finance',
+      label: 'Finance',
+      color: 'var(--color-accentBoldPurple)',
+      data: [28, 30, 27, 32, 35, 38, 40, 43],
+      legendShape: 'square',
+    },
+    {
+      id: 'retail',
+      label: 'Retail',
+      color: 'var(--color-accentBoldYellow)',
+      data: [20, 22, 25, 23, 28, 30, 32, 35],
+      legendShape: 'squircle',
+    },
+    {
+      id: 'energy',
+      label: 'Energy',
+      color: 'var(--color-accentBoldRed)',
+      data: [15, 18, 20, 22, 25, 27, 30, 33],
+      legendShape: 'pill',
+    },
+    {
+      id: 'manufacturing',
+      label: 'Manufacturing',
+      color: 'var(--color-accentBoldOrange)',
+      data: [12, 15, 18, 20, 23, 25, 28, 30],
+      legendShape: 'circle',
+    },
+  ]}
+  showYAxis
+  xAxis={{
+    data: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8'],
+    scaleType: 'point',
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend />
+</LineChart>
+```
+
+## Bar Chart
+
+Legend works seamlessly with BarChart for categorical data visualization.
+
+```jsx live
+function BarChartExample() {
+  const numberFormatter = useCallback(
+    (value: number) => `$${value}k`,
+    [],
+  );
+
+  return (
+    <VStack gap={2}>
+      <CartesianChart
+        height={{ base: 200, tablet: 225, desktop: 250 }}
+        inset={{ top: 8, bottom: 8, left: 0, right: 0 }}
+        series={[
+          {
+            id: 'revenue',
+            data: [455, 520, 380, 455, 285, 235],
+            yAxisId: 'revenue',
+            color: 'var(--color-accentBoldYellow)',
+            label: 'Revenue ($)',
+            legendShape: 'square',
+          },
+          {
+            id: 'profitMargin',
+            data: [23, 20, 16, 38, 12, 9],
+            yAxisId: 'profitMargin',
+            color: 'var(--color-fgPositive)',
+            label: 'Profit Margin (%)',
+            legendShape: 'circle',
+          },
+        ]}
+        xAxis={{
+          data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          scaleType: 'band',
+        }}
+        yAxis={[
+          {
+            id: 'revenue',
+            domain: { min: 0 },
+          },
+          {
+            id: 'profitMargin',
+            domain: { min: 0, max: 100 },
+          },
+        ]}
+      >
+        <XAxis showLine showTickMarks />
+        <YAxis
+          showGrid
+          showLine
+          showTickMarks
+          axisId="revenue"
+          position="left"
+          requestedTickCount={5}
+          width={60}
+          tickLabelFormatter={numberFormatter}
+        />
+        <YAxis
+          showLine
+          showTickMarks
+          axisId="profitMargin"
+          position="right"
+          requestedTickCount={5}
+          tickLabelFormatter={(value) => `${value}%`}
+        />
+        <BarPlot />
+        <Legend />
+      </CartesianChart>
+    </VStack>
+  );
+}
+```
+
+## Custom Styling
+
+Legend supports all Box props for customization, including `gap`, `flexDirection`, `justifyContent`, and `alignItems`.
+
+```jsx live
+<LineChart
+  height={{ base: 200, tablet: 225, desktop: 250 }}
+  series={[
+    {
+      id: 'series1',
+      label: 'Revenue',
+      color: 'var(--color-accentBoldGreen)',
+      data: [10, 20, 15, 25, 30],
+      legendShape: 'pill',
+    },
+    {
+      id: 'series2',
+      label: 'Costs',
+      color: 'var(--color-accentBoldRed)',
+      data: [5, 15, 10, 20, 25],
+      legendShape: 'circle',
+    },
+    {
+      id: 'series3',
+      label: 'Profit',
+      color: 'var(--color-accentBoldBlue)',
+      data: [3, 10, 8, 15, 18],
+      legendShape: 'square',
+    },
+  ]}
+  showYAxis
+  xAxis={{
+    data: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5'],
+    scaleType: 'point',
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend
+    gap={3}
+    justifyContent="flex-start"
+    padding={2}
+    position="top"
+    style={{ backgroundColor: 'var(--color-bgAlternate)', borderRadius: '8px' }}
+  />
+</LineChart>
+```
+
+You can also customize the alignment and wrapping behavior:
+
+```jsx live
+<LineChart
+  height={{ base: 250, tablet: 300, desktop: 350 }}
+  series={[
+    {
+      id: 'btc',
+      label: 'Bitcoin (BTC)',
+      color: 'var(--color-accentBoldBlue)',
+      data: [45, 52, 48, 55, 60, 58],
+      legendShape: 'pill',
+    },
+    {
+      id: 'eth',
+      label: 'Ethereum (ETH)',
+      color: 'var(--color-accentBoldPurple)',
+      data: [32, 35, 38, 42, 45, 43],
+      legendShape: 'circle',
+    },
+    {
+      id: 'sol',
+      label: 'Solana (SOL)',
+      color: 'var(--color-accentBoldGreen)',
+      data: [20, 25, 30, 35, 40, 38],
+      legendShape: 'square',
+    },
+  ]}
+  showYAxis
+  xAxis={{
+    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    scaleType: 'point',
+  }}
+  yAxis={{
+    showGrid: true,
+  }}
+>
+  <Legend gap={2} justifyContent="flex-end" position="top" />
+</LineChart>
+```
+
+## With Scrubber
+
+Legend and Scrubber work together seamlessly to provide comprehensive chart interactions.
+
+```jsx live
+<LineChart
+  curve="natural"
+  enableScrubbing
+  height={{ base: 200, tablet: 225, desktop: 250 }}
+  inset={{ top: 16, right: 16, bottom: 0, left: 0 }}
+  points
+  series={[
+    {
+      id: 'line1',
+      label: 'Primary Metric',
+      color: 'var(--color-accentBoldBlue)',
+      data: [2, 5.5, 2, 8.5, 1.5, 5],
+      legendShape: 'pill',
+    },
+    {
+      id: 'line2',
+      label: 'Secondary Metric',
+      color: 'var(--color-accentBoldGreen)',
+      data: [1, 3, 1.5, 6, 1, 3.5],
+      legendShape: 'circle',
+    },
+  ]}
+  showArea
+  showXAxis
+  showYAxis
+  xAxis={{
+    data: [1, 2, 3, 5, 8, 10],
+    showLine: true,
+    showTickMarks: true,
+    showGrid: true,
+  }}
+  yAxis={{
+    domain: { min: 0 },
+    position: 'left',
+    showLine: true,
+    showTickMarks: true,
+    showGrid: true,
+  }}
+>
+  <Legend />
+  <Scrubber hideOverlay />
+</LineChart>
+```

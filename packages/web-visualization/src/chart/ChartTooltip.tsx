@@ -277,8 +277,8 @@ export const ChartTooltip = ({
         {seriesItems.length > 0 && (
           <VStack gap={1}>
             {seriesItems.map((item) => (
-              <HStack key={item.id} alignItems="center" gap={2} justifyContent="space-between">
-                <HStack alignItems="center" gap={2}>
+              <HStack key={item.id} alignItems="center" gap={1} justifyContent="space-between">
+                <HStack alignItems="center">
                   <LegendMedia color={item.color} shape={item.shape} />
                   <Text font="label1">{item.label ?? item.id}</Text>
                 </HStack>

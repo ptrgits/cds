@@ -1,7 +1,11 @@
 import { Box, HStack, VStack } from '@coinbase/cds-web/layout';
 import { Text } from '@coinbase/cds-web/typography';
 
+import { CartesianChart } from '../../CartesianChart';
+import { Line, LineChart } from '../../line';
+import { Scrubber } from '../../scrubber';
 import type { LegendShape } from '../../utils/chart';
+import { Legend } from '../Legend';
 import { LegendMedia } from '../LegendMedia';
 
 export default {
@@ -54,6 +58,40 @@ export const All = () => {
             </HStack>
           ))}
         </VStack>
+      </Example>
+      <Example title="Line Chart">
+        <LineChart
+          enableScrubbing
+          points
+          showArea
+          showXAxis
+          showYAxis
+          curve="natural"
+          height={{ base: 200, tablet: 225, desktop: 250 }}
+          inset={{ top: 16, right: 16, bottom: 0, left: 0 }}
+          series={[
+            {
+              id: 'line',
+              data: [2, 5.5, 2, 8.5, 1.5, 5],
+            },
+          ]}
+          xAxis={{
+            data: [1, 2, 3, 5, 8, 10],
+            showLine: true,
+            showTickMarks: true,
+            showGrid: true,
+          }}
+          yAxis={{
+            domain: { min: 0 },
+            position: 'left',
+            showLine: true,
+            showTickMarks: true,
+            showGrid: true,
+          }}
+        >
+          <Scrubber hideOverlay />
+          <Legend />
+        </LineChart>
       </Example>
     </VStack>
   );

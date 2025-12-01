@@ -605,6 +605,11 @@ const sidebars: SidebarsConfig = {
             },
             {
               type: 'doc',
+              id: 'components/graphs/Legend/legend',
+              label: 'Legend',
+            },
+            {
+              type: 'doc',
               id: 'components/graphs/ReferenceLine/referenceLine',
               label: 'ReferenceLine',
             },

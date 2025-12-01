@@ -1,0 +1,17 @@
+{
+  "import": "import { Legend } from '@coinbase/cds-web-visualization'",
+  "source": "https://github.com/coinbase/cds/blob/master/packages/web-visualization/src/chart/legend/Legend.tsx",
+  "description": "A legend component for displaying series labels and colors in a chart.",
+  "relatedComponents": [
+    {
+      "label": "CartesianChart",
+      "url": "/components/graphs/CartesianChart/"
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "framer-motion",
+      "version": "^10.18.0"
+    }
+  ]
+}
