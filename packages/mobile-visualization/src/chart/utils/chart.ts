@@ -6,6 +6,8 @@ import type { GradientDefinition } from './gradient';
 
 export const defaultStackId = 'DEFAULT_STACK_ID';
 
+export type LegendShape = 'circle' | 'square' | 'squircle' | 'pill' | 'dot';
+
 export type AxisBounds = {
   min: number;
   max: number;
@@ -59,6 +61,11 @@ export type Series = {
    * If not specified, the series will not be stacked.
    */
   stackId?: string;
+  /**
+   * Shape of the legend media for this series.
+   * @default 'circle'
+   */
+  legendShape?: LegendShape;
 };
 
 /**

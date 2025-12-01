@@ -1,4 +1,6 @@
 import { createContext, useContext } from 'react';
+import type { RefObject } from 'react';
+import type { View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import type { Rect } from '@coinbase/cds-common/types';
 import type { SkTypefaceFontProvider } from '@shopify/react-native-skia';
@@ -102,6 +104,10 @@ export type CartesianChartContextValue = {
    * Computes the bounds of the axis based on the chart's drawing area chart/axis config, and axis position.
    */
   getAxisBounds: (id: string) => Rect | undefined;
+  /**
+   * Reference to the chart's root element.
+   */
+  svgRef?: RefObject<View | null>;
 };
 
 export type ScrubberContextValue = {

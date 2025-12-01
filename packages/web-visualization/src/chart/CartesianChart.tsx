@@ -360,6 +360,7 @@ export const CartesianChart = memo(
           registerAxis,
           unregisterAxis,
           getAxisBounds,
+          svgRef,
         }),
         [
           series,
@@ -377,6 +378,7 @@ export const CartesianChart = memo(
           registerAxis,
           unregisterAxis,
           getAxisBounds,
+          svgRef,
         ],
       );
 

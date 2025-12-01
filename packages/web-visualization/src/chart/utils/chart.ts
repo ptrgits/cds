@@ -17,6 +17,8 @@ export type AxisBounds = {
 export const isValidBounds = (bounds: Partial<AxisBounds>): bounds is AxisBounds =>
   bounds.min !== undefined && bounds.max !== undefined;
 
+export type LegendShape = 'circle' | 'square' | 'squircle' | 'pill' | 'dot';
+
 export type Series = {
   /**
    * Id of the series.
@@ -57,6 +59,11 @@ export type Series = {
    * If not specified, the series will not be stacked.
    */
   stackId?: string;
+  /**
+   * Shape of the legend media for this series.
+   * @default 'circle'
+   */
+  legendShape?: LegendShape;
 };
 
 /**

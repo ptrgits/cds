@@ -82,6 +82,10 @@ export type CartesianChartContextValue = {
    * Computes the bounds of the axis based on the chart's drawing area chart/axis config, and axis position.
    */
   getAxisBounds: (id: string) => Rect | undefined;
+  /**
+   * Reference to the chart's SVG element.
+   */
+  svgRef?: React.RefObject<SVGSVGElement | null>;
 };
 
 export type ScrubberContextValue = {

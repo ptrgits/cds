@@ -140,6 +140,10 @@ export type ScrubberBaseProps = SharedProps &
      */
     hideLine?: boolean;
     /**
+     * Hides the beacon labels while keeping the line label visible (if provided).
+     */
+    hideBeaconLabels?: boolean;
+    /**
      * Hides the overlay rect which obscures data beyond the scrubber position.
      */
     hideOverlay?: boolean;
@@ -226,6 +230,7 @@ export const Scrubber = memo(
       {
         seriesIds,
         hideLine,
+        hideBeaconLabels,
         label,
         accessibilityLabel,
         lineStroke,
@@ -382,7 +387,7 @@ export const Scrubber = memo(
             testID={testID}
             transitions={beaconTransitions}
           />
-          {beaconLabels.length > 0 && (
+          {!hideBeaconLabels && beaconLabels.length > 0 && (
             <ScrubberBeaconLabelGroup
               BeaconLabelComponent={BeaconLabelComponent}
               labelFont={beaconLabelFont}

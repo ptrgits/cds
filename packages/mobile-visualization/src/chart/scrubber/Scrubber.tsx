@@ -151,6 +151,10 @@ export type ScrubberBaseProps = Pick<ScrubberBeaconGroupBaseProps, 'idlePulse'> 
      */
     hideLine?: boolean;
     /**
+     * Hides the beacon labels while keeping the line label visible (if provided).
+     */
+    hideBeaconLabels?: boolean;
+    /**
      * Hides the overlay rect which obscures data beyond the scrubber position.
      */
     hideOverlay?: boolean;
@@ -211,6 +215,7 @@ export const Scrubber = memo(
       {
         seriesIds,
         hideLine,
+        hideBeaconLabels,
         label,
         lineStroke,
         BeaconComponent = DefaultScrubberBeacon,
@@ -380,7 +385,7 @@ export const Scrubber = memo(
             seriesIds={filteredSeriesIds}
             transitions={beaconTransitions}
           />
-          {beaconLabels.length > 0 && (
+          {!hideBeaconLabels && beaconLabels.length > 0 && (
             <ScrubberBeaconLabelGroup
               BeaconLabelComponent={BeaconLabelComponent}
               labelFont={beaconLabelFont}

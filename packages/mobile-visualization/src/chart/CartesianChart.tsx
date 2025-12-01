@@ -1,4 +1,4 @@
-import React, { forwardRef, memo, useCallback, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useMemo, useRef } from 'react';
 import { type StyleProp, type View, type ViewStyle } from 'react-native';
 import type { Rect } from '@coinbase/cds-common/types';
 import { useLayout } from '@coinbase/cds-mobile/hooks/useLayout';
@@ -128,6 +128,7 @@ export const CartesianChart = memo(
       ref,
     ) => {
       const [containerLayout, onContainerLayout] = useLayout();
+      const svgRef = useRef<View | null>(null);
 
       const chartWidth = containerLayout.width;
       const chartHeight = containerLayout.height;
@@ -401,6 +402,7 @@ export const CartesianChart = memo(
           registerAxis,
           unregisterAxis,
           getAxisBounds,
+          svgRef,
         }),
         [
           series,
@@ -422,6 +424,7 @@ export const CartesianChart = memo(
           registerAxis,
           unregisterAxis,
           getAxisBounds,
+          svgRef,
         ],
       );
 
@@ -437,7 +440,15 @@ export const CartesianChart = memo(
             onScrubberPositionChange={onScrubberPositionChange}
           >
             <Box
-              ref={ref}
+              ref={(node) => {
+                svgRef.current = node;
+                if (!ref) return;
+                if (typeof ref === 'function') {
+                  ref(node);
+                } else {
+                  (ref as React.MutableRefObject<View | null>).current = node;
+                }
+              }}
               accessibilityLiveRegion="polite"
               accessibilityRole="image"
               collapsable={collapsable}
