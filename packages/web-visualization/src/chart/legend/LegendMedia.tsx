@@ -11,7 +11,7 @@ const pillCss = css`
   border-radius: var(--borderRadius-1000);
 `;
 
-const dotCss = css`
+const circleCss = css`
   width: 10px;
   height: 10px;
   border-radius: var(--borderRadius-1000);
@@ -30,8 +30,7 @@ const squircleCss = css`
 
 const stylesByShape: Record<LegendShape, string> = {
   pill: pillCss,
-  circle: dotCss,
-  dot: dotCss,
+  circle: circleCss,
   square: squareCss,
   squircle: squircleCss,
 };
@@ -50,8 +49,7 @@ export type LegendMediaProps = BoxProps<'div'> & {
 };
 
 /**
- * A component that displays a visual indicator for a chart series in a legend.
- * Renders a shape (circle, square, pill, etc.) with a specific color.
+ * Media for a chart legend.
  */
 export const LegendMedia = memo<LegendMediaProps>(
   ({ color = 'var(--color-fgPrimary)', shape = 'circle', className, style, ...props }) => {

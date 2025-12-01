@@ -357,20 +357,24 @@ You can also round the baseline of the bars by setting the `roundBaseline` prop 
 ```jsx live
 function PositiveAndNegativeCashFlow() {
   const ThinSolidLine = memo((props: SolidLineProps) => <SolidLine {...props} strokeWidth={1} />);
+  const formatValue = useCallback(
+    (value: number) => `${value < 0 ? '-' : ''}$${Math.abs(value)}M`,
+    [],
+  );
 
   const categories = Array.from({ length: 31 }, (_, i) => `3/${i + 1}`);
   const gains = [
-    5, 0, 6, 18, 0, 5, 12, 0, 12, 22, 28, 18, 0, 12, 6, 0, 0, 24, 0, 0, 4, 0, 18, 0, 0, 14, 10, 16,
+    5, null, 6, 18, 0, 5, 12, 0, 12, 22, 28, 18, 0, 12, 6, 0, 0, 24, 0, 0, 4, 0, 18, 0, 0, 14, 10, 16,
     0, 0, 0,
   ];
 
   const losses = [
-    -4, 0, -8, -12, -6, 0, 0, 0, -18, 0, -12, 0, -9, -6, 0, 0, 0, 0, -22, -8, 0, 0, -10, -14, 0, 0,
+    -4, null, -8, -12, -6, 0, 0, 0, -18, 0, -12, 0, -9, -6, 0, 0, 0, 0, -22, -8, 0, 0, -10, -14, 0, 0,
     0, 0, 0, -12, -10,
   ];
   const series = [
-    { id: 'gains', data: gains, color: 'var(--color-fgPositive)' },
-    { id: 'losses', data: losses, color: 'var(--color-fgNegative)' },
+    { id: 'Gains', data: gains, color: 'var(--color-fgPositive)', legendShape: 'pill' },
+    { id: 'Losses', data: losses, color: 'var(--color-fgNegative)', legendShape: 'pill' },
   ];
 
   return (
@@ -387,7 +391,9 @@ function PositiveAndNegativeCashFlow() {
         GridLineComponent: ThinSolidLine,
         tickLabelFormatter: (value) => `$${value}M`,
       }}
-    />
+    >
+      <ChartTooltip label={(index) => categories[index] ?? '--'} valueFormatter={formatValue} />
+    </BarChart>
   );
 }
 ```

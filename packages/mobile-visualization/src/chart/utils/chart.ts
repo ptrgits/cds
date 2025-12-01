@@ -6,7 +6,7 @@ import type { GradientDefinition } from './gradient';
 
 export const defaultStackId = 'DEFAULT_STACK_ID';
 
-export type LegendShape = 'circle' | 'square' | 'squircle' | 'pill' | 'dot';
+export type LegendShape = 'circle' | 'square' | 'squircle' | 'pill';
 
 export type AxisBounds = {
   min: number;
