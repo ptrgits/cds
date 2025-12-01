@@ -44,13 +44,13 @@ function Example() {
         }
         content={
           <VStack gap={2}>
-            <TextCaption as="p" color="fgMuted">
+            <Text as="p" color="fgMuted" font="caption">
               50%
-            </TextCaption>
+            </Text>
             <ProgressBar progress={0.5} />
-            <TextBody as="p">
+            <Text as="p" font="body">
               Add up to 3 lines of body copy. Deliver your message with clarity and impact
-            </TextBody>
+            </Text>
           </VStack>
         }
         media={<RemoteImage height={150} source={ethBackground} width="100%" />}
@@ -110,16 +110,20 @@ function Example() {
           Start tour
         </Button>
         <TourStep id="step1">
-          <Box background="bgAlternate" padding={4}>
-            <TextBody as="p">This is step 1</TextBody>
+          <Box background="bgSecondary" padding={4}>
+            <Text as="p" font="body">
+              This is step 1
+            </Text>
           </Box>
         </TourStep>
         <Box height={spacerHeightIncrement} />
         <HStack justifyContent="flex-end">
           <Box flexShrink={0} width={spacerWidthIncrement} />
           <TourStep id="step2">
-            <Box background="bgAlternate" padding={4} width={150}>
-              <TextBody as="p">This is step 2</TextBody>
+            <Box background="bgSecondary" padding={4} width={150}>
+              <Text as="p" font="body">
+                This is step 2
+              </Text>
             </Box>
           </TourStep>
         </HStack>
@@ -127,8 +131,10 @@ function Example() {
         <HStack>
           <Box flexShrink={0} width={spacerWidthIncrement * 2} />
           <TourStep id="step3">
-            <VStack background="bgAlternate" padding={4} width={150}>
-              <TextBody as="p">This is step 3</TextBody>
+            <VStack background="bgSecondary" padding={4} width={150}>
+              <Text as="p" font="body">
+                This is step 3
+              </Text>
             </VStack>
           </TourStep>
         </HStack>

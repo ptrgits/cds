@@ -31,13 +31,13 @@ function Example() {
         action={<Button variant="secondary" onPress={goNextTourStep} compact label="Next" />}
         content={
           <VStack gap={2}>
-            <TextCaption as="p" color="fgMuted">
+            <Text color="fgMuted" font="caption">
               50%
-            </TextCaption>
+            </Text>
             <ProgressBar progress={0.5} />
-            <TextBody as="p">
+            <Text font="body">
               Add up to 3 lines of body copy. Deliver your message with clarity and impact
-            </TextBody>
+            </Text>
           </VStack>
         }
         media={<RemoteImage height={150} source={ethBackground} width="100%" />}
@@ -92,7 +92,7 @@ function Example() {
       <VStack flexGrow={1} gap={2} justifyContent="space-between">
         <Button onPress={handlePress} compact label="Start tour" />
         <TourStep id="step1">
-          <Box backgroundColor="secondary" padding={4}>
+          <Box background="bgSecondary" padding={4}>
             <Text>This is step 1</Text>
           </Box>
         </TourStep>
@@ -100,7 +100,7 @@ function Example() {
         <HStack justifyContent="flex-end">
           <Box flexShrink={0} width={spacerWidthIncrement} />
           <TourStep id="step2">
-            <Box backgroundColor="secondary" padding={4} width={150}>
+            <Box background="bgSecondary" padding={4} width={150}>
               <Text>This is step 2</Text>
             </Box>
           </TourStep>
@@ -109,7 +109,7 @@ function Example() {
         <HStack>
           <Box flexShrink={0} width={spacerWidthIncrement * 2} />
           <TourStep id="step3">
-            <VStack backgroundColor="secondary" padding={4} width={150}>
+            <VStack background="bgSecondary" padding={4} width={150}>
               <Text>This is step 3</Text>
             </VStack>
           </TourStep>
