@@ -23,8 +23,8 @@ const PageHeaderInPage = () => {
   const inset = useSafeAreaInsets();
 
   return (
-    <ExampleScreen>
-      <Example title="PageHeader In Page">
+    <ExampleScreen paddingX={0}>
+      <Example hideDivider height="100%">
         <VStack gap={0} width="100%">
           <PageHeader
             background="bg"

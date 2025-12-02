@@ -21,7 +21,7 @@ const exampleProps = {
 const PageHeaderInErrorEmptyState = () => {
   return (
     <ExampleScreen>
-      <Example title="Error/Empty State">
+      <Example hideDivider height="100%" title="Error/Empty State">
         <VStack gap={0} width="100%">
           <PageHeader background="bg" position="sticky" start={exampleProps.logoMark2} top="0" />
           <Box background="bgPrimaryWash">
