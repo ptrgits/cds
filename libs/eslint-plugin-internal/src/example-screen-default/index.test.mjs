@@ -94,4 +94,3 @@ describe("'example-screen-default' rule", () => {
     ],
   });
 });
-

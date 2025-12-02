@@ -7,7 +7,8 @@ const rule = createRule({
   meta: {
     type: 'suggestion',
     docs: {
-      description: 'Ensure ExampleScreen renders at least one <Example> (directly or via local components)',
+      description:
+        'Ensure ExampleScreen renders at least one <Example> (directly or via local components)',
       recommended: 'error',
     },
     schema: [],
@@ -108,9 +109,7 @@ function isFunctionLike(node) {
 function functionContainsElement(fnNode, elementName) {
   const returnExpressions = getReturnExpressions(fnNode);
 
-  return returnExpressions.some((expression) =>
-    expressionContainsElement(expression, elementName),
-  );
+  return returnExpressions.some((expression) => expressionContainsElement(expression, elementName));
 }
 
 function functionContainsExample(fnNode, context) {
@@ -190,7 +189,9 @@ function expressionContainsExample(expression, context) {
       return true;
     }
 
-    const childContainsExample = expr.children.some((child) => jsxChildContainsExample(child, context));
+    const childContainsExample = expr.children.some((child) =>
+      jsxChildContainsExample(child, context),
+    );
     if (childContainsExample) {
       return true;
     }
@@ -230,9 +231,7 @@ function expressionContainsExample(expression, context) {
   }
 
   if (expr.type === 'ArrayExpression') {
-    return expr.elements.some(
-      (element) => element && expressionContainsExample(element, context),
-    );
+    return expr.elements.some((element) => element && expressionContainsExample(element, context));
   }
 
   if (expr.type === 'CallExpression') {
@@ -313,4 +312,3 @@ function unwrapExpression(expression) {
 }
 
 export default rule;
-

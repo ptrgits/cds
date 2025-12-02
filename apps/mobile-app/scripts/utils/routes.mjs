@@ -2,8 +2,6 @@
  * DO NOT MODIFY
  * Generated from scripts/codegen/main.ts
  */
-/* eslint-disable global-require */
-
 export const routes = [
   {
     key: 'Accordion',

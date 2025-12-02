@@ -41,7 +41,10 @@ const rule = createRule({
 
         if (!returnsExampleScreen(functionLike)) {
           context.report({
-            node: functionLike.type === 'FunctionDeclaration' ? functionLike : node.declaration ?? node,
+            node:
+              functionLike.type === 'FunctionDeclaration'
+                ? functionLike
+                : (node.declaration ?? node),
             messageId: 'defaultExportMustReturnExampleScreen',
           });
         }
@@ -188,4 +191,3 @@ function isExampleScreenName(nameNode) {
 }
 
 export default rule;
-
