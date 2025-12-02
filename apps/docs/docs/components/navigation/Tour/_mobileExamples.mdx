@@ -1,4 +1,4 @@
-## Basic Usage
+## Basics
 
 The Tour component guides users through your app with step-by-step coachmarks.
 You define tour steps with unique IDs and wrap target elements with `TourStep` components.
@@ -126,7 +126,79 @@ function BasicTourExample() {
 }
 ```
 
-## Scrolling Behavior
+Coachmarks can contain rich content including images, progress indicators, and custom layouts.
+
+```jsx
+function RichContentExample() {
+  const RichStep = () => {
+    const { goNextTourStep, stopTour } = useTourContext();
+
+    return (
+      <Coachmark
+        action={
+          <Button compact onPress={goNextTourStep} variant="secondary">
+            Continue
+          </Button>
+        }
+        closeButtonAccessibilityLabel="Close"
+        content={
+          <VStack gap={2}>
+            <Text color="fgMuted" font="caption">
+              Step 2 of 4
+            </Text>
+            <ProgressBar progress={0.5} />
+            <Text font="body">
+              This step showcases how you can include rich content like progress bars and images.
+            </Text>
+          </VStack>
+        }
+        media={
+          <Image
+            accessibilityIgnoresInvertColors
+            source={{ uri: 'https://example.com/feature-image.png' }}
+            style={{ width: '100%', height: 150 }}
+          />
+        }
+        onClose={stopTour}
+        title="Rich Content Example"
+      />
+    );
+  };
+}
+```
+
+You can use TypeScript string literal types to ensure type safety for your step IDs.
+
+```tsx
+type StepId = 'intro' | 'feature-highlight' | 'call-to-action';
+
+function TypeSafeTourExample() {
+  const [activeTourStep, setActiveTourStep] = useState<TourStepValue<StepId> | null>(null);
+
+  const tourSteps: TourStepValue<StepId>[] = [
+    { id: 'intro', Component: IntroStep },
+    { id: 'feature-highlight', Component: FeatureStep },
+    { id: 'call-to-action', Component: CTAStep },
+  ];
+
+  return (
+    <Tour activeTourStep={activeTourStep} onChange={setActiveTourStep} steps={tourSteps}>
+      <TourStep id="intro">
+        <IntroContent />
+      </TourStep>
+      <TourStep id="feature-highlight">
+        <FeatureContent />
+      </TourStep>
+      {/* TypeScript error if id doesn't match StepId type */}
+      <TourStep id="call-to-action">
+        <CTAContent />
+      </TourStep>
+    </Tour>
+  );
+}
+```
+
+## Scrolling
 
 When tour steps are off-screen, you can use the `onBeforeActive` callback to scroll them into view.
 This callback runs before the step becomes active and can be async.
@@ -195,7 +267,9 @@ function ScrollingTourExample() {
 }
 ```
 
-## Hide Overlay
+## Customization
+
+### Overlay
 
 You can hide the dimmed overlay behind the coachmark using the `hideOverlay` prop.
 This can be set globally on the `Tour` component or per-step.
@@ -225,43 +299,13 @@ function HideOverlayExample() {
       onChange={setActiveTourStep}
       steps={tourSteps}
     >
-      <TourContent />
+      ...
     </Tour>
   );
 }
 ```
 
-## Positioning
-
-The Tour component uses `@floating-ui` to position coachmarks relative to their target elements.
-You can customize positioning with the `tourStepOffset`, `tourStepShift`, and `tourStepAutoPlacement` props.
-
-```jsx
-function PositioningExample() {
-  const [activeTourStep, setActiveTourStep] = useState(null);
-
-  const tourSteps = [
-    { id: 'step1', Component: StepOne },
-    { id: 'step2', Component: StepTwo },
-  ];
-
-  return (
-    <Tour
-      activeTourStep={activeTourStep}
-      onChange={setActiveTourStep}
-      steps={tourSteps}
-      // Increase distance between coachmark and target
-      tourStepOffset={32}
-      // Add padding when shifting to stay in viewport
-      tourStepShift={{ padding: 16 }}
-    >
-      <TourContent />
-    </Tour>
-  );
-}
-```
-
-## Tour Mask Customization
+### Mask
 
 Customize the mask (cutout) around the highlighted element with padding and border radius.
 
@@ -285,17 +329,44 @@ function MaskCustomizationExample() {
       activeTourStep={activeTourStep}
       onChange={setActiveTourStep}
       steps={tourSteps}
-      // Global mask customization
       tourMaskPadding={8}
       tourMaskBorderRadius={8}
     >
-      <TourContent />
+      ...
     </Tour>
   );
 }
 ```
 
-## Custom Arrow
+### Positioning
+
+The Tour component uses `@floating-ui` to position coachmarks relative to their target elements.
+You can customize positioning with the `tourStepOffset`, `tourStepShift`, and `tourStepAutoPlacement` props.
+
+```jsx
+function PositioningExample() {
+  const [activeTourStep, setActiveTourStep] = useState(null);
+
+  const tourSteps = [
+    { id: 'step1', Component: StepOne },
+    { id: 'step2', Component: StepTwo },
+  ];
+
+  return (
+    <Tour
+      activeTourStep={activeTourStep}
+      onChange={setActiveTourStep}
+      steps={tourSteps}
+      tourStepOffset={32}
+      tourStepShift={{ padding: 16 }}
+    >
+      ...
+    </Tour>
+  );
+}
+```
+
+### Arrow
 
 You can customize the arrow that points to the target element by providing a custom `TourStepArrowComponent`.
 
@@ -326,88 +397,11 @@ function CustomArrowExample() {
       activeTourStep={activeTourStep}
       onChange={setActiveTourStep}
       steps={tourSteps}
-      // Global custom arrow
       TourStepArrowComponent={CustomArrow}
     >
-      <TourContent />
+      ...
     </Tour>
   );
-}
-```
-
-## Type-Safe Step IDs
-
-You can use TypeScript string literal types to ensure type safety for your step IDs.
-
-```tsx
-type StepId = 'intro' | 'feature-highlight' | 'call-to-action';
-
-function TypeSafeTourExample() {
-  const [activeTourStep, setActiveTourStep] = useState<TourStepValue<StepId> | null>(null);
-
-  const tourSteps: TourStepValue<StepId>[] = [
-    { id: 'intro', Component: IntroStep },
-    { id: 'feature-highlight', Component: FeatureStep },
-    { id: 'call-to-action', Component: CTAStep },
-  ];
-
-  return (
-    <Tour activeTourStep={activeTourStep} onChange={setActiveTourStep} steps={tourSteps}>
-      <TourStep id="intro">
-        <IntroContent />
-      </TourStep>
-      <TourStep id="feature-highlight">
-        <FeatureContent />
-      </TourStep>
-      {/* TypeScript error if id doesn't match StepId type */}
-      <TourStep id="call-to-action">
-        <CTAContent />
-      </TourStep>
-    </Tour>
-  );
-}
-```
-
-## Rich Content
-
-Coachmarks can contain rich content including images, progress indicators, and custom layouts.
-
-```jsx
-function RichContentExample() {
-  const RichStep = () => {
-    const { goNextTourStep, stopTour } = useTourContext();
-
-    return (
-      <Coachmark
-        action={
-          <Button compact onPress={goNextTourStep} variant="secondary">
-            Continue
-          </Button>
-        }
-        closeButtonAccessibilityLabel="Close"
-        content={
-          <VStack gap={2}>
-            <Text color="fgMuted" font="caption">
-              Step 2 of 4
-            </Text>
-            <ProgressBar progress={0.5} />
-            <Text font="body">
-              This step showcases how you can include rich content like progress bars and images.
-            </Text>
-          </VStack>
-        }
-        media={
-          <Image
-            accessibilityIgnoresInvertColors
-            source={{ uri: 'https://example.com/feature-image.png' }}
-            style={{ width: '100%', height: 150 }}
-          />
-        }
-        onClose={stopTour}
-        title="Rich Content Example"
-      />
-    );
-  };
 }
 ```
 
