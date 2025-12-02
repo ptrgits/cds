@@ -42,7 +42,14 @@ export const Example = ({
   const exampleLabel = `Example ${exampleNumberRef.current}`;
 
   return (
-    <VStack accessibilityLabel={exampleLabel} background="bg" gap={2} paddingBottom={3} {...props}>
+    <VStack
+      accessibilityLabel={exampleLabel}
+      alignItems={inline ? 'flex-start' : undefined}
+      background="bg"
+      gap={2}
+      paddingBottom={3}
+      {...props}
+    >
       {!!title && (
         <Text color="fgPrimary" font="title3" {...titlePadding}>
           {title}
