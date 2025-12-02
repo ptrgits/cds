@@ -38,8 +38,8 @@ const PageFooterInPageScreen = () => {
   const inset = useSafeAreaInsets();
 
   return (
-    <ExampleScreen>
-      <Example title="PageFooter In Page">
+    <ExampleScreen paddingX={0}>
+      <Example hideDivider height="100%">
         <VStack
           alignContent="center"
           alignItems="center"

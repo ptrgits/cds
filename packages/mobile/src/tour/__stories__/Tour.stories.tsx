@@ -219,7 +219,7 @@ const TourStory = () => {
 
   return (
     <ExampleScreen ref={scrollViewRef}>
-      <Example>
+      <Example title="Tour Example">
         <Tour activeTourStep={activeTourStep} onChange={setActiveTourStep} steps={tourSteps}>
           <TourExamples
             ids={['step1', 'step2', 'step3', 'step4']}

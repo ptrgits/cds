@@ -30,8 +30,8 @@ const exampleProps = {
 
 const PageFooterScreen = () => {
   return (
-    <ExampleScreen>
-      <Example title="PageFooter Variants">
+    <ExampleScreen paddingX={0}>
+      <Example gap={0}>
         <PageFooter action={exampleProps.endButton} background="bgPrimaryWash" />
         <Divider />
         <PageFooter action={exampleProps.endButtons} />
