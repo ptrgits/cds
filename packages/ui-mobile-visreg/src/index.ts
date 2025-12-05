@@ -1,6 +1,7 @@
 /// <reference types="detox" />
 
 import { execSync } from 'node:child_process';
+import * as path from 'node:path';
 
 import type { PercyScreenshotOptions } from './percy/processScreenshots';
 import processScreenshots from './percy/processScreenshots';
@@ -109,8 +110,8 @@ export function processScreenshotsForVisualDiffs(options: {
   screenshotsDir?: string;
   processingOptions?: PercyScreenshotOptions;
 }) {
-  const screenshotsDir = options.screenshotsDir ? `/${options.screenshotsDir}` : '';
-  const fullDirPath = `${baseDir}${screenshotsDir}`;
+  const screenshotsDir = options.screenshotsDir || '';
+  const fullDirPath = path.join(baseDir, screenshotsDir);
 
   processScreenshots(fullDirPath, options.processingOptions ?? {});
 }
